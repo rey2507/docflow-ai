@@ -34,7 +34,7 @@ PHASE 6 — INTEGRATION (COMPLETE)
 
 PHASE 7 — PRODUCTIZATION (HIGHEST PRIORITY)
 19. [x] Main Documents Dashboard with stats and filters (Task 7.1)
-20. [ ] Documents Listing Page with card/table views and actions (Task 7.2)
+20. [x] Documents Listing Page with card/table views and actions (Task 7.2)
 21. [ ] Document Details Page showing full lifecycle data (Task 7.3)
 22. [ ] File Preview System (PDF, PNG, JPG) (Task 7.4)
 23. [ ] Extraction Correction UI for manual field edits (Task 7.5)

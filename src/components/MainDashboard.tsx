@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { ReportService } from '../services/reports/report.service';
 import type { Document, DocumentStatus, DocumentType } from '../types/document';
-import PipelineStatusDisplay from './PipelineStatusDisplay';
+import DocumentList from './DocumentList';
 
 interface DashboardStats {
   total: number;
@@ -201,39 +201,11 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             <p className="text-gray-500 font-medium">No documents found matching your criteria.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {documents.map((doc) => (
-              <div key={doc.id} className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      {/* Simple Icon placeholder based on type */}
-                      <span className="text-xl">📄</span>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 truncate max-w-xs">{doc.name}</h4>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600 capitalize">{doc.type}</span>
-                        <span className="text-xs text-gray-400">
-                          {new Date(doc.createdAt as string).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status & Mini Pipeline View */}
-                  <div className="flex-1 max-w-md">
-                    <PipelineStatusDisplay documentId={doc.id} />
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50">View Details</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <DocumentList 
+            documents={documents} 
+            onRefresh={() => { fetchStats(); fetchDocuments(); }}
+            onViewDetails={(id) => console.log('Navigate to details for:', id)}
+          />
         )}
       </div>
 
