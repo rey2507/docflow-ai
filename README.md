@@ -27,6 +27,11 @@ Completed phases:
 - [x] Pipeline Orchestration
 - [x] Real-time Dashboard (v1)
 
+Recent engineering progress:
+- [x] Vitest test runner + TS config stabilized (repo-local `tsconfig.json`, correct `setup.ts` usage).
+- [x] Fixed Vitest/Vite plugin typing mismatch so tests run cleanly.
+
+
 ## 🚦 Getting Started
 
 1. Clone the repository.

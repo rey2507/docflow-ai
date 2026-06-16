@@ -9,10 +9,16 @@
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.0",
+    "@testing-library/react": "^16.0.0",
+    "jsdom": "^24.1.0",
+    "@vitejs/plugin-react": "^4.3.0"
   },
   "scripts": {
     "build": "tsc",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   }
 }

@@ -39,6 +39,14 @@ PHASE 7 — PRODUCTIZATION (HIGHEST PRIORITY)
 22. [x] File Preview System (PDF, PNG, JPG) (Task 7.4)
 23. [x] Extraction Correction UI for manual field edits (Task 7.5)
 
+---
+Engineering / DevEx Tasks (Test & CI readiness)
+- 41. [x] Fix Vitest setupFiles path and add repo-local `tsconfig.json` so tests compile.
+- 42. [x] Resolve Vite/Vitest React plugin type mismatch so `npx vitest run` passes.
+- 43. [x] Implement PipelineOrchestrator integration test (sub-service mocking).
+- 44. [x] Implement WorkflowTimeline component test (Realtime subscription mocking).
+
+
 PHASE 8 — AI QUALITY IMPROVEMENTS
 24. [x] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
 25. [x] Field-level Confidence Scoring (Task 8.2)
