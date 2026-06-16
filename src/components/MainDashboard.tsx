@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase/client';
 import { ReportService } from '../services/reports/report.service';
 import type { Document, DocumentStatus, DocumentType } from '../types/document';
 import DocumentList from './DocumentList';
+import DocumentDetails from './DocumentDetails';
 
 interface DashboardStats {
   total: number;
@@ -29,6 +30,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
 
   // Filter and Sort State
   const [search, setSearch] = useState('');
@@ -91,6 +93,13 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   }, [fetchStats, fetchDocuments]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  // Render Detail View if a document is selected
+  if (selectedDocumentId) {
+    return (
+      <DocumentDetails documentId={selectedDocumentId} onBack={() => setSelectedDocumentId(null)} />
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -204,7 +213,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
           <DocumentList 
             documents={documents} 
             onRefresh={() => { fetchStats(); fetchDocuments(); }}
-            onViewDetails={(id) => console.log('Navigate to details for:', id)}
+            onViewDetails={(id) => setSelectedDocumentId(id)}
           />
         )}
       </div>

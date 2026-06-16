@@ -18,6 +18,21 @@ export const PromptService = {
     const baseInstructions = `
       You are an expert document analysis AI. 
       Your task is to extract structured data from the provided text.
+      
+      IMPORTANT:
+      1. For every field specified in the EXTRACTION SCHEMA, you must return an object with:
+         - "value": The extracted information (following the requested type).
+         - "confidence": A float between 0.0 and 1.0 representing your certainty.
+      
+      2. Additionally, include a top-level field "validation_suggestions" (array of strings).
+         Provide actionable advice if data is missing, conflicting, or has low confidence (e.g., "Invoice date is blurry, please verify").
+      
+      Example output structure: 
+      { 
+        "field_name": { "value": "extracted_data", "confidence": 0.98 },
+        "validation_suggestions": ["Actionable suggestion 1", "Actionable suggestion 2"]
+      }
+
       Return ONLY a valid JSON object. Do not include markdown formatting, backticks, or explanations.
     `;
 

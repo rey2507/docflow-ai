@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase/client';
+import type { Document } from '../../types/document';
 
 /**
  * DocumentService
@@ -7,6 +8,45 @@ import { supabase } from '../../lib/supabase/client';
  * specific to the processing pipeline (e.g., Deletion, fetching by ID).
  */
 export const DocumentService = {
+  /**
+   * Fetches a single document by its ID.
+   * 
+   * @param documentId The UUID of the document.
+   */
+  async getDocumentById(documentId: string): Promise<{ data: Document | null; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+      return { data: data as Document, error };
+    } catch (error: any) {
+      return { data: null, error };
+    }
+  },
+
+  /**
+   * Updates the metadata of a document.
+   * 
+   * @param documentId The UUID of the document.
+   * @param metadata The new metadata object.
+   */
+  async updateMetadata(documentId: string, metadata: any): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ 
+          metadata,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', documentId);
+      return { error };
+    } catch (error: any) {
+      return { error };
+    }
+  },
+
   /**
    * Deletes a document record and its associated file in storage.
    * 

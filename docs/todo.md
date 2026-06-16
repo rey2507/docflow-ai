@@ -35,31 +35,34 @@ PHASE 6 — INTEGRATION (COMPLETE)
 PHASE 7 — PRODUCTIZATION (HIGHEST PRIORITY)
 19. [x] Main Documents Dashboard with stats and filters (Task 7.1)
 20. [x] Documents Listing Page with card/table views and actions (Task 7.2)
-21. [ ] Document Details Page showing full lifecycle data (Task 7.3)
-22. [ ] File Preview System (PDF, PNG, JPG) (Task 7.4)
-23. [ ] Extraction Correction UI for manual field edits (Task 7.5)
+21. [x] Document Details Page showing full lifecycle data (Task 7.3)
+22. [x] File Preview System (PDF, PNG, JPG) (Task 7.4)
+23. [x] Extraction Correction UI for manual field edits (Task 7.5)
 
 PHASE 8 — AI QUALITY IMPROVEMENTS
-24. [ ] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
-25. [ ] Field-level Confidence Scoring (Task 8.2)
-26. [ ] AI-generated Validation Suggestions (Task 8.3)
+24. [x] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
+25. [x] Field-level Confidence Scoring (Task 8.2)
+26. [x] Implement fallback mechanism in PipelineOrchestrator to switch to Gemini if OpenAI fails
+27. [x] AI-generated Validation Suggestions (Task 8.3)
+28. [x] Generic retry strategy utility with exponential backoff
+29. [x] Add a Jitter factor to the retry utility to prevent thundering herd issues
 
 PHASE 9 — SAAS READINESS
-27. [ ] Usage tracking and User Quotas (Task 9.1)
-28. [ ] Subscription Plan limits enforcement (Task 9.2)
-29. [ ] Billing Integration (Stripe/Razorpay) (Task 9.3)
+30. [x] Implement the Usage Tracking service for Task 9.1
+31. [x] Subscription Plan limits enforcement (Task 9.2)
+32. [ ] Billing Integration (Stripe/Razorpay) (Task 9.3)
 
 PHASE 10 — BUSINESS FEATURES
-30. [ ] Contract Validation Rules (Signatures, Expiry) (Task 10.1)
-31. [ ] Form Validation Rules (Required fields, Formats) (Task 10.2)
-32. [ ] Duplicate Upload/Invoice Detection (Task 10.3)
-33. [ ] AI Summary and Key Point Generation (Task 10.4)
+33. [ ] Contract Validation Rules (Signatures, Expiry) (Task 10.1)
+34. [ ] Form Validation Rules (Required fields, Formats) (Task 10.2)
+35. [ ] Duplicate Upload/Invoice Detection (Task 10.3)
+36. [ ] AI Summary and Key Point Generation (Task 10.4)
 
 PHASE 11 — GROWTH FEATURES
-34. [ ] Email Import (Gmail/Outlook attachments) (Task 11.1)
-35. [ ] OCR Support for scanned docs and photos (Task 11.2)
-36. [ ] Semantic Search ("contracts expiring soon") (Task 11.3)
-37. [ ] Interactive AI Chat with document context (Task 11.4)
+37. [ ] Email Import (Gmail/Outlook attachments) (Task 11.1)
+38. [ ] OCR Support for scanned docs and photos (Task 11.2)
+39. [ ] Semantic Search ("contracts expiring soon") (Task 11.3)
+40. [ ] Interactive AI Chat with document context (Task 11.4)
 
 ---
 

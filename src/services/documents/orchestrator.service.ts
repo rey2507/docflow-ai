@@ -1,100 +1,117 @@
 import { supabase } from '../../lib/supabase/client';
-import { ExtractService } from '../documents/extract.service';
-import { ValidateService } from '../documents/validate.service';
-import { FinalizationService } from '../documents/finalization.service';
-import type { DocumentStatus } from '../../types/document';
+import { ExtractService } from './extract.service';
+import { ValidateService } from './validate.service';
+import { FinalizationService } from './finalization.service';
+import type { Document, DocumentStatus } from '../../types/document';
+import { AIProvider } from '../ai/provider.service';
+import { SubscriptionService } from '../../subscription/subscription.service';
+
+/**
+ * Temporary type declaration for Node.js process to resolve linting errors.
+ */
+declare const process: { env: Record<string, string | undefined> };
 
 /**
  * PipelineOrchestrator
  * 
- * Coordinates the end-to-end processing of a document.
- * Links Extraction, Validation, and Finalization sequentially.
+ * Manages the end-to-end processing of a document through its lifecycle:
+ * Upload -> Extraction -> Validation -> Finalization.
+ * Handles overall status updates and error recovery, including AI provider fallbacks.
  */
 export const PipelineOrchestrator = {
-  /**
-   * Runs the full automated pipeline for a given document.
-   * 
-   * @param documentId The UUID of the document to process.
-   */
   async runPipeline(documentId: string): Promise<{ success: boolean; error: Error | null }> {
-    const MAX_RETRIES = 3;
-    const BASE_DELAY = 2000;
-
+    let document: Document | null = null;
     try {
-      console.log(`[PipelineOrchestrator] Starting pipeline for ${documentId}`);
-
-      // Step 1: Extraction with Retry Logic
-      let extractedData = null;
-      let lastError = null;
-
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        const result = await ExtractService.processDocument(documentId);
-        
-        if (!result.error && result.data) {
-          extractedData = result.data;
-          break;
-        }
-
-        lastError = result.error || new Error('Extraction produced no data');
-        console.warn(`[PipelineOrchestrator] Extraction attempt ${attempt} failed for ${documentId}: ${lastError.message}`);
-
-        if (attempt < MAX_RETRIES) {
-          // Wait with incremental delay before next attempt
-          await new Promise(resolve => setTimeout(resolve, BASE_DELAY * attempt));
-        }
-      }
-
-      if (!extractedData) throw lastError || new Error('Extraction failed after retries');
-
-      // Step 2: Validation
-      const { isValid, error: validateError } = await ValidateService.validateData(documentId, extractedData);
-      if (validateError) throw validateError;
-
-      if (!isValid) {
-        // If data is invalid, we stop the pipeline and mark the document as failed
-        await this.handleFailure(documentId, new Error('Validation failed: Document data does not meet business rules.'));
-        return { success: false, error: new Error('Validation failed') };
-      }
-
-      // Step 3: Finalization
-      const { error: finalizationError } = await FinalizationService.finalizeDocument(documentId);
-      if (finalizationError) throw finalizationError;
-
-      console.log(`[PipelineOrchestrator] Pipeline completed successfully for ${documentId}`);
-      return { success: true, error: null };
-
-    } catch (error: any) {
-      console.error(`[PipelineOrchestrator] Pipeline failed for ${documentId}:`, error.message);
-      await this.handleFailure(documentId, error);
-      return { success: false, error };
-    }
-  },
-
-  /**
-   * Internal helper to set document status to failed on pipeline errors.
-   */
-  async handleFailure(documentId: string, error: Error): Promise<void> {
-    try {
-      // Fetch existing metadata to avoid overwriting existing fields
-      const { data: document } = await supabase
+      // 1. Fetch document
+      const { data: doc, error: docError } = await supabase
         .from('documents')
-        .select('metadata')
+        .select('*')
         .eq('id', documentId)
         .single();
 
-      await supabase
+      if (docError || !doc) throw docError || new Error('Document not found for orchestration.');
+      document = doc as Document;
+
+      // Ensure document status is 'pending' or 'processing' to start
+      if (document.status === 'completed' || document.status === 'failed') {
+        console.log(`[Orchestrator] Document ${documentId} already ${document.status}. Skipping pipeline.`);
+        return { success: true, error: null };
+      }
+
+      // Set initial status to processing if not already
+      await supabase.from('documents').update({ status: 'processing' as DocumentStatus }).eq('id', documentId);
+
+      // --- Plan Limits Check (Task 9.2) ---
+      const { allowed, reason } = await SubscriptionService.canProcessDocument(document.userId);
+      if (!allowed) {
+        throw new Error(reason || 'Subscription limit reached.');
+      }
+
+      // --- Extraction Phase with Fallback ---
+      let extractionSuccess = false;
+      let lastExtractionError: Error | null = null;
+
+      // Determine the provider chain from environment variables or use a default fallback
+      const providerChain: AIProvider[] = (
+        process.env.AI_PROVIDER_CHAIN || 
+        process.env.NEXT_PUBLIC_AI_PROVIDER_CHAIN || 
+        'openai,gemini'
+      ).split(',').map((p: string) => p.trim() as AIProvider);
+
+      for (let i = 0; i < providerChain.length; i++) {
+        const provider = providerChain[i];
+        console.log(`[Orchestrator] Extraction attempt ${i + 1}/${providerChain.length} using ${provider}`);
+
+        // We must destructure the error because processDocument catches internal errors
+        const { error: extError } = await ExtractService.processDocument(document.id, provider);
+
+        if (!extError) {
+          extractionSuccess = true;
+          break; // Success!
+        }
+
+        lastExtractionError = extError;
+        console.warn(`[Orchestrator] Provider ${provider} failed for document ${documentId}: ${extError.message}`);
+
+        // Update metadata so the UI can show which provider failed
+        await supabase.from('documents').update({ 
+          metadata: { 
+            ...document.metadata, 
+            lastExtractionError: extError.message,
+            failedProvider: provider 
+          } 
+        }).eq('id', documentId);
+      }
+
+      if (!extractionSuccess) {
+        throw lastExtractionError || new Error('AI extraction failed after exhausting all providers in the chain.');
+      }
+
+      // Re-fetch document to get updated metadata (especially extractedData and aiProvider/aiModel)
+      const { data: updatedDoc, error: refetchError } = await supabase
         .from('documents')
-        .update({ 
-          status: 'failed' as DocumentStatus,
-          metadata: {
-            ...(document?.metadata || {}),
-            pipelineError: error.message,
-            failedAt: new Date().toISOString()
-          }
-        })
-        .eq('id', documentId);
-    } catch (err: any) {
-      console.error('[PipelineOrchestrator] Error during failure handling:', err.message);
+        .select('*')
+        .eq('id', documentId)
+        .single();
+      if (refetchError || !updatedDoc) throw refetchError || new Error('Failed to re-fetch document after extraction.');
+      document = updatedDoc as Document; // Update the document reference
+
+      // --- Validation Phase ---
+      await ValidateService.validateData(document.id, document.metadata?.extractedData || {});
+
+      // --- Finalization Phase ---
+      await FinalizationService.finalizeDocument(document.id);
+
+      // FinalizationService handles the terminal status updates for the document and workflow.
+      return { success: true, error: null };
+    } catch (error: any) {
+      console.error(`[PipelineOrchestrator] Pipeline failed for document ${documentId}:`, error.message);
+      // Update document and workflow status to failed
+      if (document) {
+        await supabase.from('documents').update({ status: 'failed' as DocumentStatus, metadata: { ...document.metadata, pipelineError: error.message } }).eq('id', documentId);
+        await supabase.from('workflows').update({ status: 'failed' }).eq('documentId', documentId);
+      }
+      return { success: false, error };
     }
   }
 };
