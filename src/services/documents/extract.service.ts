@@ -1,13 +1,13 @@
-import { supabase } from '../../lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { eq } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { documents, workflows } from '../../../docs/schema';
-import { WorkflowService } from '../workflow/workflow.service';
-import { AIProviderService } from '../ai/provider.service';
-import { PromptService } from '../ai/prompt.service';
-import { AIProvider } from '../ai/provider.service'; // Import AIProvider type
-import { UsageService } from '../usage/usage.service';
-import type { Document, DocumentStatus } from '../../types/document';
+import { DbClient } from 'docs/client';
+import { documents, workflows } from 'docs/schema';
+import { WorkflowService } from '@/services/workflow/workflow.service';
+import { AIProviderService } from '@/services/ai/provider.service';
+import { PromptService } from '@/services/ai/prompt.service';
+import { AIProvider } from '@/services/ai/provider.service'; // Import AIProvider type
+import { UsageService } from '@/services/usage/usage.service';
+import type { Document, DocumentStatus } from '@/types/document';
 
 /**
  * ExtractService

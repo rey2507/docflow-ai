@@ -10,11 +10,23 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-
     "types": ["vitest/globals", "node", "@cloudflare/workers-types"],
-    "noEmit": true
+    "ignoreDeprecations": "6.0",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "docs/*": ["docs/*"]
+    }
   },
-  "include": ["src", "setup.ts", "vitest.config.ts", "drizzle.config.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "docs/**/*.ts",
+    "setup.ts",
+    "vitest.config.ts",
+    "drizzle.config.ts"
+  ],
   "exclude": [
     "docs/index.edge.ts",
     "docs/cleanup.edge.ts",

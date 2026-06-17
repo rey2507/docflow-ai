@@ -1,4 +1,8 @@
-import { supabase } from '../../lib/supabase/client';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { eq, and, sql } from 'drizzle-orm';
+import { DbClient } from 'docs/client';
+import { documents } from 'docs/schema';
+import { v4 as uuidv4 } from 'uuid';
 import type { Document, DocumentType } from '../../types/document';
 import { WorkflowService } from '../workflow/workflow.service';
 import { PipelineOrchestrator } from './orchestrator.service';
@@ -13,29 +17,29 @@ import { SubscriptionService } from '../../subscription/subscription.service'; /
 export const DocumentUploadService = {
   /**
    * Uploads a file and creates a database record.
+   * @param db Drizzle database client.
+   * @param supabase Supabase client (configured for storage).
    * @param file The File object from the user input.
    * @param userId The ID of the authenticated user.
    */
-  async uploadDocument(file: File, userId: string): Promise<{ data: Document | null; error: Error | null }> {
+  async uploadDocument(db: DbClient, supabase: SupabaseClient, file: File, userId: string): Promise<{ data: Document | null; error: Error | null }> {
+    let filePath: string | null = null;
     try {
       // --- NEW: Check document upload limit ---
-      // NOTE: SubscriptionService.canUploadDocument now expects a Drizzle DbClient.
-      // This call needs to be moved to a server-side API endpoint (e.g., Cloudflare Worker)
-      // that the frontend calls to check limits before proceeding with the upload.
-      const { allowed, reason } = await SubscriptionService.canUploadDocument(null as any, userId); // Temporary bypass for TS error
+      const { allowed, reason } = await SubscriptionService.canUploadDocument(db, userId);
       if (!allowed) {
         return { data: null, error: new Error(reason || 'Document upload limit reached.') };
       }
       // --- END NEW ---
 
       // --- NEW: Duplicate Upload Detection (Task 10.3) ---
-      const { data: existingDoc } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('userId', userId)
-        .eq('name', file.name)
-        .eq('metadata->fileSize', file.size)
-        .maybeSingle();
+      const existingDoc = await db.query.documents.findFirst({
+        where: and(
+          eq(documents.userId, userId),
+          eq(documents.name, file.name),
+          sql`${documents.metadata}->>'$.fileSize' = ${file.size}`
+        )
+      });
 
       if (existingDoc) {
         return { data: null, error: new Error('A document with the same name and size already exists.') };
@@ -46,7 +50,7 @@ export const DocumentUploadService = {
       
       // 2. Generate a unique storage path: userId/timestamp_filename
       const sanitizedName = file.name.replace(/[^\x00-\x7F]/g, "").replace(/\s+/g, "_");
-      const filePath = `${userId}/${Date.now()}_${sanitizedName}`;
+      filePath = `${userId}/${Date.now()}_${sanitizedName}`;
 
       // 3. Upload file to 'documents' bucket
       const { data: storageData, error: storageError } = await supabase.storage
@@ -59,43 +63,35 @@ export const DocumentUploadService = {
       if (storageError) throw storageError;
 
       // 4. Create document record in database
-      const { data: dbData, error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          userId: userId,
-          name: file.name,
-          type: type,
-          status: 'pending',
-          storagePath: storageData.path,
-          metadata: {
-            fileSize: file.size,
-            mimeType: file.type,
-          }
-        })
-        .select()
-        .single();
-
-      if (dbError) {
-        // Rollback: remove file from storage if DB record creation fails
-        await supabase.storage.from('documents').remove([filePath]);
-        throw dbError;
-      }
-
-      const document = dbData as Document;
+      const [document] = await db.insert(documents).values({
+        id: uuidv4(),
+        userId: userId,
+        name: file.name,
+        type: type,
+        status: 'pending',
+        storagePath: storageData.path,
+        metadata: {
+          fileSize: file.size,
+          mimeType: file.type,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
 
       // 5. Initialize Workflow
-      const { error: wfError } = await WorkflowService.createWorkflow(null as any, document.id); // db client will be passed from a Worker later
+      const { error: wfError } = await WorkflowService.createWorkflow(db, document.id);
       if (wfError) {
         console.error('[DocumentUploadService] Workflow creation error:', wfError.message);
       } else {
         // 6. Trigger Pipeline (Background process)
-        // We do not await this to return the document record to the UI immediately
-        // Temporary: passing null for DbClient as this frontend call will eventually move to a Worker
-        PipelineOrchestrator.runPipeline(null as any, document.id);
+        PipelineOrchestrator.runPipeline(db, document.id);
       }
 
-      return { data: document, error: null };
+      return { data: document as unknown as Document, error: null };
     } catch (error: any) {
+      if (filePath) {
+        await supabase.storage.from('documents').remove([filePath]);
+      }
       console.error('[DocumentUploadService] Error:', error.message);
       return { data: null, error };
     }

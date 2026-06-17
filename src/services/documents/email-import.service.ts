@@ -1,6 +1,6 @@
-import { DbClient } from '../../../docs/client';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { DbClient } from 'docs/client';
 import { DocumentUploadService } from './upload.service';
-import { supabase } from '../../lib/supabase/client';
 
 /**
  * EmailImportService
@@ -13,11 +13,13 @@ export const EmailImportService = {
    * Processes an inbound email message.
    * 
    * @param db Drizzle database client
+   * @param supabase Supabase client (configured for storage)
    * @param userId User ID to associate the documents with
    * @param attachments Array of attachment objects from the email
    */
   async processEmailInbound(
     db: DbClient, 
+    supabase: SupabaseClient,
     userId: string, 
     attachments: Array<{ name: string; content: ArrayBuffer; mimeType: string }>
   ): Promise<{ success: boolean; processedCount: number; errors: string[] }> {
@@ -31,7 +33,7 @@ export const EmailImportService = {
         
         console.log(`[EmailImportService] Importing attachment: ${attachment.name} for user: ${userId}`);
         
-        const { data, error } = await DocumentUploadService.uploadDocument(file, userId);
+        const { data, error } = await DocumentUploadService.uploadDocument(db, supabase, file, userId);
         
         if (error) {
           errors.push(`Failed to upload ${attachment.name}: ${error.message}`);
@@ -68,7 +70,8 @@ export const EmailImportService = {
  *       }));
  *       
  *       const db = createDbClient(env.D1_DB);
- *       await EmailImportService.processEmailInbound(db, userId, attachments);
+ *       const supabase = createSupabaseClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+ *       await EmailImportService.processEmailInbound(db, supabase, userId, attachments);
  *     }
  *   }
  * }

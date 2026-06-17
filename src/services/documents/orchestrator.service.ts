@@ -1,13 +1,13 @@
 import { eq, and, ne } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { documents, workflows } from '../../../docs/schema';
+import { DbClient } from 'docs/client';
+import { documents, workflows } from 'docs/schema';
 import { ExtractService } from './extract.service';
-import { AIProviderService } from '../ai/provider.service';
+import { AIProviderService } from '@/services/ai/provider.service';
 import { ValidateService } from './validate.service';
 import { FinalizationService } from './finalization.service';
-import { SubscriptionService } from '../../subscription/subscription.service';
-import { WorkflowService } from '../workflow/workflow.service';
-import type { WorkflowStep } from '../../types/workflow';
+import { SubscriptionService } from '@/subscription/subscription.service';
+import { WorkflowService } from '@/services/workflow/workflow.service';
+import type { WorkflowStep } from '@/types/workflow';
 
 /**
  * PipelineOrchestrator
