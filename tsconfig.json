@@ -11,9 +11,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
 
-    "types": ["vitest/globals", "node"],
+    "types": ["vitest/globals", "node", "@cloudflare/workers-types"],
     "noEmit": true
   },
-  "include": ["src", "setup.ts", "vitest.config.ts", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src", "setup.ts", "vitest.config.ts", "drizzle.config.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "docs/index.edge.ts",
+    "docs/cleanup.edge.ts",
+    "docs/index.ts"
+  ]
 }
-

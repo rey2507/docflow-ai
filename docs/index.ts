@@ -1,48 +1,69 @@
-/// <reference lib="deno.ns" />
+// @ts-nocheck
+// NOTE:
+// This file is kept for reference only.
+// The actual Supabase Edge Function entrypoint is docs/index.edge.ts (Deno).
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.108.2';
-import Stripe from 'https://esm.sh/stripe@14.23.0?target=deno'; // Ensure this version is compatible with Deno
+import Stripe from 'https://esm.sh/stripe@14.23.0?target=deno';
 
-// IMPORTANT: In a real Supabase Edge Function, you cannot directly import local Node.js modules
+
+
+
+/**
+// IMPORTANT: In a real Supabase Edge Function, you cannot directly import local Node.js modules 
 // like `src/services/subscription/subscription.service.ts`.
 // You would typically:
 // 1. Re-implement the necessary SubscriptionService logic directly within this Edge Function.
 // 2. Bundle your SubscriptionService into a single JS file that the Edge Function can import.
 // 3. Have this Edge Function call another internal API endpoint that *does* have access to your Node.js services.
 // For this example, we'll define a mock interface and a placeholder implementation.
-
-interface SubscriptionService {
-  handleStripeSubscriptionCreated(stripeSubscription: Stripe.Subscription, userId: string): Promise<void>;
-  handleStripeSubscriptionUpdated(stripeSubscription: Stripe.Subscription, userId: string): Promise<void>;
-  handleStripeSubscriptionDeleted(stripeSubscriptionId: string): Promise<void>;
-}
-
-// Placeholder for your actual SubscriptionService logic.
-// In production, replace this with the actual logic or an import of a bundled version.
-const mockSubscriptionService: SubscriptionService = {
-  async handleStripeSubscriptionCreated(stripeSubscription, userId) {
-    console.log(`[MockSubscriptionService] Created subscription ${stripeSubscription.id} for user ${userId}. Status: ${stripeSubscription.status}`);
-    // Your actual logic here: Insert a new record into your 'subscriptions' table
-    // linking userId to stripeSubscription.id, stripeSubscription.status, etc.
-  },
-  async handleStripeSubscriptionUpdated(stripeSubscription, userId) {
-    console.log(`[MockSubscriptionService] Updated subscription ${stripeSubscription.id} for user ${userId}. Status: ${stripeSubscription.status}`);
-    // Your actual logic here: Update an existing record in your 'subscriptions' table
-    // with new status, current_period_end, plan_id, etc.
-  },
-  async handleStripeSubscriptionDeleted(stripeSubscriptionId) {
-    console.log(`[MockSubscriptionService] Deleted subscription: ${stripeSubscriptionId}`);
-    // Your actual logic here: Mark the subscription as inactive/deleted in your 'subscriptions' table
-  },
-};
+*/
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2023-10-16', // Use your Stripe API version
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-serve(async (req: Request): Promise<Response> => {
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+);
+
+/**
+ * Updates the local database with the latest Stripe subscription data.
+ */
+async function upsertSubscription(subscription: Stripe.Subscription, userId: string) {
+  const { error } = await supabase
+    .from('subscriptions')
+    .upsert({
+      id: subscription.id,
+      user_id: userId,
+      status: subscription.status,
+      price_id: subscription.items.data[0]?.price?.id,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+  if (error) throw error;
+}
+
+/**
+ * Marks a subscription as canceled in the local database.
+ */
+async function deleteSubscription(subscriptionId: string) {
+  const { error } = await supabase
+    .from('subscriptions')
+    .update({ 
+      status: 'canceled',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId);
+
+  if (error) throw error;
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }
@@ -67,12 +88,6 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // Initialize Supabase client with service role key for elevated permissions
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-
   try {
     const subscription = event.data.object as Stripe.Subscription;
     const customerId = subscription.customer as string; // Stripe customer ID
@@ -93,13 +108,13 @@ serve(async (req: Request): Promise<Response> => {
 
     switch (event.type) {
       case 'customer.subscription.created':
-        await mockSubscriptionService.handleStripeSubscriptionCreated(subscription, userId);
+        await upsertSubscription(subscription, userId);
         break;
       case 'customer.subscription.updated':
-        await mockSubscriptionService.handleStripeSubscriptionUpdated(subscription, userId);
+        await upsertSubscription(subscription, userId);
         break;
       case 'customer.subscription.deleted':
-        await mockSubscriptionService.handleStripeSubscriptionDeleted(subscription.id);
+        await deleteSubscription(subscription.id);
         break;
       default:
         console.log(`Unhandled Stripe event type: ${event.type}`);

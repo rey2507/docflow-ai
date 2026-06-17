@@ -1,19 +1,24 @@
+export type DocumentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'validating';
 export type DocumentType = 'invoice' | 'contract' | 'form' | 'image' | 'spreadsheet' | 'other';
 
-export type DocumentStatus = 
-  | 'pending' 
-  | 'uploading' 
-  | 'processing' 
-  | 'validating' 
-  | 'completed' 
-  | 'failed';
-
 export interface DocumentMetadata {
-  pageCount?: number;
-  fileSize: number;
-  mimeType: string;
-  extractedAt?: string;
-  [key: string]: any; // Allow for flexible AI-extracted fields
+  fileSize?: number;
+  mimeType?: string;
+  extractedData?: Record<string, { value: any; confidence: number }>;
+  validationSuggestions?: string[];
+  summary?: string | null; // Added for AI Summary
+  keyPoints?: string[] | null; // Added for AI Key Points
+  extractedAt?: string; // ISO date string
+  aiProvider?: string;
+  aiModel?: string;
+  embedding?: number[]; // Added for Semantic Search
+  pipelineError?: string;
+  failedAt?: string;
+  duplicateOf?: string;
+  lastExtractionError?: string;
+  failedProvider?: string;
+  manuallyCorrected?: boolean;
+  correctedAt?: string;
 }
 
 export interface Document {
@@ -24,6 +29,16 @@ export interface Document {
   status: DocumentStatus;
   storagePath: string;
   metadata: DocumentMetadata;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Runtime validation helper for DocumentMetadata
+ */
+export function validateMetadata(metadata: unknown): metadata is DocumentMetadata {
+  if (typeof metadata !== 'object' || metadata === null) return false;
+  
+  // Basic structural check; can be expanded with specific field validations
+  return true;
 }

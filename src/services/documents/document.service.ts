@@ -1,4 +1,7 @@
 import { supabase } from '../../lib/supabase/client';
+import { eq } from 'drizzle-orm';
+import { DbClient } from '../../../docs/client';
+import { documents } from '../../../docs/schema';
 import type { Document } from '../../types/document';
 
 /**
@@ -11,16 +14,15 @@ export const DocumentService = {
   /**
    * Fetches a single document by its ID.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document.
    */
-  async getDocumentById(documentId: string): Promise<{ data: Document | null; error: Error | null }> {
+  async getDocumentById(db: DbClient, documentId: string): Promise<{ data: Document | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-      return { data: data as Document, error };
+      const data = await db.query.documents.findFirst({
+        where: eq(documents.id, documentId)
+      });
+      return { data: data as unknown as Document, error: null };
     } catch (error: any) {
       return { data: null, error };
     }
@@ -29,19 +31,19 @@ export const DocumentService = {
   /**
    * Updates the metadata of a document.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document.
    * @param metadata The new metadata object.
    */
-  async updateMetadata(documentId: string, metadata: any): Promise<{ error: Error | null }> {
+  async updateMetadata(db: DbClient, documentId: string, metadata: any): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase
-        .from('documents')
-        .update({ 
-          metadata,
-          updatedAt: new Date().toISOString()
+      await db.update(documents)
+        .set({ 
+          metadata, 
+          updatedAt: new Date() 
         })
-        .eq('id', documentId);
-      return { error };
+        .where(eq(documents.id, documentId));
+      return { error: null };
     } catch (error: any) {
       return { error };
     }
@@ -50,18 +52,18 @@ export const DocumentService = {
   /**
    * Deletes a document record and its associated file in storage.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document to delete.
    */
-  async deleteDocument(documentId: string): Promise<{ error: Error | null }> {
+  async deleteDocument(db: DbClient, documentId: string): Promise<{ error: Error | null }> {
     try {
       // 1. Get document details to find the storage path
-      const { data: doc, error: fetchError } = await supabase
-        .from('documents')
-        .select('storagePath')
-        .eq('id', documentId)
-        .single();
+      const doc = await db.query.documents.findFirst({
+        columns: { storagePath: true },
+        where: eq(documents.id, documentId)
+      });
       
-      if (fetchError) throw fetchError;
+      if (!doc) throw new Error('Document not found');
 
       // 2. Delete the physical file from Supabase Storage
       if (doc?.storagePath) {
@@ -72,13 +74,8 @@ export const DocumentService = {
       }
 
       // 3. Delete the database record
-      // Note: Foreign key constraints should be set to CASCADE for workflows/steps
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (dbError) throw dbError;
+      await db.delete(documents)
+        .where(eq(documents.id, documentId));
 
       return { error: null };
     } catch (error: any) {

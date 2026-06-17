@@ -27,10 +27,14 @@ export const PromptService = {
       2. Additionally, include a top-level field "validation_suggestions" (array of strings).
          Provide actionable advice if data is missing, conflicting, or has low confidence (e.g., "Invoice date is blurry, please verify").
       
+      3. Generate a concise "summary" (string) and a list of "key_points" (array of strings) highlighting the 3-5 most critical information or obligations found in the document.
+
       Example output structure: 
       { 
         "field_name": { "value": "extracted_data", "confidence": 0.98 },
-        "validation_suggestions": ["Actionable suggestion 1", "Actionable suggestion 2"]
+        "validation_suggestions": ["Actionable suggestion 1", "Actionable suggestion 2"],
+        "summary": "Concise summary of the document contents.",
+        "key_points": ["Critical point 1", "Critical point 2"]
       }
 
       Return ONLY a valid JSON object. Do not include markdown formatting, backticks, or explanations.

@@ -4,16 +4,21 @@
     "@supabase/supabase-js": "^2.108.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/uuid": "^10.0.0",
+    "drizzle-orm": "^0.45.2",
     "openai": "^4.47.1",
-    "react": "^19.2.7"
+    "react": "^19.2.7",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.12.12",
-    "typescript": "^5.9.3",
-    "vitest": "^1.6.0",
+    "@cloudflare/workers-types": "^4.20260617.1",
     "@testing-library/react": "^16.0.0",
+    "@types/node": "^20.19.43",
+    "@vitejs/plugin-react": "^4.3.0",
+    "drizzle-kit": "^0.31.10",
     "jsdom": "^24.1.0",
-    "@vitejs/plugin-react": "^4.3.0"
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.0"
   },
   "scripts": {
     "build": "tsc",

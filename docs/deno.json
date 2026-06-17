@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "https://esm.sh/@supabase/supabase-js@2.108.2": "./docs/supabase.mock.ts"
+  },
+  "tasks": {
+    "run-local-webhook": "deno run --allow-net --allow-env --env-file docs/local.env --import-map deno.json docs/run_local.ts"
+  }
+}

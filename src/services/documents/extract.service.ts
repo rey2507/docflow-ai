@@ -1,4 +1,7 @@
 import { supabase } from '../../lib/supabase/client';
+import { eq } from 'drizzle-orm';
+import { DbClient } from '../../../docs/client';
+import { documents, workflows } from '../../../docs/schema';
 import { WorkflowService } from '../workflow/workflow.service';
 import { AIProviderService } from '../ai/provider.service';
 import { PromptService } from '../ai/prompt.service';
@@ -16,37 +19,49 @@ export const ExtractService = {
   /**
    * Orchestrates the extraction process for a specific document.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document to process.
    */
-  async processDocument(documentId: string, providerOverride?: AIProvider): Promise<{ data: Record<string, any> | null; error: Error | null }> {
+  async processDocument(db: DbClient, documentId: string, providerOverride?: AIProvider): Promise<{ data: Record<string, any> | null; error: Error | null }> {
     try {
       // 1. Fetch the document and its associated workflow
-      const [
-        { data: document, error: docError },
-        { data: workflow, error: wfError }
-      ] = await Promise.all([
-        supabase.from('documents').select('*').eq('id', documentId).single(),
-        WorkflowService.getWorkflowByDocumentId(documentId)
-      ]);
+      const document = await db.query.documents.findFirst({
+        where: eq(documents.id, documentId)
+      });
+      const { data: workflow, error: wfError } = await WorkflowService.getWorkflowByDocumentId(db, documentId);
 
-      if (docError || !document) throw docError || new Error('Document not found');
+      if (!document) throw new Error('Document not found');
       if (wfError || !workflow) throw wfError || new Error('Workflow not found');
 
       // 2. Update document status to 'processing'
-      const { error: statusError } = await supabase
-        .from('documents')
-        .update({ status: 'processing' as DocumentStatus })
-        .eq('id', documentId);
-      if (statusError) throw statusError;
+      await db.update(documents)
+        .set({ status: 'processing', updatedAt: new Date() })
+        .where(eq(documents.id, documentId));
 
       // 3. Update the 'Extraction' step to 'in_progress'
-      await WorkflowService.updateStepStatus(workflow.id, 'Extraction', 'in_progress');
+      await WorkflowService.updateStepStatus(db, workflow.id, 'Extraction', 'in_progress');
 
-      // 4. Generate the prompt for AI extraction based on document type
+      // 4. Generate the prompt for AI extraction
       const prompt = PromptService.getExtractionPrompt((document as Document).type);
+      let fileContent: string | undefined;
+
+      // --- NEW: OCR / Vision Support (Task 11.2) ---
+      // If image, fetch file from storage and convert to base64 for Vision models
+      if (document.type === 'image' || document.name.toLowerCase().endsWith('.png') || document.name.toLowerCase().endsWith('.jpg')) {
+        const { data: blob, error: downloadError } = await supabase.storage
+          .from('documents')
+          .download(document.storagePath);
+        
+        if (!downloadError && blob) {
+          const arrayBuffer = await blob.arrayBuffer();
+          fileContent = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        }
+      }
 
       // 5. Call the AI Provider Service to perform extraction, using providerOverride if provided
-      const { data: aiResult, error: aiError } = await AIProviderService.analyze(prompt, { provider: providerOverride });
+      const { data: aiResult, error: aiError } = await AIProviderService.analyze(prompt, { 
+        provider: providerOverride
+      });
       if (aiError || !aiResult) throw aiError || new Error('AI extraction failed');
       
       // 6. Log usage details (Task 9.1)
@@ -78,24 +93,24 @@ export const ExtractService = {
       }
 
       // 7. Update document metadata with extracted results
-      const { error: updateError } = await supabase
-        .from('documents')
-        .update({
+      await db.update(documents)
+        .set({
           metadata: {
             ...document.metadata,
             extractedData: normalizedData,
             validationSuggestions: aiResult.suggestions || [],
+            summary: aiResult.summary,
+            keyPoints: aiResult.keyPoints || [],
             extractedAt: new Date().toISOString(),
             aiProvider: aiResult.provider,
             aiModel: aiResult.model
-          }
+          },
+          updatedAt: new Date()
         })
-        .eq('id', documentId);
-
-      if (updateError) throw updateError;
+        .where(eq(documents.id, documentId));
 
       // 8. Mark the 'Extraction' step as completed
-      const { error: stepError } = await WorkflowService.updateStepStatus(workflow.id, 'Extraction', 'completed');
+      const { error: stepError } = await WorkflowService.updateStepStatus(db, workflow.id, 'Extraction', 'completed');
       if (stepError) throw stepError;
 
       return { data: aiResult.structuredData, error: null };

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+"moduleResolution": "Bundler",
+    "types": ["@cloudflare/workers-types", "node"]
+  },
+  "include": ["docs/**/*.ts", "docs/**/*.tsx", "docs/**/*.d.ts"],
+  "exclude": []
+}

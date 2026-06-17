@@ -1,11 +1,7 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withRetry } from '../../lib/utils/retry';
-
-/**
- * Temporary type declaration for Node.js process to resolve linting errors.
- */
-declare const process: { env: Record<string, string | undefined> };
+import { getEnv } from '../../../docs/env';
 
 /**
  * AIProviderService
@@ -15,12 +11,12 @@ declare const process: { env: Record<string, string | undefined> };
  */
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY || '',
+  apiKey: getEnv('OPENAI_API_KEY'),
   dangerouslyAllowBrowser: true,
 });
 
 const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || ''
+  getEnv('GEMINI_API_KEY')
 );
 
 export type AIProvider = 'openai' | 'gemini' | 'anthropic';
@@ -29,6 +25,8 @@ export interface AIAnalysisResponse {
   rawResponse: string;
   structuredData: Record<string, { value: any; confidence: number }> | null;
   suggestions: string[] | null;
+  summary: string | null;
+  keyPoints: string[] | null;
   usage: {
     promptTokens: number;
     completionTokens: number;
@@ -40,6 +38,37 @@ export interface AIAnalysisResponse {
 
 export const AIProviderService = {
   /**
+   * Generates a vector embedding for a given text.
+   * Used for Semantic Search and RAG.
+   */
+  async embed(
+    text: string,
+    options: { provider?: AIProvider; model?: string } = {}
+  ): Promise<{ embedding: number[] | null; error: Error | null }> {
+    try {
+      const provider = options.provider || 'openai';
+      const model = options.model || 'text-embedding-3-small';
+
+      if (provider === 'openai') {
+        const response = await withRetry(() => openai.embeddings.create({
+          model: model,
+          input: text.replace(/\n/g, ' '),
+        }));
+
+        return {
+          embedding: response.data[0].embedding,
+          error: null
+        };
+      }
+
+      throw new Error(`Embedding not yet implemented for ${provider}`);
+    } catch (error: any) {
+      console.error(`[AIProviderService] Embedding error:`, error.message);
+      return { embedding: null, error };
+    }
+  },
+
+  /**
    * General method to analyze text or documents using a chosen provider.
    * Currently acts as a wrapper for future SDK integrations.
    */
@@ -48,8 +77,8 @@ export const AIProviderService = {
     options: { provider?: AIProvider; model?: string } = {}
   ): Promise<{ data: AIAnalysisResponse | null; error: Error | null }> {
     try {
-      const provider = options.provider || (process.env.AI_DEFAULT_PROVIDER as AIProvider) || (process.env.NEXT_PUBLIC_AI_DEFAULT_PROVIDER as AIProvider) || 'openai';
-      const model = options.model || process.env.AI_DEFAULT_MODEL || process.env.NEXT_PUBLIC_AI_DEFAULT_MODEL || 'gpt-4o';
+      const provider = options.provider || (getEnv('AI_DEFAULT_PROVIDER') as AIProvider) || 'openai';
+      const model = options.model || getEnv('AI_DEFAULT_MODEL') || 'gpt-4o';
 
       console.log(`[AIProviderService] Calling ${provider} with model ${model}`);
       
@@ -68,10 +97,14 @@ export const AIProviderService = {
         const rawResponse = response.choices[0].message.content || '';
         let structuredData = null;
         let suggestions: string[] = [];
+        let summary: string | null = null;
+        let keyPoints: string[] = [];
         
         try {
           const parsed = JSON.parse(rawResponse);
-          const { validation_suggestions, ...data } = parsed;
+          const { validation_suggestions, summary: parsedSummary, key_points, ...data } = parsed;
+          summary = typeof parsedSummary === 'string' ? parsedSummary : null;
+          keyPoints = Array.isArray(key_points) ? key_points : [];
           structuredData = data;
           suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
         } catch (e) {
@@ -83,6 +116,8 @@ export const AIProviderService = {
             rawResponse,
             structuredData,
             suggestions,
+            summary,
+            keyPoints,
             usage: {
               promptTokens: response.usage?.prompt_tokens || 0,
               completionTokens: response.usage?.completion_tokens || 0,
@@ -107,9 +142,13 @@ export const AIProviderService = {
         
         let structuredData = null;
         let suggestions: string[] = [];
+        let summary: string | null = null;
+        let keyPoints: string[] = [];
         try {
           const parsed = JSON.parse(rawResponse);
-          const { validation_suggestions, ...data } = parsed;
+          const { validation_suggestions, summary: parsedSummary, key_points, ...data } = parsed;
+          summary = typeof parsedSummary === 'string' ? parsedSummary : null;
+          keyPoints = Array.isArray(key_points) ? key_points : [];
           structuredData = data;
           suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
         } catch (e) {
@@ -121,6 +160,8 @@ export const AIProviderService = {
             rawResponse,
             structuredData,
             suggestions,
+            summary,
+            keyPoints,
             usage: {
               promptTokens: 0, // Gemini SDK requires separate call for token counts
               completionTokens: 0,
@@ -139,6 +180,8 @@ export const AIProviderService = {
           rawResponse: `Mock response for ${provider}. Integration pending.`,
           structuredData: null,
           suggestions: null,
+          summary: null,
+          keyPoints: null,
           usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
           model,
           provider

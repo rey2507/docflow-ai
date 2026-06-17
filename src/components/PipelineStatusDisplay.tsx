@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase/client';
 import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
 import type { Document } from '../types/document';
-import { PipelineOrchestrator } from '../services/documents/orchestrator.service';
 
 interface PipelineStatusDisplayProps {
   documentId: string;
@@ -68,8 +67,23 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
     setRetryLoading(true);
     setError(null);
     try {
-      const result = await PipelineOrchestrator.runPipeline(documentId);
-      if (result.error) throw result.error;
+      // Call the server-side API endpoint that handles the pipeline execution
+      const response = await fetch(`/api/documents/${documentId}/retry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        let errorMessage = 'Server failed to initiate retry.';
+        if (typeof errData === 'object' && errData !== null && 'message' in errData && typeof errData.message === 'string') {
+          errorMessage = errData.message;
+        }
+        throw new Error(errorMessage);
+      }
+      
+      // We don't need to manually set the document state here; 
+      // the Supabase Realtime subscription will catch the 'processing' update.
     } catch (err: any) {
       setError(`Retry failed: ${err.message}`);
     } finally {
@@ -113,6 +127,16 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
                 Timestamp: {new Date(document.metadata.failedAt).toLocaleString()}
               </p>
             )}
+            
+            {document.metadata?.duplicateOf && (
+              <a 
+                href={`/documents/${document.metadata.duplicateOf}`}
+                className="mt-3 inline-block text-sm font-bold text-red-800 underline hover:text-red-900 transition-colors"
+              >
+                View original document →
+              </a>
+            )}
+
             <button
               onClick={handleRetry}
               disabled={retryLoading}

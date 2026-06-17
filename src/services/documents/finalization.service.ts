@@ -1,6 +1,9 @@
 import { supabase } from '../../lib/supabase/client';
+import { eq } from 'drizzle-orm';
+import { DbClient } from '../../../docs/client';
+import { documents } from '../../../docs/schema';
 import { WorkflowService } from '../workflow/workflow.service';
-import type { DocumentStatus } from '../../types/document';
+import type { DocumentStatus } from '../../types/document'; 
 
 /**
  * FinalizationService
@@ -12,27 +15,25 @@ export const FinalizationService = {
   /**
    * Completes the document processing lifecycle.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document to finalize.
    */
-  async finalizeDocument(documentId: string): Promise<{ error: Error | null }> {
+  async finalizeDocument(db: DbClient, documentId: string): Promise<{ error: Error | null }> {
     try {
       // 1. Retrieve the active workflow for this document
-      const { data: workflow, error: wfError } = await WorkflowService.getWorkflowByDocumentId(documentId);
+      const { data: workflow, error: wfError } = await WorkflowService.getWorkflowByDocumentId(db, documentId);
       if (wfError || !workflow) {
         throw wfError || new Error('Workflow not found for this document');
       }
 
       // 2. Update the document status to 'completed'
-      const { error: docError } = await supabase
-        .from('documents')
-        .update({ status: 'completed' as DocumentStatus })
-        .eq('id', documentId);
-
-      if (docError) throw docError;
+      await db.update(documents)
+        .set({ status: 'completed', updatedAt: new Date() })
+        .where(eq(documents.id, documentId));
 
       // 3. Update the 'Finalization' step status within the workflow
-      const { error: stepError } = await WorkflowService.updateStepStatus(
-        workflow.id, 
+      const { error: stepError } = await WorkflowService.updateStepStatus(db,
+        workflow.id,
         'Finalization', 
         'completed'
       );
@@ -40,7 +41,7 @@ export const FinalizationService = {
       if (stepError) throw stepError;
 
       // 4. Mark the entire workflow record as completed
-      const { error: completeError } = await WorkflowService.completeWorkflow(workflow.id);
+      const { error: completeError } = await WorkflowService.completeWorkflow(db, workflow.id);
       
       if (completeError) throw completeError;
 

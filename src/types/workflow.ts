@@ -13,10 +13,10 @@ export interface WorkflowStep {
 export interface Workflow {
   id: string;
   documentId: string;
-  status: 'active' | 'paused' | 'completed' | 'cancelled';
+  status: 'active' | 'paused' | 'completed' | 'cancelled' | 'failed';
   priority: WorkflowPriority;
   currentStepId: string;
   steps: WorkflowStep[];
-  startedAt: string;
-  completedAt?: string;
+  startedAt: Date | null;
+  completedAt?: Date | null;
 }

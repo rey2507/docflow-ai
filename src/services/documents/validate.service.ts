@@ -1,6 +1,8 @@
-import { supabase } from '../../lib/supabase/client';
+import { eq } from 'drizzle-orm';
+import { DbClient } from '../../../docs/client';
+import { documents } from '../../../docs/schema';
 import { WorkflowService } from '../workflow/workflow.service';
-import type { Document, DocumentStatus } from '../../types/document';
+import type { DocumentStatus } from '../../types/document';
 import { getValidator } from './validator.factory';
 
 /**
@@ -13,28 +15,27 @@ export const ValidateService = {
   /**
    * Validates extracted document data.
    * 
+   * @param db The Drizzle database client.
    * @param documentId The UUID of the document.
    * @param extractedData The data object returned from the AI layer.
    */
-  async validateData(documentId: string, extractedData: Record<string, any>): Promise<{ isValid: boolean; error: Error | null }> {
+  async validateData(db: DbClient, documentId: string, extractedData: Record<string, any>): Promise<{ isValid: boolean; error: Error | null }> {
     try {
       // 1. Fetch document and workflow
-      const [{ data: document, error: docError }, { data: workflow, error: wfError }] = await Promise.all([
-        supabase.from('documents').select('*').eq('id', documentId).single(),
-        WorkflowService.getWorkflowByDocumentId(documentId),
-      ]);
+      const document = await db.query.documents.findFirst({
+        where: eq(documents.id, documentId)
+      });
+      const { data: workflow, error: wfError } = await WorkflowService.getWorkflowByDocumentId(db, documentId);
 
-      if (docError || !document) throw docError || new Error('Document not found');
+      if (!document) throw new Error('Document not found');
       if (wfError || !workflow) throw wfError || new Error('Workflow not found');
 
-      await WorkflowService.updateStepStatus(workflow.id, 'Validation', 'in_progress');
+      await WorkflowService.updateStepStatus(db, workflow.id, 'Validation', 'in_progress');
 
       // 2. Update document status to 'validating' (if not already set by orchestrator)
-      const { error: statusError } = await supabase
-        .from('documents')
-        .update({ status: 'validating' as DocumentStatus })
-        .eq('id', documentId);
-      if (statusError) throw statusError;
+      await db.update(documents)
+        .set({ status: 'validating', updatedAt: new Date() })
+        .where(eq(documents.id, documentId));
 
       console.log(`[ValidateService] Validation started for: ${documentId}`, extractedData);
 
@@ -52,12 +53,12 @@ export const ValidateService = {
       }
 
       if (!isValid) {
-        await WorkflowService.updateStepStatus(workflow.id, 'Validation', 'failed');
+        await WorkflowService.updateStepStatus(db, workflow.id, 'Validation', 'failed');
         return { isValid: false, error: validationError };
       }
 
       // Temporary: auto-validate as true for structure testing
-      await WorkflowService.updateStepStatus(workflow.id, 'Validation', 'completed');
+      await WorkflowService.updateStepStatus(db, workflow.id, 'Validation', 'completed');
       
       return { isValid: true, error: null };
     } catch (error: any) {
