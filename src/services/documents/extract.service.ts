@@ -66,7 +66,7 @@ export const ExtractService = {
       
       // 6. Log usage details (Task 9.1)
       // We log this as soon as we have a successful AI response
-      await UsageService.logAIUsage({
+      await UsageService.logAIUsage(db, {
         userId: (document as Document).userId,
         documentId: document.id,
         provider: aiResult.provider,

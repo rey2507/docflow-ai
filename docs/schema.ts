@@ -58,3 +58,15 @@ export const subscriptions = sqliteTable('subscriptions', {
   currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });
+
+export const usageLogs = sqliteTable('usage_logs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  documentId: text('document_id').references(() => documents.id),
+  provider: text('provider').notNull(),
+  model: text('model').notNull(),
+  promptTokens: integer('prompt_tokens').notNull(),
+  completionTokens: integer('completion_tokens').notNull(),
+  totalTokens: integer('total_tokens').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});

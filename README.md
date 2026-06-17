@@ -13,7 +13,7 @@ DocFlow AI is an intelligent document processing SaaS platform that automates da
 - **Automated Maintenance:** Stale process cleanup via Edge Functions to prevent "zombie" document states.
 
 ## 🛠️ Tech Stack
-
+- **Frontend:** React 19, TypeScript, Tailwind CSS.
 - **Frontend:** React 19, TypeScript, Tailwind CSS.
 - **Backend/BaaS:** Supabase (Auth, Database, Storage, Realtime).
 - **Database Layer:** Drizzle ORM (providing universal D1/Postgres compatibility).
@@ -21,7 +21,7 @@ DocFlow AI is an intelligent document processing SaaS platform that automates da
 
 ## 📋 Project Status
 
-Currently in **Phase 11: Growth Features**.
+All core development phases are **completed**.
 Completed phases:
 - [x] Core Foundation & Auth
 - [x] Document Storage & Management
@@ -32,6 +32,7 @@ Completed phases:
 - [x] AI Quality & Confidence Scoring
 - [x] SaaS Readiness & Usage Tracking
 - [x] Business Features (Summarization, Duplicate Detection)
+- [x] Growth Features (Email Import, OCR, Semantic Search, AI Chat)
 
 Recent engineering progress:
 - [x] Vitest test runner + TS config stabilized (repo-local `tsconfig.json`, correct `setup.ts` usage).
@@ -42,13 +43,35 @@ Recent engineering progress:
 - [x] Integrated AI-generated summaries and key highlights into the document pipeline.
 - [x] Developed specialized validation rules for Contracts and General Forms.
 
-
-
 ## 🚦 Getting Started
 
 1. Clone the repository.
 2. Install dependencies: `npm install`
-3. Configure environment variables in `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Run the development server: `npm run dev`
+3. Configure environment variables in `.env.local` (for local development) or your Cloudflare Pages/Worker environment:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `AI_DEFAULT_PROVIDER` (e.g., `openai`, `gemini`)
+   - `AI_DEFAULT_MODEL` (e.g., `gpt-4o`, `gemini-1.5-pro`)
+   - `CLOUDFLARE_ACCOUNT_ID` (for Drizzle migrations)
+   - `CLOUDFLARE_DATABASE_ID` (for Drizzle migrations)
+   - `CLOUDFLARE_D1_TOKEN` (for Drizzle migrations)
+4. Run the development server (if applicable for your frontend framework): `npm run dev`
+5. For Cloudflare Pages deployment, ensure your `wrangler.toml` is configured with D1 bindings and environment variables.
+
+## 🚀 Deployment
+
+This project is designed for deployment on **Cloudflare Pages** for the frontend and API functions, with optional **Cloudflare Workers** for specialized triggers like email ingestion.
+
+1.  **Database Setup:**
+    *   Ensure your Cloudflare D1 database is created.
+    *   Run Drizzle migrations: `npx drizzle-kit generate` then `npx wrangler d1 migrations apply <YOUR_D1_BINDING_NAME> --remote`
+2.  **Cloudflare Pages:**
+    *   Connect your GitHub repository to Cloudflare Pages.
+    *   Configure environment variables (SUPABASE_URL, SUPABASE_ANON_KEY, AI_DEFAULT_PROVIDER, AI_DEFAULT_MODEL).
+    *   Bind your D1 database to the `DB` variable in your Pages project settings.
+3.  **Cloudflare Email Worker (Optional):**
+    *   If using email import, deploy a standalone Cloudflare Worker (e.g., from `src/workers/email-inbound.ts`) and configure an email route.
+
+## ✅ All Phases Completed!
+
+The DocFlow AI project has successfully completed all planned development phases, including core foundation, AI integration, workflow engine, SaaS readiness, and all growth features. The architecture is now fully Drizzle/D1 compatible and optimized for Cloudflare deployment.
