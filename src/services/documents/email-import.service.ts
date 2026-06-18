@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { DbClient } from 'docs/client';
-import { DocumentUploadService } from './upload.service';
+import { DocumentUploadService } from '@/services/documents/upload.service';
+import { LogService } from '@/services/logging/log.service';
 
 /**
  * EmailImportService
@@ -31,17 +32,18 @@ export const EmailImportService = {
         // Convert ArrayBuffer to File-like object for UploadService
         const file = new File([attachment.content], attachment.name, { type: attachment.mimeType });
         
-        console.log(`[EmailImportService] Importing attachment: ${attachment.name} for user: ${userId}`);
+        LogService.info(`Importing email attachment`, { attachmentName: attachment.name, userId });
         
         const { data, error } = await DocumentUploadService.uploadDocument(db, supabase, file, userId);
         
         if (error) {
-          errors.push(`Failed to upload ${attachment.name}: ${error.message}`);
+          errors.push(`Failed to upload ${attachment.name}: ${error.message}`); // Keep for return value
         } else {
           processedCount++;
         }
       } catch (err: any) {
-        errors.push(`Unexpected error processing ${attachment.name}: ${err.message}`);
+        LogService.error(`Unexpected error processing email attachment`, err, { attachmentName: attachment.name, userId });
+        errors.push(`Unexpected error processing ${attachment.name}: ${err.message}`); // Keep for return value
       }
     }
 
@@ -56,6 +58,10 @@ export const EmailImportService = {
 /**
  * Example Cloudflare Email Worker implementation:
  * 
+ * import PostalMime from 'postal-mime';
+ * import { createClient } from '@supabase/supabase-js';
+ * import { createDbClient } from 'docs/client';
+ * 
  * export default {
  *   async email(message, env, ctx) {
  *     const userId = message.to.split('@')[0]; // Simple routing logic
@@ -69,8 +75,9 @@ export const EmailImportService = {
  *         mimeType: a.mimeType
  *       }));
  *       
- *       const db = createDbClient(env.D1_DB);
- *       const supabase = createSupabaseClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+ *       // Bindings and secrets are accessed via the 'env' object in Cloudflare Workers
+ *       const db = createDbClient(env.DB);
+ *       const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
  *       await EmailImportService.processEmailInbound(db, supabase, userId, attachments);
  *     }
  *   }

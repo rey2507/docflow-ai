@@ -44,9 +44,10 @@ describe('PipelineOrchestrator', () => {
     vi.mocked(ValidateService.validateData).mockResolvedValue({ success: true, errors: [] } as any);
     vi.mocked(FinalizationService.finalizeDocument).mockResolvedValue({ error: null });
 
-    const result = await PipelineOrchestrator.runPipeline(mockDocId);
+    const result = await PipelineOrchestrator.runPipeline({} as any, mockDocId, mockUserId);
 
     expect(result.success).toBe(true);
+
     expect(ExtractService.processDocument).toHaveBeenCalled();
     expect(ValidateService.validateData).toHaveBeenCalled();
     expect(FinalizationService.finalizeDocument).toHaveBeenCalled();
@@ -64,7 +65,8 @@ describe('PipelineOrchestrator', () => {
     vi.mocked(ValidateService.validateData).mockResolvedValue({ success: true, errors: [] } as any);
     vi.mocked(FinalizationService.finalizeDocument).mockResolvedValue({ error: null });
 
-    const result = await PipelineOrchestrator.runPipeline(mockDocId);
+    const result = await PipelineOrchestrator.runPipeline({} as any, mockDocId, mockUserId);
+
 
     expect(result.success).toBe(true);
     // Should be called twice due to fallback

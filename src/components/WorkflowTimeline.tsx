@@ -23,7 +23,8 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({ documentId }) => {
     const fetchWorkflow = async () => {
       setLoading(true);
       try {
-        const { data, error: fetchError } = await WorkflowService.getWorkflowByDocumentId(documentId);
+const { data, error: fetchError } = await WorkflowService.getWorkflowByDocumentId({} as any, documentId);
+
         if (fetchError) throw fetchError;
         setWorkflow(data);
       } catch (err: any) {

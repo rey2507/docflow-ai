@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { withRetry } from '../../lib/utils/retry';
-import { getEnv } from '../../../docs/env';
+import { withRetry } from '@/lib/utils/retry';
+import { getEnv } from 'docs/env';
+import { LogService } from '@/services/logging/log.service';
 
 /**
  * AIProviderService
@@ -23,7 +24,7 @@ export type AIProvider = 'openai' | 'gemini' | 'anthropic';
 
 export interface AIAnalysisResponse {
   rawResponse: string;
-  structuredData: Record<string, { value: any; confidence: number }> | null;
+  structuredData: Record<string, any> | null;
   suggestions: string[] | null;
   summary: string | null;
   keyPoints: string[] | null;
@@ -74,23 +75,28 @@ export const AIProviderService = {
    */
   async analyze(
     prompt: string,
-    options: { provider?: AIProvider; model?: string } = {}
+    options: { provider?: AIProvider; model?: string; image?: string } = {}
   ): Promise<{ data: AIAnalysisResponse | null; error: Error | null }> {
     try {
       const provider = options.provider || (getEnv('AI_DEFAULT_PROVIDER') as AIProvider) || 'openai';
       const model = options.model || getEnv('AI_DEFAULT_MODEL') || 'gpt-4o';
 
-      console.log(`[AIProviderService] Calling ${provider} with model ${model}`);
-      
-      /**
-       * Note: For field-level confidence (Task 8.2), we rely on the PromptService 
-       * to instruct the model to return: { "field_name": { "value": "...", "confidence": 0.95 } }
-       */
+      LogService.info(`Calling AI provider`, { provider, model, hasImage: !!options.image });
 
       if (provider === 'openai') {
         const response = await withRetry(() => openai.chat.completions.create({
           model: model,
-          messages: [{ role: 'user', content: prompt }],
+          messages: [
+            { 
+              role: 'user', 
+              content: options.image 
+                ? [
+                    { type: 'text', text: prompt },
+                    { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${options.image}` } }
+                  ]
+                : prompt 
+            }
+          ],
           response_format: { type: 'json_object' },
         }));
 
@@ -108,7 +114,7 @@ export const AIProviderService = {
           structuredData = data;
           suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
         } catch (e) {
-          console.warn('[AIProviderService] Failed to parse JSON response:', e);
+          LogService.warn('Failed to parse AI JSON response', { provider, docId: 'unknown' });
         }
 
         return {
@@ -136,7 +142,16 @@ export const AIProviderService = {
           generationConfig: { responseMimeType: "application/json" }
         });
 
-        const result = await withRetry(() => genModel.generateContent(prompt));
+        const result = await withRetry(() => 
+          genModel.generateContent(
+            options.image 
+              ? [
+                  prompt, 
+                  { inlineData: { data: options.image, mimeType: "image/jpeg" } }
+                ] 
+              : prompt
+          )
+        );
         const response = await result.response;
         const rawResponse = response.text();
         
@@ -152,7 +167,7 @@ export const AIProviderService = {
           structuredData = data;
           suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
         } catch (e) {
-          console.warn('[AIProviderService] Failed to parse Gemini JSON:', e);
+          LogService.warn('Failed to parse Gemini JSON response', { provider });
         }
 
         return {
@@ -162,10 +177,10 @@ export const AIProviderService = {
             suggestions,
             summary,
             keyPoints,
-            usage: {
-              promptTokens: 0, // Gemini SDK requires separate call for token counts
-              completionTokens: 0,
-              totalTokens: 0,
+            usage: { // Extract usage from Gemini's response metadata
+              promptTokens: response.usageMetadata?.promptTokenCount || 0,
+              completionTokens: response.usageMetadata?.candidatesTokenCount || 0, // Candidates are completions
+              totalTokens: response.usageMetadata?.totalTokenCount || 0,
             },
             model,
             provider: 'gemini',
@@ -190,7 +205,7 @@ export const AIProviderService = {
       };
       
     } catch (error: any) {
-      console.error(`[AIProviderService] Error during analysis:`, error.message);
+      LogService.error('AI analysis request failed', error, { provider: options.provider });
       return { data: null, error };
     }
   }

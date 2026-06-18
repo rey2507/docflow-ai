@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { documents } from '../../../docs/schema';
+import { DbClient } from 'docs/client';
+import { documents } from 'docs/schema';
 import { WorkflowService } from '../workflow/workflow.service';
 import type { DocumentStatus } from '../../types/document';
+import { LogService } from '@/services/logging/log.service';
 import { getValidator } from './validator.factory';
 
 /**
@@ -37,7 +38,7 @@ export const ValidateService = {
         .set({ status: 'validating', updatedAt: new Date() })
         .where(eq(documents.id, documentId));
 
-      console.log(`[ValidateService] Validation started for: ${documentId}`, extractedData);
+      LogService.info(`Validation started`, { documentId });
 
       let isValid = true;
       let validationError: Error | null = null;
@@ -49,7 +50,7 @@ export const ValidateService = {
         isValid = result.isValid;
         validationError = result.error;
       } else {
-        console.log(`[ValidateService] No specific validation rules for document type: ${document.type}`);
+        LogService.warn(`No specific validation rules for document type`, { type: document.type, documentId });
       }
 
       if (!isValid) {
@@ -62,7 +63,7 @@ export const ValidateService = {
       
       return { isValid: true, error: null };
     } catch (error: any) {
-      console.error('[ValidateService] Error:', error.message);
+      LogService.error('Validation phase failed', error, { documentId });
       return { isValid: false, error };
     }
   },

@@ -11,12 +11,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "types": ["vitest/globals", "node", "@cloudflare/workers-types"],
-    "ignoreDeprecations": "6.0",
+
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "docs/*": ["docs/*"]
+      "@/*": ["./src/*"],
+      "docs/*": ["./docs/*"]
     }
   },
   "include": [

@@ -1,8 +1,9 @@
-import { supabase } from '../../lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { eq } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { documents } from '../../../docs/schema';
+import { DbClient } from 'docs/client';
+import { documents } from 'docs/schema';
 import { WorkflowService } from '../workflow/workflow.service';
+import { LogService } from '@/services/logging/log.service';
 import type { DocumentStatus } from '../../types/document'; 
 
 /**
@@ -45,10 +46,10 @@ export const FinalizationService = {
       
       if (completeError) throw completeError;
 
-      console.log(`[FinalizationService] Document ${documentId} finalized successfully.`);
+      LogService.info(`Document finalized successfully`, { documentId });
       return { error: null };
     } catch (error: any) {
-      console.error('[FinalizationService] finalizeDocument Error:', error.message);
+      LogService.error('finalizeDocument failed', error, { documentId });
       return { error };
     }
   }

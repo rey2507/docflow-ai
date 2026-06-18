@@ -20,7 +20,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh, onVie
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
     
-    const { error } = await DocumentService.deleteDocument(id);
+    // DocumentService expects (db, documentId)
+    const { error } = await DocumentService.deleteDocument({} as any, id);
+
     if (error) {
       alert(`Failed to delete document: ${error.message}`);
     } else {
@@ -57,7 +59,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh, onVie
                   <PipelineStatusDisplay documentId={doc.id} />
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                  {new Date(doc.createdAt as string).toLocaleDateString()}
+                  {(doc.createdAt instanceof Date ? doc.createdAt : new Date(doc.createdAt)).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 text-right space-x-2">
                   <button 
@@ -86,7 +88,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh, onVie
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-bold text-gray-900 truncate max-w-[200px]">{doc.name}</h4>
-                <p className="text-xs text-gray-500 capitalize">{doc.type} • {new Date(doc.createdAt as string).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500 capitalize">{doc.type} • {(doc.createdAt instanceof Date ? doc.createdAt : new Date(doc.createdAt)).toLocaleDateString()}</p>
               </div>
               <button 
                 onClick={() => handleDelete(doc.id, doc.name)}

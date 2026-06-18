@@ -1,7 +1,8 @@
-import { supabase } from '../../lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { eq } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { documents } from '../../../docs/schema';
+import { DbClient } from 'docs/client';
+import { documents } from 'docs/schema';
+import { LogService } from '@/services/logging/log.service';
 import type { Document } from '../../types/document';
 
 /**
@@ -70,7 +71,7 @@ export const DocumentService = {
         const { error: storageError } = await supabase.storage
           .from('documents')
           .remove([doc.storagePath]);
-        if (storageError) console.warn('[DocumentService] Storage deletion warning:', storageError.message);
+        if (storageError) LogService.warn('Storage deletion warning', { message: storageError.message, documentId });
       }
 
       // 3. Delete the database record
@@ -79,7 +80,7 @@ export const DocumentService = {
 
       return { error: null };
     } catch (error: any) {
-      console.error('[DocumentService] deleteDocument Error:', error.message);
+      LogService.error('deleteDocument failed', error, { documentId });
       return { error };
     }
   }

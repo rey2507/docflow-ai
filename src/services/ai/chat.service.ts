@@ -1,7 +1,9 @@
-import { DbClient } from '../../../docs/client';
-import { documents } from '../../../docs/schema';
-import { eq, sql } from 'drizzle-orm';
+import { DbClient } from 'docs/client';
+import { documents, documentEmbeddings, documentExtractions, workspaceMembers } from 'docs/schema';
+import { eq, sql, and } from 'drizzle-orm';
 import { AIProviderService } from './provider.service';
+import { RateLimitService } from '@/services/security/rate-limit.service';
+import { LogService } from '@/services/logging/log.service';
 
 /**
  * ChatService
@@ -15,27 +17,37 @@ export const ChatService = {
    */
   async askLibrary(db: DbClient, userId: string, query: string): Promise<{ answer: string; sources: string[]; error: Error | null }> {
     try {
+      // --- Task 12.5: Rate Limiting ---
+      const { allowed: rateAllowed, reason: rateReason } = await RateLimitService.checkRateLimit(db, userId, 'AI_CHAT');
+      if (!rateAllowed) {
+        return { answer: rateReason || 'Rate limit exceeded', sources: [], error: new Error(rateReason) };
+      }
+
       // 1. Generate embedding for the query
       const { embedding: queryEmbedding, error: embedError } = await AIProviderService.embed(query);
       if (embedError || !queryEmbedding) throw embedError || new Error('Failed to embed query');
 
       // 2. Perform similarity search
-      // Since D1 is used, we perform cosine similarity comparison. 
-      // Note: For large libraries, this should be moved to a dedicated Vector DB or optimized D1 query.
-      const allDocs = await db.query.documents.findMany({
-        where: eq(documents.userId, userId),
-        columns: { name: true, metadata: true, id: true }
-      });
+      // Using pgvector <=> (Cosine distance) operator in PostgreSQL.
+      // We join documents with embeddings, extractions, and workspace members to filter by userId.
+      const relevantDocs = (await (db as any)
+        .select({
+          name: documents.name,
+          summary: documentExtractions.summary,
+        })
+        .from(documents)
+        .innerJoin(documentEmbeddings, eq(documents.id, documentEmbeddings.documentId))
+        .innerJoin(documentExtractions, eq(documents.id, documentExtractions.documentId))
 
-      const relevantDocs = allDocs
-        .filter(doc => doc.metadata?.embedding && doc.metadata.summary)
-        .map(doc => ({
-          name: doc.name,
-          summary: doc.metadata!.summary!,
-          similarity: this.cosineSimilarity(queryEmbedding, doc.metadata!.embedding!)
-        }))
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 3); // Get top 3 most relevant documents
+        .innerJoin(workspaceMembers, eq(documents.workspaceId, workspaceMembers.workspaceId))
+        .where(and(
+          eq(workspaceMembers.userId, userId),
+          sql`${documentEmbeddings.embedding} IS NOT NULL`
+        ))
+        // Avoid TS overload issues with orderBy for pgvector expressions by using raw SQL.
+        .orderBy(sql`(${documentEmbeddings.embedding} <=> ${JSON.stringify(queryEmbedding)})`)
+        .limit(3)) as { name: string; summary: string | null }[];
+
 
       if (relevantDocs.length === 0) {
         return { 
@@ -46,7 +58,7 @@ export const ChatService = {
       }
 
       // 3. Construct context and prompt
-      const context = relevantDocs.map(d => `Document: ${d.name}\nSummary: ${d.summary}`).join('\n\n');
+      const context = relevantDocs.map(d => `Document: ${d.name}\nSummary: ${d.summary || 'No summary available.'}`).join('\n\n');
       const prompt = `
         You are DocFlow AI assistant. Use the following document context to answer the user's question.
         If the context doesn't contain the answer, say you don't know based on the documents.
@@ -67,15 +79,8 @@ export const ChatService = {
         error: null
       };
     } catch (error: any) {
-      console.error('[ChatService] Error:', error.message);
+      LogService.error('Library chat failed', error, { userId });
       return { answer: '', sources: [], error };
     }
   },
-
-  cosineSimilarity(a: number[], b: number[]): number {
-    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-    const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-    const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (magA * magB);
-  }
 };

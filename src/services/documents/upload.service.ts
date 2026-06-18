@@ -3,10 +3,13 @@ import { eq, and, sql } from 'drizzle-orm';
 import { DbClient } from 'docs/client';
 import { documents } from 'docs/schema';
 import { v4 as uuidv4 } from 'uuid';
-import type { Document, DocumentType } from '../../types/document';
-import { WorkflowService } from '../workflow/workflow.service';
-import { PipelineOrchestrator } from './orchestrator.service';
-import { SubscriptionService } from '../../subscription/subscription.service'; // Import the SubscriptionService
+import type { Document, DocumentType } from '@/types/document';
+import { WorkflowService } from '@/services/workflow/workflow.service';
+import { PipelineOrchestrator } from '@/services/documents/orchestrator.service';
+import { SubscriptionService } from '@/subscription/subscription.service'; // Import the SubscriptionService
+import { RateLimitService } from '@/services/security/rate-limit.service';
+import { LogService } from '@/services/logging/log.service';
+
 
 /**
  * DocumentUploadService
@@ -25,6 +28,12 @@ export const DocumentUploadService = {
   async uploadDocument(db: DbClient, supabase: SupabaseClient, file: File, userId: string): Promise<{ data: Document | null; error: Error | null }> {
     let filePath: string | null = null;
     try {
+      // --- Task 12.5: Rate Limiting ---
+      const { allowed: rateAllowed, reason: rateReason } = await RateLimitService.checkRateLimit(db, userId, 'UPLOAD');
+      if (!rateAllowed) {
+        return { data: null, error: new Error(rateReason) };
+      }
+
       // --- NEW: Check document upload limit ---
       const { allowed, reason } = await SubscriptionService.canUploadDocument(db, userId);
       if (!allowed) {
@@ -81,10 +90,10 @@ export const DocumentUploadService = {
       // 5. Initialize Workflow
       const { error: wfError } = await WorkflowService.createWorkflow(db, document.id);
       if (wfError) {
-        console.error('[DocumentUploadService] Workflow creation error:', wfError.message);
+        LogService.error('Workflow creation failed', wfError, { documentId: document.id });
       } else {
         // 6. Trigger Pipeline (Background process)
-        PipelineOrchestrator.runPipeline(db, document.id);
+        PipelineOrchestrator.runPipeline(db, document.id, userId);
       }
 
       return { data: document as unknown as Document, error: null };
@@ -92,7 +101,7 @@ export const DocumentUploadService = {
       if (filePath) {
         await supabase.storage.from('documents').remove([filePath]);
       }
-      console.error('[DocumentUploadService] Error:', error.message);
+      LogService.error('Document upload failed', error, { userId });
       return { data: null, error };
     }
   },

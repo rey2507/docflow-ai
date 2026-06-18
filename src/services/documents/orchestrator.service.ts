@@ -2,29 +2,31 @@ import { eq, and, ne } from 'drizzle-orm';
 import { DbClient } from 'docs/client';
 import { documents, workflows } from 'docs/schema';
 import { ExtractService } from './extract.service';
-import { AIProviderService } from '@/services/ai/provider.service';
+import { AIProviderService, type AIProvider } from '@/services/ai/provider.service';
 import { ValidateService } from './validate.service';
 import { FinalizationService } from './finalization.service';
 import { SubscriptionService } from '@/subscription/subscription.service';
 import { WorkflowService } from '@/services/workflow/workflow.service';
+import { LogService } from '@/services/logging/log.service';
 import type { WorkflowStep } from '@/types/workflow';
 
 /**
  * PipelineOrchestrator
  */
 export const PipelineOrchestrator = {
-  async runPipeline(db: DbClient, documentId: string): Promise<{ success: boolean; error: Error | null }> {
+  async runPipeline(db: DbClient, documentId: string, userId: string): Promise<{ success: boolean; error: Error | null }> {
+    const startTime = Date.now();
     try {
-      // 1. Fetch document - Drizzle automatically knows the type
+      LogService.logPipelineStart(documentId, userId);
       const doc = await db.query.documents.findFirst({
-        where: eq(documents.id, documentId)
+        where: and(eq(documents.id, documentId), eq(documents.userId, userId))
       });
 
       if (!doc) throw new Error('Document not found.');
 
       // If document is already completed, skip.
       if (doc.status === 'completed') {
-        console.log(`[Orchestrator] Document ${documentId} already ${doc.status}. Skipping pipeline.`);
+        LogService.info(`Document already completed. Skipping pipeline.`, { documentId });
         return { success: true, error: null };
       }
 
@@ -49,7 +51,7 @@ export const PipelineOrchestrator = {
             },
             updatedAt: new Date()
           })
-          .where(eq(documents.id, documentId));
+          .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         // Update 'doc' object to reflect new status for subsequent checks
         doc.status = 'processing';
         doc.metadata = { ...doc.metadata, pipelineError: undefined, failedAt: undefined };
@@ -58,7 +60,7 @@ export const PipelineOrchestrator = {
       else if (doc.status !== 'processing') {
          await db.update(documents)
           .set({ status: 'processing', updatedAt: new Date() })
-          .where(eq(documents.id, documentId));
+          .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
          doc.status = 'processing'; // Update local doc object
       }
 
@@ -69,17 +71,57 @@ export const PipelineOrchestrator = {
       }
 
       // 2. Extraction Phase
-      const { error: extractError } = await ExtractService.processDocument(db, documentId);
-      if (extractError) throw extractError;
+      // Implement Task 12.2: Provider Failover Chain
+      const providerChain: AIProvider[] = ['openai', 'gemini', 'anthropic'];
+      let lastError: Error | null = null;
+      let extractionSuccessful = false;
+      const failoverAttempts: {
+        provider: string;
+        error: string;
+        timestamp: string;
+      }[] = [];
+
+      for (const provider of providerChain) {
+        LogService.info(`Attempting extraction`, { documentId, provider });
+        const { error: extractError } = await ExtractService.processDocument(db, documentId, userId, provider);
+        
+        if (!extractError) {
+          extractionSuccessful = true;
+          break;
+        }
+        
+        LogService.logProviderFailure(documentId, provider, extractError);
+        
+        // Capture failure stats for Task 12.2
+        failoverAttempts.push({
+          provider,
+          error: extractError.message,
+          timestamp: new Date().toISOString()
+        });
+
+        // Persist failure history immediately in case the entire pipeline fails
+        await db.update(documents)
+          .set({ 
+            metadata: { ...doc.metadata, failoverHistory: failoverAttempts },
+            updatedAt: new Date()
+          })
+          .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
+
+        lastError = extractError;
+      }
+
+      if (!extractionSuccessful) {
+        throw lastError || new Error('Extraction failed across all providers.');
+      }
 
       // 3. Generate Embedding for Semantic Search (Task 11.3)
       // Fetch the updated document to get the summary generated during extraction
       const updatedDoc = await db.query.documents.findFirst({
-        where: eq(documents.id, documentId)
+        where: and(eq(documents.id, documentId), eq(documents.userId, userId))
       });
 
       if (updatedDoc?.metadata?.summary) {
-        console.log(`[Orchestrator] Generating semantic embedding for document: ${documentId}`);
+        LogService.info(`Generating semantic embedding`, { documentId });
         const { embedding, error: embedError } = await AIProviderService.embed(updatedDoc.metadata.summary);
         
         if (!embedError && embedding) {
@@ -91,9 +133,9 @@ export const PipelineOrchestrator = {
               },
               updatedAt: new Date() 
             })
-            .where(eq(documents.id, documentId));
+            .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         } else if (embedError) {
-          console.warn(`[Orchestrator] Embedding generation failed: ${embedError.message}`);
+          LogService.error(`Embedding generation failed`, embedError, { documentId });
         }
       }
 
@@ -103,9 +145,10 @@ export const PipelineOrchestrator = {
       // 5. Finalization Phase
       await FinalizationService.finalizeDocument(db, documentId);
 
+      LogService.logPipelineSuccess(documentId, Date.now() - startTime);
       return { success: true, error: null };
     } catch (error: any) {
-      console.error(`[PipelineOrchestrator] Pipeline failed for ${documentId}:`, error.message);
+      LogService.error(`Pipeline failed`, error, { documentId });
 
       // 1. Mark the active workflow step as failed for better debugging visibility
       const workflow = await db.query.workflows.findFirst({
@@ -135,7 +178,7 @@ export const PipelineOrchestrator = {
           },
           updatedAt: new Date()
         })
-        .where(eq(documents.id, documentId));
+        .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
 
       await db.update(workflows)
         .set({ status: 'failed' })
