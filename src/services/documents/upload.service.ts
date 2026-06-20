@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { DbClient } from 'docs/client';
-import { documents } from 'docs/schema';
+import { documents, subscriptions } from 'docs/schema';
 import { v4 as uuidv4 } from 'uuid';
 import type { Document, DocumentType } from '@/types/document';
 import { WorkflowService } from '@/services/workflow/workflow.service';
@@ -72,8 +72,22 @@ export const DocumentUploadService = {
       if (storageError) throw storageError;
 
       // 4. Create document record in database
+      // workspaceId is required by the Drizzle `documents` schema.
+      // workspaceId is required by the Drizzle `documents` schema.
+      // Current codebase doesn't expose a workspaceId lookup helper on SubscriptionService,
+      // so derive it from the most recent active subscription row.
+      const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.userId, userId),
+        orderBy: [desc(subscriptions.updatedAt)],
+      });
+      const workspaceId = subscription?.workspaceId;
+      if (!workspaceId) {
+        throw new Error('Unable to determine workspace for this user.');
+      }
+
       const [document] = await db.insert(documents).values({
         id: uuidv4(),
+        workspaceId,
         userId: userId,
         name: file.name,
         type: type,
@@ -86,6 +100,7 @@ export const DocumentUploadService = {
         createdAt: new Date(),
         updatedAt: new Date()
       }).returning();
+
 
       // 5. Initialize Workflow
       const { error: wfError } = await WorkflowService.createWorkflow(db, document.id);

@@ -28,8 +28,19 @@ export const UsageService = {
     totalTokens: number;
   }): Promise<{ success: boolean; error: Error | null }> {
     try {
+      // workspaceId is required by Drizzle `usage_logs` schema; derive it from the document.
+      const doc = await db.query.documents.findFirst({
+        columns: { workspaceId: true },
+        where: eq((usageLogs as any).documentId, params.documentId),
+      });
+      const workspaceId = (doc as any)?.workspaceId;
+      if (!workspaceId) {
+        throw new Error('Unable to determine workspaceId for usage log.');
+      }
+
       await db.insert(usageLogs).values({
         id: uuidv4(),
+        workspaceId,
         userId: params.userId,
         documentId: params.documentId,
         provider: params.provider,

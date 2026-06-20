@@ -1,4 +1,4 @@
-# TODO / Progress
+PLACEHOLDER
 
 ## Deno Edge Function type-checking fixes
 - [x] Created `docs/index.edge.ts` as the Deno Edge entrypoint (original logic).
@@ -156,10 +156,89 @@ Convert DocFlow AI from Beta to Launch Ready.
 ---
 
 ## NEW — Typecheck blocker checklist (from latest `tsc`)
-- [ ] `docs/schema.ts`: add/align `documents.userId`
-- [ ] `docs/schema.ts`: add/align `documents.metadata` (JSONB) field
-- [ ] `docs/schema.ts`: align `workflows` fields to service expectations (`steps`, `currentStepId` vs `stepsConfig`, `currentStep`)
-- [ ] `docs/schema.ts`: add/align `subscriptions.userId`
-- [ ] `docs/schema.ts`: add/align `usage_logs.userId`
-- [ ] After schema alignment, rerun: `npx tsc -p tsconfig.json --noEmit --pretty false`
+- [x] `docs/schema.ts`: add/align `documents.userId`
+- [x] `docs/schema.ts`: add/align `documents.metadata` (JSONB) field
+- [x] `docs/schema.ts`: align `workflows` fields to service expectations (`steps`, `currentStepId` vs `stepsConfig`, `currentStep`)
+- [x] `docs/schema.ts`: add/align `subscriptions.userId`
+- [x] `docs/schema.ts`: add/align `usage_logs.userId`
+- [x] After schema alignment, rerun: `npx tsc -p tsconfig.json --noEmit --pretty false`
+
+---
+
+## Phase: Supabase Infrastructure Finalization
+- [ ] Validate all RLS policies (tables: documents, workflows, workflow_steps, usage_logs, subscriptions, storage objects).
+- [ ] Test workspace isolation: ensure cross-workspace access is denied for reads/writes.
+- [ ] Test document ownership rules: ensure users can only act on documents they own / belong to.
+- [ ] Test realtime subscriptions for workspace-scoped updates (no cross-tenant leakage).
+- [ ] Create/verify Supabase storage buckets for document uploads (bucket exists + correct naming).
+- [ ] Configure and verify storage policies (read/write scoped by workspace + ownership).
+- [ ] Verify pgvector similarity search end-to-end (embedding stored -> similarity query -> expected results).
+
+## Phase: Backend Refactor Cleanup
+- [ ] Remove remaining D1/SQLite logic and references (code + docs/config).
+- [ ] Refactor `ChatService` to use native pgvector similarity queries (no legacy similarity paths).
+- [ ] Audit all services for Supabase compatibility (Auth, Documents, Chat, Reports, Storage).
+- [ ] Validate migration consistency across database setup + Drizzle migrations (no drift).
+- [ ] Remove obsolete D1 documentation/config references (docs + runtime files).
+
+## Phase: Environment & Secrets
+- [ ] Create `.env.example` with all required variables (including Supabase + Edge Function env).
+- [ ] Document required env vars in README (and/or docs) with defaults where safe.
+- [ ] Validate missing env handling (fail fast with clear, non-sensitive error).
+- [ ] Add startup env validation (for both app and edge/docs runtime entrypoints).
+
+## Phase: Error System Audit
+- [ ] Ensure raw stack traces are never exposed to the UI (sanitize error responses).
+- [ ] Validate graceful API failure responses (consistent shape + status codes).
+- [ ] Add/verify fallback UI states for: failed loads, empty data, and server errors.
+- [ ] Test AI provider failure handling (failover triggers, correct provider attribution).
+- [ ] Test empty/no-response states (no embeddings, no results, empty chat context).
+- [ ] Test upload failures (network abort, unsupported file, storage policy denial).
+- [ ] Test timeout handling (AI calls, extraction calls, realtime fetch dependencies).
+- [ ] Test invalid auth/session handling (expired token, missing session, revoked user).
+
+## Phase: UI/UX Stability Audit
+- [ ] Validate responsive layouts (dashboard, details, workflow timeline, forms).
+- [ ] Test loading states (skeletons/spinners) for all major screens.
+- [ ] Test empty states (no documents, no workflows, no chat history).
+- [ ] Test dashboard usability (filters/actions work with realistic data volume).
+- [ ] Ensure no broken navigation (routes/components linked correctly).
+- [ ] Verify form validation UX (client-side rules + server error mapping).
+- [ ] Verify basic accessibility (keyboard navigation, readable contrast, focus states).
+- [ ] Ensure UI remains simple and maintainable (avoid adding new complex UI flows).
+
+## Phase: Testing & QA
+- [ ] Run and complete end-to-end workflow testing (happy path + failure modes).
+- [ ] Upload pipeline testing (multipart flow, storage write, metadata persistence).
+- [ ] Extraction validation testing (rule outcomes + error mapping).
+- [ ] Semantic search testing (vector query correctness + workspace scoping).
+- [ ] Auth flow testing (sign-in/out + session persistence + protected routes).
+- [ ] Workspace RBAC testing (read/write/delete boundaries).
+- [ ] Regression testing across key services (chat, workflow timeline, reports).
+- [ ] Production smoke testing (build + runtime checks + critical paths).
+
+## Phase: Deployment Preparation
+- [ ] Cloudflare Pages configuration verification (build output, routes, env wiring).
+- [ ] Supabase production environment validation (URLs, keys, schema, RLS enabled).
+- [ ] Deployment-time environment variable setup (secrets management readiness).
+- [ ] Production build testing (app build + edge/docs typecheck + bundling).
+- [ ] Edge function verification (workflows: upload/extract/chat/storage/realtime).
+- [ ] Deployment rollback planning (document steps; confirm revert can be executed safely).
+
+## Phase: Billing Decision
+- [ ] Evaluate Stripe alternatives (requirements fit + implementation complexity).
+- [ ] Decide payment provider strategy (current plan vs migration path).
+- [ ] Define free-tier limits (credits/workflows/chats; enforcement expectations).
+- [ ] Separate free vs paid AI provider access (quota gating + safe error messaging).
+
+## Post-Launch Next Steps
+- [ ] Create a single, canonical “Correction UI” endpoint and wire it to the Extraction Correction UI
+- [ ] Implement Edge Function / worker for OCR offloading to reduce Edge memory pressure
+- [ ] Add middleware to Deno Edge Functions to prevent API abuse (upload/extract/chat)
+- [ ] Refine subscription/credit proration for mid-cycle upgrades
+- [ ] Validate pgvector HNSW performance for expected dataset size and plan migration strategy
+
+
+
+
 

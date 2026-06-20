@@ -44,8 +44,8 @@ export const PipelineOrchestrator = {
         await db.update(documents)
           .set({
             status: 'processing',
-            metadata: {
-              ...doc.metadata,
+            metadata: { 
+              ...(typeof doc.metadata === 'object' && doc.metadata ? (doc.metadata as Record<string, any>) : {}),
               pipelineError: undefined,
               failedAt: undefined,
             },
@@ -54,7 +54,8 @@ export const PipelineOrchestrator = {
           .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         // Update 'doc' object to reflect new status for subsequent checks
         doc.status = 'processing';
-        doc.metadata = { ...doc.metadata, pipelineError: undefined, failedAt: undefined };
+        const docMetadataObj = (doc.metadata && typeof doc.metadata === 'object') ? (doc.metadata as Record<string, any>) : {};
+        doc.metadata = { ...docMetadataObj, pipelineError: undefined, failedAt: undefined };
       }
       // If doc.status is 'pending' or 'validating', ensure it's 'processing' for the pipeline start.
       else if (doc.status !== 'processing') {
@@ -101,8 +102,11 @@ export const PipelineOrchestrator = {
 
         // Persist failure history immediately in case the entire pipeline fails
         await db.update(documents)
-          .set({ 
-            metadata: { ...doc.metadata, failoverHistory: failoverAttempts },
+          .set({
+            metadata: {
+              ...(doc.metadata && typeof doc.metadata === 'object' ? (doc.metadata as Record<string, any>) : {}),
+              failoverHistory: failoverAttempts
+            },
             updatedAt: new Date()
           })
           .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
@@ -120,16 +124,17 @@ export const PipelineOrchestrator = {
         where: and(eq(documents.id, documentId), eq(documents.userId, userId))
       });
 
-      if (updatedDoc?.metadata?.summary) {
+const updatedMetadata = (updatedDoc?.metadata && typeof updatedDoc.metadata === 'object') ? (updatedDoc.metadata as Record<string, any>) : ({} as Record<string, any>);
+      if ((updatedMetadata as any).summary) {
         LogService.info(`Generating semantic embedding`, { documentId });
-        const { embedding, error: embedError } = await AIProviderService.embed(updatedDoc.metadata.summary);
+        const { embedding, error: embedError } = await AIProviderService.embed((updatedMetadata as any).summary as string);
         
         if (!embedError && embedding) {
           await db.update(documents)
             .set({ 
-              metadata: { 
-                ...updatedDoc.metadata, 
-                embedding 
+            metadata: {
+                ...updatedMetadata,
+                embedding
               },
               updatedAt: new Date() 
             })
@@ -140,7 +145,8 @@ export const PipelineOrchestrator = {
       }
 
       // 4. Validation Phase
-      await ValidateService.validateData(db, documentId, updatedDoc?.metadata?.extractedData || {});
+      const extractedData = (updatedMetadata.extractedData && typeof updatedMetadata.extractedData === 'object') ? updatedMetadata.extractedData : {};
+      await ValidateService.validateData(db, documentId, extractedData);
 
       // 5. Finalization Phase
       await FinalizationService.finalizeDocument(db, documentId);

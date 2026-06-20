@@ -78,10 +78,14 @@ export const workspaceMembers = pgTable('workspace_members', {
 export const documents = pgTable('documents', {
   id: uuid('id').primaryKey().defaultRandom(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  // The authenticated user that owns the document.
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
   createdBy: uuid('created_by').references(() => profiles.id, { onDelete: 'set null' }),
   name: text('name').notNull(),
   type: documentTypeEnum('type').notNull(),
   status: documentStatusEnum('status').default('pending').notNull(),
+  // Arbitrary pipeline metadata (ex: provider used, retry stats, extraction results overrides).
+  metadata: jsonb('metadata'),
   storagePath: text('storage_path').notNull(),
   mimeType: text('mime_type'),
   extension: text('extension'),
@@ -91,6 +95,7 @@ export const documents = pgTable('documents', {
 }, (t) => ({
   workspaceStatusIdx: index('idx_documents_workspace_status').on(t.workspaceId, t.status),
   unqDuplicate: unique('unq_documents_duplicate').on(t.workspaceId, t.name, t.sizeBytes),
+  userStatusIdx: index('idx_documents_user_status').on(t.userId, t.status),
 }));
 
 /**
@@ -147,8 +152,12 @@ export const workflows = pgTable('workflows', {
   id: uuid('id').primaryKey().defaultRandom(),
   documentId: uuid('document_id').references(() => documents.id, { onDelete: 'cascade' }).notNull(),
   status: workflowStatusEnum('status').default('active').notNull(),
-  currentStep: text('current_step').notNull(),
-  stepsConfig: jsonb('steps_config').notNull(),
+
+  // Current step pointer (what WorkflowService expects)
+  currentStepId: text('current_step_id').notNull(),
+  // Step definitions/state
+  steps: jsonb('steps').notNull(),
+
   startedAt: timestamp('started_at', { withTimezone: true }).defaultNow(),
   completedAt: timestamp('completed_at', { withTimezone: true }),
 }, (t) => ({
@@ -161,6 +170,8 @@ export const workflows = pgTable('workflows', {
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'restrict' }).notNull(),
+  // User that owns the subscription (used by quota enforcement)
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
   status: subscriptionStatusEnum('status').notNull(),
   planType: planTypeEnum('plan_type').notNull(),
   documentLimit: integer('document_limit'),
@@ -178,6 +189,7 @@ export const subscriptions = pgTable('subscriptions', {
 export const usageLogs = pgTable('usage_logs', {
   id: uuid('id').primaryKey().defaultRandom(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }).notNull(),
   documentId: uuid('document_id').references(() => documents.id, { onDelete: 'set null' }),
   provider: text('provider').notNull(),
   model: text('model').notNull(),
@@ -187,6 +199,7 @@ export const usageLogs = pgTable('usage_logs', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({
   workspaceUsageIdx: index('idx_usage_workspace_created').on(t.workspaceId, t.createdAt),
+  userUsageIdx: index('idx_usage_user_created').on(t.userId, t.createdAt),
 }));
 
 /**

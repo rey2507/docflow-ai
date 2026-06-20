@@ -104,7 +104,7 @@ export const ExtractService = {
       await db.update(documents)
         .set({
           metadata: {
-            ...document.metadata,
+            ...(document.metadata as any),
             extractedData: normalizedData,
             validationSuggestions: aiResult.suggestions || [],
             summary: aiResult.summary,
