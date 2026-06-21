@@ -1,4 +1,3 @@
-  /**
 import { supabase } from '@/lib/supabase/client';
 import { DbClient } from 'docs/client';
 import { subscriptions, documents } from 'docs/schema';
