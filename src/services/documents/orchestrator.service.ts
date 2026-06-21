@@ -1,5 +1,5 @@
 import { eq, and } from 'drizzle-orm';
-import type { DbClient } from '../../../docs/client';
+import type { DbClient } from 'docs/client';
 import { documents, workflows } from 'docs/schema';
 import { ExtractService } from './extract.service';
 import { AIProviderService, type AIProvider } from '../ai/provider.service';

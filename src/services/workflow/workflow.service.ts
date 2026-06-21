@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { DbClient } from '../../../docs/client';
-import { workflows } from '../../../docs/schema';
+import { DbClient } from 'docs/client';
+import { workflows } from 'docs/schema';
 import { v4 as uuidv4 } from 'uuid';
 import type { Workflow, WorkflowStep, WorkflowPriority } from '../../types/workflow';
 

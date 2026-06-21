@@ -17,7 +17,7 @@ DocFlow AI is an intelligent document processing SaaS platform that automates da
 - **Frontend:** React 19, TypeScript, Tailwind CSS.
 - **Frontend:** React 19, TypeScript, Tailwind CSS.
 - **Backend/BaaS:** Supabase (Auth, Database, Storage, Realtime).
-- **Database Layer:** Drizzle ORM (providing universal D1/Postgres compatibility).
+- **Database Layer:** Drizzle ORM with PostgreSQL on Supabase and pgvector for embeddings.
 - **AI Integration:** Custom Prompt Management & Provider Abstraction.
 
 ## 📋 Project Status
@@ -40,7 +40,7 @@ Recent Major Updates:
 - **AI Provider Failover:** Implemented automatic fallback loop (`OpenAI` -> `Gemini` -> `Anthropic`).
 - **Subscription Guarding:** Linked billing cycles to real-time AI usage and processing blocks.
 - **Vision Support:** Full base64 OCR/Vision support integrated for image documents.
-- **Database Migration:** Successfully transitioned from SQLite/D1 to **PostgreSQL on Supabase** with `pgvector` support and a Workspace-centric architecture.
+- **Database:** PostgreSQL on Supabase with `pgvector` for embeddings, workspace-centric RLS, and Drizzle ORM.
 - **Developer Experience:** Standardized TypeScript environment and Drizzle-kit migration workflow.
 
 ## 🚦 Getting Started
@@ -67,7 +67,7 @@ This project is designed for deployment on **Cloudflare Pages** for the frontend
 2.  **Cloudflare Pages:**
     *   Connect your GitHub repository to Cloudflare Pages.
     *   Configure environment variables (SUPABASE_URL, SUPABASE_ANON_KEY, AI_DEFAULT_PROVIDER, AI_DEFAULT_MODEL).
-    *   Bind your D1 database to the `DB` variable in your Pages project settings.
+    *   Configure your Supabase PostgreSQL connection string in `DATABASE_URL` environment variable.
 3.  **Cloudflare Email Worker (Optional):**
     *   If using email import, deploy a standalone Cloudflare Worker (e.g., from `src/workers/email-inbound.ts`) and configure an email route.
 
@@ -80,4 +80,4 @@ This project is designed for deployment on **Cloudflare Pages** for the frontend
 
 ## ✅ All Phases Completed!
 
-The DocFlow AI project has successfully completed all planned development phases, including core foundation, AI integration, workflow engine, SaaS readiness, and all growth features. The architecture is now fully Drizzle/D1 compatible and optimized for Cloudflare deployment.
+The DocFlow AI project has successfully completed core phases 1-13.1, including foundation, AI integration, workflow engine, SaaS readiness, and growth features. The architecture is fully Supabase PostgreSQL-based with pgvector embeddings, workspace-level RLS, and Cloudflare Pages deployment.

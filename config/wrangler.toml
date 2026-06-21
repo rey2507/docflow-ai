@@ -1,11 +1,6 @@
 # Cloudflare Pages Configuration
 name = "docflow-ai"
-pages_build_output_dir = "./dist"
-
-[[d1_databases]]
-binding = "DB" # This matches the d1Binding used in docs/client.ts
-database_name = "docflow-db"
-database_id = "your-actual-d1-database-id"
+pages_build_output_dir = "dist"
 
 [vars]
 SUPABASE_URL = "https://your-project.supabase.co"
@@ -19,3 +14,4 @@ AI_DEFAULT_MODEL = "gpt-4o"
 
 [build]
 command = "npm run build"
+output_dir = "./dist"
