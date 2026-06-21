@@ -1,5 +1,13 @@
 import { supabase } from '../../lib/supabase/client';
-import type { AuthResponse, User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import type { AuthResponse, AuthOtpResponse, User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+
+function getEmailRedirectTo(): string | undefined {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return window.location.origin;
+}
 
 /**
  * AuthService
@@ -16,6 +24,9 @@ export const AuthService = {
     const response = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: getEmailRedirectTo(),
+      },
     });
     return response;
   },
@@ -27,6 +38,34 @@ export const AuthService = {
     const response = await supabase.auth.signInWithPassword({
       email,
       password,
+    });
+    return response;
+  },
+
+  /**
+   * Send a passwordless magic-link sign-in email.
+   */
+  async sendMagicLink(email: string): Promise<AuthOtpResponse> {
+    const response = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: getEmailRedirectTo(),
+        shouldCreateUser: false,
+      },
+    });
+    return response;
+  },
+
+  /**
+   * Resend the email confirmation for a pending signup.
+   */
+  async resendConfirmation(email: string): Promise<AuthOtpResponse> {
+    const response = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: getEmailRedirectTo(),
+      },
     });
     return response;
   },

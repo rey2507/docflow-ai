@@ -4,6 +4,7 @@ import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
 import type { User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, supabaseConfigError } from './lib/supabase/client';
+import { formatErrorForUser, normalizeAuthError } from './lib/utils/error-normalization';
 import './main.css';
 
 /**
@@ -17,7 +18,17 @@ function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+
+  const setFriendlyAuthError = (error: unknown) => {
+    const normalized = normalizeAuthError(error);
+    setAuthError(formatErrorForUser(normalized));
+
+    if (normalized.code === 'AUTH_EMAIL_NOT_CONFIRMED') {
+      setPendingConfirmationEmail(email.trim());
+    }
+  };
 
   if (!isSupabaseConfigured) {
     return (
@@ -39,7 +50,7 @@ function App() {
     AuthService.getSession()
       .then(({ session, error }) => {
         if (error) {
-          setAuthError(error.message);
+          setFriendlyAuthError(error);
         }
 
         setUser(session?.user ?? null);
@@ -55,6 +66,7 @@ function App() {
       if (event === 'SIGNED_IN' && session?.user) {
         setAuthError('');
         setAuthMessage('');
+        setPendingConfirmationEmail('');
       }
 
       if (event === 'SIGNED_OUT') {
@@ -70,6 +82,7 @@ function App() {
     setAuthError('');
     setAuthMessage('');
     setIsSubmitting(true);
+    setPendingConfirmationEmail('');
 
     const fn = authMode === 'signup' ? AuthService.signUp : AuthService.signIn;
     const { data, error } = await fn(email, password);
@@ -77,7 +90,7 @@ function App() {
     setIsSubmitting(false);
 
     if (error) {
-      setAuthError(error.message);
+      setFriendlyAuthError(error);
       return;
     }
 
@@ -87,7 +100,8 @@ function App() {
         return;
       }
 
-      setAuthMessage('Account created. Check your email to confirm your address, then sign in.');
+  setPendingConfirmationEmail(email.trim());
+  setAuthMessage(`Account created. We sent a confirmation email to ${email.trim()}. Confirm your address, then sign in.`);
       setPassword('');
       setAuthMode('signin');
       return;
@@ -99,6 +113,53 @@ function App() {
     }
 
     setAuthError('Sign-in did not return a session. Check your Supabase auth settings and try again.');
+  };
+
+  const handleResendConfirmation = async () => {
+    const targetEmail = pendingConfirmationEmail || email.trim();
+    if (!targetEmail) {
+      setAuthError('Enter your email address first so the confirmation message can be resent.');
+      return;
+    }
+
+    setAuthError('');
+    setAuthMessage('');
+    setIsSubmitting(true);
+
+    const { error } = await AuthService.resendConfirmation(targetEmail);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setFriendlyAuthError(error);
+      return;
+    }
+
+    setPendingConfirmationEmail(targetEmail);
+    setAuthMessage(`We sent a new confirmation email to ${targetEmail}. Check your inbox and spam folder.`);
+  };
+
+  const handleMagicLink = async () => {
+    const targetEmail = email.trim();
+    if (!targetEmail) {
+      setAuthError('Enter your email address first to receive a magic sign-in link.');
+      return;
+    }
+
+    setAuthError('');
+    setAuthMessage('');
+    setIsSubmitting(true);
+
+    const { error } = await AuthService.sendMagicLink(targetEmail);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setFriendlyAuthError(error);
+      return;
+    }
+
+    setAuthMessage(`We sent a magic sign-in link to ${targetEmail}. Use that link to finish signing in.`);
   };
 
   if (loading) {
@@ -159,12 +220,39 @@ function App() {
             >
               {isSubmitting ? 'Working...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
             </button>
+            {authMode === 'signin' && (
+              <button
+                type="button"
+                className="app-shell__button app-shell__button--secondary"
+                disabled={isSubmitting}
+                onClick={handleMagicLink}
+              >
+                {isSubmitting ? 'Working...' : 'Email Me a Magic Link'}
+              </button>
+            )}
           </form>
+          {pendingConfirmationEmail && (
+            <div className="app-shell__actions">
+              <button
+                type="button"
+                className="app-shell__link-button"
+                disabled={isSubmitting}
+                onClick={handleResendConfirmation}
+              >
+                Resend confirmation email
+              </button>
+            </div>
+          )}
           <p className="app-shell__muted app-shell__muted--centered">
             {authMode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
             <button
               type="button"
-              onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+              onClick={() => {
+                setAuthError('');
+                setAuthMessage('');
+                setPendingConfirmationEmail('');
+                setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+              }}
               className="app-shell__link-button"
             >
               {authMode === 'signin' ? 'Sign up' : 'Sign in'}

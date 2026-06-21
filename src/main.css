@@ -101,6 +101,10 @@
   margin-bottom: 1rem;
 }
 
+.app-shell__actions {
+  margin-top: 0.75rem;
+}
+
 .app-shell__button {
   width: 100%;
   padding: 0.625rem;
@@ -111,6 +115,15 @@
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+}
+
+.app-shell__button + .app-shell__button {
+  margin-top: 0.75rem;
+}
+
+.app-shell__button--secondary {
+  background-color: #e5e7eb;
+  color: #111827;
 }
 
 .app-shell__button:disabled {
@@ -125,4 +138,9 @@
   cursor: pointer;
   padding: 0;
   font-size: 0.875rem;
+}
+
+.app-shell__link-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }

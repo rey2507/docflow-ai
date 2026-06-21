@@ -168,9 +168,70 @@ export function normalizeStorageError(error: Error | any): NormalizedError {
 }
 
 /**
+ * Normalizes authentication-related errors
+ */
+export function normalizeAuthError(error: Error | any): NormalizedError {
+  const message = (error?.message || String(error) || '').toLowerCase();
+
+  if (message.includes('invalid login credentials')) {
+    return {
+      message: 'Email or password is incorrect.',
+      code: 'AUTH_INVALID_CREDENTIALS',
+      severity: 'user',
+    };
+  }
+
+  if (message.includes('email not confirmed') || message.includes('email_not_confirmed')) {
+    return {
+      message: 'Your email is not confirmed yet. Check your inbox or resend the confirmation email.',
+      code: 'AUTH_EMAIL_NOT_CONFIRMED',
+      severity: 'user',
+    };
+  }
+
+  if (message.includes('user already registered')) {
+    return {
+      message: 'An account with this email already exists. Try signing in or use a magic link.',
+      code: 'AUTH_ALREADY_REGISTERED',
+      severity: 'user',
+    };
+  }
+
+  if (message.includes('for security purposes') || message.includes('rate limit') || message.includes('too many requests')) {
+    return {
+      message: 'Too many auth attempts were made recently. Wait a moment and try again.',
+      code: 'AUTH_RATE_LIMITED',
+      severity: 'user',
+    };
+  }
+
+  if (message.includes('signup is disabled')) {
+    return {
+      message: 'New signups are currently disabled for this project.',
+      code: 'AUTH_SIGNUP_DISABLED',
+      severity: 'system',
+    };
+  }
+
+  if (message.includes('email link is invalid') || message.includes('otp')) {
+    return {
+      message: 'This sign-in link is invalid or expired. Request a new one and try again.',
+      code: 'AUTH_LINK_INVALID',
+      severity: 'user',
+    };
+  }
+
+  return {
+    message: 'Authentication failed. Please try again.',
+    code: 'AUTH_ERROR',
+    severity: 'user',
+  };
+}
+
+/**
  * Generic error normalizer that routes to specific handlers
  */
-export function normalizeError(error: Error | any, context?: { type: 'ai' | 'db' | 'storage'; provider?: string }): NormalizedError {
+export function normalizeError(error: Error | any, context?: { type: 'ai' | 'db' | 'storage' | 'auth'; provider?: string }): NormalizedError {
   if (!error) {
     return {
       message: 'An unknown error occurred.',
@@ -191,6 +252,10 @@ export function normalizeError(error: Error | any, context?: { type: 'ai' | 'db'
     return normalizeStorageError(error);
   }
 
+  if (context?.type === 'auth') {
+    return normalizeAuthError(error);
+  }
+
   // Try to infer type from error message
   const message = error?.message || String(error);
   if (message.includes('API') || message.includes('provider') || message.includes('model')) {
@@ -201,6 +266,9 @@ export function normalizeError(error: Error | any, context?: { type: 'ai' | 'db'
   }
   if (message.includes('storage') || message.includes('bucket')) {
     return normalizeStorageError(error);
+  }
+  if (message.includes('auth') || message.includes('login') || message.includes('password') || message.includes('otp')) {
+    return normalizeAuthError(error);
   }
 
   // Generic fallback

@@ -116,6 +116,9 @@
 - [ ] Standardize loading states
 - [ ] Standardize error states
 - [ ] Fix login/signup flow feedback and session handling
+- [ ] Add resend confirmation email flow
+- [ ] Add magic-link login option
+- [ ] Improve auth error messages and confirmation UX
 - [ ] Verify responsive layouts
 - [ ] Verify realtime dashboard updates
 - [ ] Simplify unstable UI components
