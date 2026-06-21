@@ -112,19 +112,27 @@
 
 ## PHASE 13.3 — UI/UX STABILIZATION
 
-- [ ] Audit all pages for rendering/layout issues
-- [ ] Standardize loading states
-- [ ] Standardize error states
-- [ ] Fix login/signup flow feedback and session handling
+- [ ] Audit every page and route for layout, spacing, and rendering quality
+- [ ] Improve all DocFlow AI screens, not just auth, to match a polished production UI
+- [ ] Review dashboard, auth, upload, document detail, workflow, reports, and settings screens individually
+- [ ] Redesign dashboard empty states so zero-data views still feel intentional
+- [ ] Improve document stats/cards/filters for clearer hierarchy and readability
+- [ ] Standardize loading states across every page and shared shell
+- [ ] Standardize empty states and no-results states across the app
+- [ ] Standardize error states and retry actions across every page
+- [ ] Improve login/signup flow feedback and session handling
+- [ ] Make email confirmation signup feel polished and reliable
 - [ ] Add resend confirmation email flow
 - [ ] Add magic-link login option
-- [ ] Improve auth error messages and confirmation UX
-- [ ] Verify responsive layouts
-- [ ] Verify realtime dashboard updates
-- [ ] Simplify unstable UI components
-- [ ] Verify upload workflow UX
-- [ ] Validate workspace UI consistency
-- [ ] Remove placeholder/demo remnants
+- [ ] Improve auth error messages, rate-limit messaging, and confirmation UX
+- [ ] Verify responsive layouts on mobile, tablet, and desktop
+- [ ] Verify realtime dashboard updates have visible UI feedback
+- [ ] Simplify unstable UI components and reduce clutter
+- [ ] Verify upload workflow UX from upload to finalization
+- [ ] Validate workspace UI consistency across all screens
+- [ ] Remove placeholder/demo remnants and weak default wording
+- [ ] Polish navigation, spacing, typography, and visual hierarchy app-wide
+- [ ] Review every screen even if the current bug is not visible there
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 
@@ -188,7 +196,7 @@
 ## CURRENT PRIORITY
 
 1. **Infrastructure stabilization** — Fix TypeScript paths, standardize imports, remove legacy code
-2. **UI/UX stabilization** — Audit and fix rendering issues, standardize states
+2. **UI/UX stabilization** — Improve every page and shared UI pattern across the app
 3. **Error handling & resilience** — Add boundaries, normalize responses, improve recovery
 4. **Real system testing** — E2E workflow validation, provider testing, RLS verification
 5. **Deployment preparation** — Environment config, production settings, final readiness audit
