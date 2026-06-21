@@ -115,6 +115,7 @@
 - [ ] Audit all pages for rendering/layout issues
 - [ ] Standardize loading states
 - [ ] Standardize error states
+- [ ] Fix login/signup flow feedback and session handling
 - [ ] Verify responsive layouts
 - [ ] Verify realtime dashboard updates
 - [ ] Simplify unstable UI components

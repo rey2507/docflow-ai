@@ -12,9 +12,11 @@ import './main.css';
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
 
   if (!isSupabaseConfigured) {
@@ -34,14 +36,30 @@ function App() {
 
   useEffect(() => {
     // Resolve initial session
-    AuthService.getSession().then(({ session }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    AuthService.getSession()
+      .then(({ session, error }) => {
+        if (error) {
+          setAuthError(error.message);
+        }
+
+        setUser(session?.user ?? null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        setAuthError('');
+        setAuthMessage('');
+      }
+
+      if (event === 'SIGNED_OUT') {
+        setAuthMessage('');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -50,9 +68,37 @@ function App() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    setAuthMessage('');
+    setIsSubmitting(true);
+
     const fn = authMode === 'signup' ? AuthService.signUp : AuthService.signIn;
-    const { error } = await fn(email, password);
-    if (error) setAuthError(error.message);
+    const { data, error } = await fn(email, password);
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    if (authMode === 'signup') {
+      if (data.session?.user) {
+        setUser(data.session.user);
+        return;
+      }
+
+      setAuthMessage('Account created. Check your email to confirm your address, then sign in.');
+      setPassword('');
+      setAuthMode('signin');
+      return;
+    }
+
+    if (data.session?.user) {
+      setUser(data.session.user);
+      return;
+    }
+
+    setAuthError('Sign-in did not return a session. Check your Supabase auth settings and try again.');
   };
 
   if (loading) {
@@ -100,19 +146,24 @@ function App() {
                 className="app-shell__input"
               />
             </div>
+            {authMessage && (
+              <p className="app-shell__message">{authMessage}</p>
+            )}
             {authError && (
               <p className="app-shell__error">{authError}</p>
             )}
             <button
               type="submit"
               className="app-shell__button"
+              disabled={isSubmitting}
             >
-              {authMode === 'signin' ? 'Sign In' : 'Sign Up'}
+              {isSubmitting ? 'Working...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
           <p className="app-shell__muted app-shell__muted--centered">
             {authMode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
             <button
+              type="button"
               onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
               className="app-shell__link-button"
             >
