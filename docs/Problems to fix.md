@@ -1,8 +1,4 @@
-Plan:
 
-Information Gathered:
-
-- `src/services/security/rate-limit.service.ts` referenced a non-existent Drizzle table and used `db.execute(...)`.
 - Migration `0000_create_rate_limits_table.sql` indicates intended table: `rate_limits(key, count, reset_at)`.
 
 Edits Completed:
