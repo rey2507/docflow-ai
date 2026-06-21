@@ -1,0 +1,117 @@
+.app-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.app-shell--panel {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+}
+
+.app-shell__card {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.app-shell__card--wide {
+  max-width: 640px;
+}
+
+.app-shell__card--narrow {
+  max-width: 400px;
+}
+
+.app-shell__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.app-shell__title--spaced {
+  margin-bottom: 0.75rem;
+}
+
+.app-shell__title--compact {
+  margin-bottom: 0.5rem;
+}
+
+.app-shell__body {
+  color: #111827;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.app-shell__muted {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.app-shell__muted--spaced {
+  margin-bottom: 1rem;
+}
+
+.app-shell__muted--section {
+  margin-bottom: 1.5rem;
+}
+
+.app-shell__muted--centered {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.app-shell__muted--reset {
+  margin: 0;
+}
+
+.app-shell__field {
+  margin-bottom: 1rem;
+}
+
+.app-shell__label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.app-shell__input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.app-shell__error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.app-shell__button {
+  width: 100%;
+  padding: 0.625rem;
+  background-color: #2563eb;
+  color: #ffffff;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.app-shell__link-button {
+  color: #2563eb;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.875rem;
+}

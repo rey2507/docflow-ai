@@ -4,6 +4,7 @@ import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
 import type { User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, supabaseConfigError } from './lib/supabase/client';
+import './main.css';
 
 /**
  * App root — handles auth state and renders the dashboard.
@@ -18,12 +19,12 @@ function App() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f9fafb', padding: '1.5rem' }}>
-        <div style={{ width: '100%', maxWidth: '640px', backgroundColor: 'white', padding: '2rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>DocFlow AI</h1>
-          <p style={{ color: '#111827', fontSize: '1rem', marginBottom: '0.75rem' }}>Supabase is not configured for this deployment.</p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>{supabaseConfigError}</p>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+      <div className="app-shell app-shell--panel">
+        <div className="app-shell__card app-shell__card--wide">
+          <h1 className="app-shell__title app-shell__title--spaced">DocFlow AI</h1>
+          <p className="app-shell__body">Supabase is not configured for this deployment.</p>
+          <p className="app-shell__muted app-shell__muted--spaced">{supabaseConfigError}</p>
+          <p className="app-shell__muted app-shell__muted--reset">
             Rebuild the site after setting the environment variables in the deployment environment.
           </p>
         </div>
@@ -56,60 +57,64 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <p style={{ color: '#6b7280' }}>Loading…</p>
+      <div className="app-shell">
+        <p className="app-shell__muted">Loading…</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-        <div style={{ width: '100%', maxWidth: '400px', backgroundColor: 'white', padding: '2rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', marginBottom: '0.5rem' }}>DocFlow AI</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+      <div className="app-shell app-shell--panel">
+        <div className="app-shell__card app-shell__card--narrow">
+          <h1 className="app-shell__title app-shell__title--compact">DocFlow AI</h1>
+          <p className="app-shell__muted app-shell__muted--section">
             {authMode === 'signin' ? 'Sign in to your account' : 'Create a new account'}
           </p>
           <form onSubmit={handleAuth}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>
+            <div className="app-shell__field">
+              <label className="app-shell__label" htmlFor="email">
                 Email
               </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
                 required
-                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem' }}
+                className="app-shell__input"
               />
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>
+            <div className="app-shell__field">
+              <label className="app-shell__label" htmlFor="password">
                 Password
               </label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
                 required
-                style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.875rem' }}
+                className="app-shell__input"
               />
             </div>
             {authError && (
-              <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '1rem' }}>{authError}</p>
+              <p className="app-shell__error">{authError}</p>
             )}
             <button
               type="submit"
-              style={{ width: '100%', padding: '0.625rem', backgroundColor: '#2563eb', color: 'white', borderRadius: '0.375rem', fontWeight: '500', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+              className="app-shell__button"
             >
               {authMode === 'signin' ? 'Sign In' : 'Sign Up'}
             </button>
           </form>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '1rem', textAlign: 'center' }}>
+          <p className="app-shell__muted app-shell__muted--centered">
             {authMode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
             <button
               onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
-              style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.875rem' }}
+              className="app-shell__link-button"
             >
               {authMode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
