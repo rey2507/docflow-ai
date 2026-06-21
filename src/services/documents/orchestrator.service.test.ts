@@ -6,17 +6,20 @@ import { ValidateService } from './validate.service';
 import { FinalizationService } from './finalization.service';
 import { SubscriptionService } from '../../subscription/subscription.service';
 
+const mockUpdate = vi.fn().mockReturnThis();
+const mockSingle = vi.fn();
+const mockFromQuery = {
+  select: vi.fn().mockReturnThis(),
+  upsert: vi.fn().mockReturnThis(),
+  update: mockUpdate,
+  eq: vi.fn().mockReturnThis(),
+  single: mockSingle,
+};
+
 // Mock all dependencies
 vi.mock('../../lib/supabase/client', () => ({
   supabase: {
-    from: vi.fn(() => ({
-      // Supabase-style mock (only used by these tests)
-      select: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn(),
-    })),
+    from: vi.fn(() => mockFromQuery),
   },
 }));
 
@@ -33,7 +36,7 @@ describe('PipelineOrchestrator', () => {
     vi.clearAllMocks();
 
     // Default setup: Document exists and subscription is valid
-    (supabase.from as any)().single.mockResolvedValue({
+    mockSingle.mockResolvedValue({
       data: { id: mockDocId, userId: mockUserId, status: 'pending', metadata: {} },
       error: null,
     });
@@ -41,7 +44,7 @@ describe('PipelineOrchestrator', () => {
     vi.mocked(SubscriptionService.canProcessDocument).mockResolvedValue({ allowed: true, reason: '' });
   });
 
-  it.skip('should run the full pipeline successfully', async () => {
+  it('should run the full pipeline successfully', async () => {
     vi.mocked(ExtractService.processDocument).mockResolvedValue({ data: {}, error: null });
     vi.mocked(ValidateService.validateData).mockResolvedValue({ success: true, errors: [] } as any);
     vi.mocked(FinalizationService.finalizeDocument).mockResolvedValue({ error: null });
@@ -75,7 +78,7 @@ describe('PipelineOrchestrator', () => {
     expect(FinalizationService.finalizeDocument).toHaveBeenCalled();
   });
 
-  it.skip('should attempt fallback if the first AI provider fails', async () => {
+  it('should attempt fallback if the first AI provider fails', async () => {
     // Mock environment for provider chain
     process.env.AI_PROVIDER_CHAIN = 'openai,gemini';
 
@@ -114,7 +117,7 @@ describe('PipelineOrchestrator', () => {
 
     // Check if it updated metadata about the failure
     expect(supabase.from).toHaveBeenCalledWith('documents');
-    expect(vi.mocked(supabase.from('documents').update)).toHaveBeenCalledWith(
+    expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ failedProvider: 'openai' }) })
     );
   });
