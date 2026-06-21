@@ -48,8 +48,8 @@ Recent Major Updates:
 1. Clone the repository.
 2. Install dependencies: `npm install`
 3. Configure environment variables in `.env.local` (for local development) or your Cloudflare Pages/Worker environment:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
+    - `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL` for Cloudflare Pages build-time injection)
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY` for Cloudflare Pages build-time injection)
    - `AI_DEFAULT_PROVIDER` (e.g., `openai`, `gemini`)
    - `AI_DEFAULT_MODEL` (e.g., `gpt-4o`, `gemini-1.5-pro`)
    - `DATABASE_URL` (Supabase PostgreSQL connection string)
@@ -66,7 +66,7 @@ This project is designed for deployment on **Cloudflare Pages** for the frontend
     *   Push migrations to Supabase: `npx drizzle-kit push`
 2.  **Cloudflare Pages:**
     *   Connect your GitHub repository to Cloudflare Pages.
-    *   Configure environment variables (SUPABASE_URL, SUPABASE_ANON_KEY, AI_DEFAULT_PROVIDER, AI_DEFAULT_MODEL).
+    *   Configure environment variables (`SUPABASE_URL` and `SUPABASE_ANON_KEY`, or the `NEXT_PUBLIC_` equivalents, plus `AI_DEFAULT_PROVIDER` and `AI_DEFAULT_MODEL`).
     *   Configure your Supabase PostgreSQL connection string in `DATABASE_URL` environment variable.
 3.  **Cloudflare Email Worker (Optional):**
     *   If using email import, deploy a standalone Cloudflare Worker (e.g., from `src/workers/email-inbound.ts`) and configure an email route.

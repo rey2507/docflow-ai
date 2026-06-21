@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from './lib/supabase/client';
+import { isSupabaseConfigured, supabase, supabaseConfigError } from './lib/supabase/client';
 
 /**
  * App root — handles auth state and renders the dashboard.
@@ -15,6 +15,21 @@ function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f9fafb', padding: '1.5rem' }}>
+        <div style={{ width: '100%', maxWidth: '640px', backgroundColor: 'white', padding: '2rem', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>DocFlow AI</h1>
+          <p style={{ color: '#111827', fontSize: '1rem', marginBottom: '0.75rem' }}>Supabase is not configured for this deployment.</p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>{supabaseConfigError}</p>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+            Rebuild the site after setting the environment variables in the deployment environment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Resolve initial session
