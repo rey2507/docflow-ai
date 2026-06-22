@@ -7,8 +7,29 @@ import { createClient } from '@supabase/supabase-js';
  * It uses the 'anon' key for client-side operations, respecting RLS policies.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+type RuntimeConfig = {
+  NEXT_PUBLIC_SUPABASE_URL?: string;
+  NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+};
+
+const runtimeConfig =
+  typeof window !== 'undefined'
+    ? ((window as Window & { __DOCFLOW_RUNTIME_ENV__?: RuntimeConfig }).__DOCFLOW_RUNTIME_ENV__ || {})
+    : {};
+
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  runtimeConfig.NEXT_PUBLIC_SUPABASE_URL ||
+  runtimeConfig.SUPABASE_URL;
+
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  runtimeConfig.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  runtimeConfig.SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const supabaseConfigError = isSupabaseConfigured
