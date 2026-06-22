@@ -28,6 +28,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DashboardStats>({ total: 0, processing: 0, completed: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
@@ -55,6 +56,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true);
+    setFetchError('');
     try {
       let query = supabase
         .from('documents')
@@ -82,6 +84,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
       setTotalCount(count || 0);
     } catch (err) {
       console.error('Error fetching documents:', err);
+      setFetchError(err instanceof Error ? err.message : 'Unable to load documents right now.');
     } finally {
       setLoading(false);
     }
@@ -102,31 +105,45 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="min-h-screen bg-slate-50/70">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6 lg:space-y-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace dashboard</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Documents</h2>
+            <p className="mt-1 text-sm text-slate-600">Review processing status, filter the queue, and open a document when you need details.</p>
+          </div>
+          <div className="text-sm text-slate-500">
+            Showing {documents.length} of {totalCount} documents
+          </div>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Total', value: stats.total, color: 'text-gray-600', bg: 'bg-gray-50' },
-          { label: 'Processing', value: stats.processing, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Completed', value: stats.completed, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Failed', value: stats.failed, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Total', value: stats.total, color: 'text-slate-900', bg: 'bg-white', hint: 'All documents in the workspace' },
+          { label: 'Processing', value: stats.processing, color: 'text-blue-700', bg: 'bg-blue-50', hint: 'Pending, processing, or validating' },
+          { label: 'Completed', value: stats.completed, color: 'text-emerald-700', bg: 'bg-emerald-50', hint: 'Ready for review or export' },
+          { label: 'Failed', value: stats.failed, color: 'text-rose-700', bg: 'bg-rose-50', hint: 'Needs attention or retry' },
         ].map((item) => (
-          <div key={item.label} className={`${item.bg} p-6 rounded-xl border border-white shadow-sm`}>
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{item.label}</p>
+          <div key={item.label} className={`${item.bg} rounded-2xl border border-slate-200 p-5 shadow-sm`}>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
             <p className={`text-3xl font-bold mt-1 ${item.color}`}>{item.value}</p>
+            <p className="mt-2 text-sm text-slate-600">{item.hint}</p>
           </div>
         ))}
-      </div>
+        </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Filter Bar */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 space-y-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           {/* Search */}
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <input
               type="text"
-              placeholder="Search by filename..."
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Search documents"
+              aria-label="Search documents by filename"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
@@ -134,11 +151,12 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
 
           {/* Status Filter */}
           <select
-            className="px-4 py-2 border rounded-lg outline-none"
+            aria-label="Filter by document status"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           >
-            <option value="">All Statuses</option>
+            <option value="">All statuses</option>
             <option value="pending">Pending</option>
             <option value="processing">Processing</option>
             <option value="validating">Validating</option>
@@ -148,11 +166,12 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
 
           {/* Type Filter */}
           <select
-            className="px-4 py-2 border rounded-lg outline-none"
+            aria-label="Filter by document type"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
           >
-            <option value="">All Types</option>
+            <option value="">All types</option>
             <option value="invoice">Invoice</option>
             <option value="image">Image</option>
             <option value="spreadsheet">Spreadsheet</option>
@@ -161,95 +180,121 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
 
           {/* Provider Filter */}
           <select
-            className="px-4 py-2 border rounded-lg outline-none"
+            aria-label="Filter by AI provider"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             value={providerFilter}
             onChange={(e) => { setProviderFilter(e.target.value); setPage(1); }}
           >
-            <option value="">All AI Providers</option>
+            <option value="">All AI providers</option>
             <option value="openai">OpenAI</option>
             <option value="gemini">Gemini</option>
             <option value="anthropic">Anthropic</option>
           </select>
-        </div>
+          </div>
 
-        {/* Sorting Controls */}
-        <div className="flex items-center justify-between pt-2 border-t text-sm text-gray-500">
-          <div className="flex items-center space-x-4">
-            <span>Sort by:</span>
+          {/* Sorting Controls */}
+          <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="font-medium text-slate-500">Sort by</span>
             <button 
               onClick={() => setSortBy('createdAt')}
-              className={`hover:text-blue-600 ${sortBy === 'createdAt' ? 'font-bold text-blue-600' : ''}`}
+              className={`rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ${sortBy === 'createdAt' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600'}`}
             >
               Date
             </button>
             <button 
               onClick={() => setSortBy('name')}
-              className={`hover:text-blue-600 ${sortBy === 'name' ? 'font-bold text-blue-600' : ''}`}
+              className={`rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ${sortBy === 'name' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600'}`}
             >
               Name
             </button>
             <button 
               onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="flex items-center space-x-1 hover:text-blue-600"
+              className="flex items-center gap-1 rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-blue-700"
             >
-              <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
+              <span aria-hidden="true">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+              <span className="sr-only">Toggle sort direction</span>
+            </button>
+            </div>
+            <div className="text-slate-500">
+              {page > 1 ? `Page ${page} of ${totalPages}` : 'First page'}
+            </div>
+          </div>
+        </div>
+
+        {/* Document List */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
+              <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-full bg-slate-200" />
+              <p className="font-medium text-slate-700">Loading documents</p>
+              <p className="mt-1 text-sm text-slate-500">Fetching the latest document queue and status updates.</p>
+            </div>
+          ) : fetchError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 shadow-sm">
+              <p className="font-semibold text-rose-900">Unable to load documents</p>
+              <p className="mt-1 text-sm text-rose-800">{fetchError}</p>
+              <button
+                type="button"
+                onClick={() => { fetchStats(); fetchDocuments(); }}
+                className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
+              >
+                Retry
+              </button>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+              <p className="text-base font-semibold text-slate-900">
+                {search || statusFilter || typeFilter || providerFilter ? 'No documents match these filters.' : 'No documents yet.'}
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                {search || statusFilter || typeFilter || providerFilter
+                  ? 'Clear a filter or search term to return to the full queue.'
+                  : 'When documents arrive, they will appear here with processing status and review actions.'}
+              </p>
+            </div>
+          ) : (
+            <DocumentList 
+              documents={documents} 
+              onRefresh={() => { fetchStats(); fetchDocuments(); }}
+              onViewDetails={(id) => setSelectedDocumentId(id)}
+            />
+          )}
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`h-10 min-w-10 rounded-xl border px-3 text-sm font-medium transition ${
+                    page === p ? 'border-blue-600 bg-blue-600 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
             </button>
           </div>
-          <div>
-            Showing {documents.length} of {totalCount} documents
-          </div>
-        </div>
-      </div>
-
-      {/* Document List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading documents...</div>
-        ) : documents.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed">
-            <p className="text-gray-500 font-medium">No documents found matching your criteria.</p>
-          </div>
-        ) : (
-          <DocumentList 
-            documents={documents} 
-            onRefresh={() => { fetchStats(); fetchDocuments(); }}
-            onViewDetails={(id) => setSelectedDocumentId(id)}
-          />
         )}
       </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2 pt-4">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
-            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
-          >
-            Previous
-          </button>
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`w-10 h-10 rounded-lg border ${
-                  page === p ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(p => p + 1)}
-            className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 };

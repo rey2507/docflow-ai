@@ -92,8 +92,8 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
   };
 
   if (loading) return <div className="p-4 animate-pulse text-gray-500 text-center">Checking document status...</div>;
-  if (error) return <div className="p-4 bg-red-50 text-red-600 rounded-lg border border-red-200">Error: {error}</div>;
-  if (!document) return <div className="p-4 text-gray-500">Document not found.</div>;
+  if (error) return <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">Error: {error}</div>;
+  if (!document) return <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">Document not found.</div>;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -106,24 +106,24 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
   };
 
   return (
-    <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-      <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-        <h3 className="font-semibold text-gray-700">Pipeline Execution</h3>
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase ${getStatusColor(document.status)}`}>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+        <h3 className="font-semibold text-slate-800">Pipeline execution</h3>
+        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold uppercase ${getStatusColor(document.status)}`}>
           {document.status}
         </span>
       </div>
 
-      <div className="p-5 space-y-4">
+      <div className="space-y-4 p-5">
         {/* Error Notification Section */}
         {document.status === 'failed' && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-            <p className="text-sm font-bold text-red-800">Processing Failed</p>
-            <p className="text-sm text-red-700 mt-1">
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+            <p className="text-sm font-bold text-rose-800">Processing failed</p>
+            <p className="mt-1 text-sm text-rose-700">
               {document.metadata?.pipelineError || 'An unexpected error occurred during processing.'}
             </p>
             {document.metadata?.failedAt && (
-              <p className="text-xs text-red-500 mt-2 italic">
+              <p className="mt-2 text-xs italic text-rose-500">
                 Timestamp: {new Date(document.metadata.failedAt).toLocaleString()}
               </p>
             )}
@@ -131,7 +131,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
             {document.metadata?.duplicateOf && (
               <a 
                 href={`/documents/${document.metadata.duplicateOf}`}
-                className="mt-3 inline-block text-sm font-bold text-red-800 underline hover:text-red-900 transition-colors"
+                className="mt-3 inline-block text-sm font-semibold text-rose-800 underline decoration-rose-300 underline-offset-2 transition hover:text-rose-900"
               >
                 View original document →
               </a>
@@ -140,9 +140,9 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
             <button
               onClick={handleRetry}
               disabled={retryLoading}
-              className="mt-4 px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+              className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {retryLoading ? 'Initiating Retry...' : 'Retry Processing'}
+              {retryLoading ? 'Retrying…' : 'Retry processing'}
             </button>
           </div>
         )}
@@ -150,12 +150,12 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
         {/* Metadata Details */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div className="col-span-1">
-            <p className="text-gray-500">AI Provider</p>
-            <p className="font-medium text-gray-900">{document.metadata?.aiProvider || 'Pending...'}</p>
+            <p className="text-slate-500">AI provider</p>
+            <p className="font-medium text-slate-900">{document.metadata?.aiProvider || 'Pending…'}</p>
           </div>
           <div className="col-span-1">
-            <p className="text-gray-500">AI Model</p>
-            <p className="font-medium text-gray-900">{document.metadata?.aiModel || 'Pending...'}</p>
+            <p className="text-slate-500">AI model</p>
+            <p className="font-medium text-slate-900">{document.metadata?.aiModel || 'Pending…'}</p>
           </div>
         </div>
       </div>

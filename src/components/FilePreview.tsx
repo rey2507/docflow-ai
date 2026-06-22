@@ -23,26 +23,26 @@ const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, fileType, fileNa
     loadUrl();
   }, [storagePath]);
 
-  if (loading) return <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg animate-pulse text-gray-400">Loading preview...</div>;
-  if (!url) return <div className="flex items-center justify-center h-64 bg-gray-50 border-2 border-dashed rounded-lg text-gray-400">Preview not available</div>;
+  if (loading) return <div className="flex min-h-[18rem] items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-sm text-slate-500 animate-pulse">Loading preview…</div>;
+  if (!url) return <div className="flex min-h-[18rem] items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">Preview not available</div>;
 
   const isImage = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(fileType) || 
                   ['png', 'jpg', 'jpeg'].some(ext => fileName.toLowerCase().endsWith(ext));
   const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
 
   return (
-    <div className="w-full h-full min-h-[500px] border rounded-lg overflow-hidden bg-white shadow-inner">
+    <div className="w-full min-h-[500px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {isImage && (
-        <img src={url} alt={fileName} className="w-full h-auto object-contain max-h-screen" />
+        <img src={url} alt={fileName} className="h-auto max-h-screen w-full object-contain" />
       )}
       {isPdf && (
-        <iframe src={`${url}#toolbar=0`} title={fileName} className="w-full h-full min-h-[600px]" />
+        <iframe src={`${url}#toolbar=0`} title={fileName} className="min-h-[600px] h-full w-full" />
       )}
       {!isImage && !isPdf && (
-        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="flex min-h-[18rem] flex-col items-center justify-center space-y-4 p-6 text-center">
           <span className="text-4xl">📄</span>
-          <p className="text-gray-500 text-sm">Preview for this file type is not supported.</p>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-medium hover:underline">Download file instead</a>
+          <p className="text-sm text-slate-500">Preview for this file type is not supported.</p>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-700 underline decoration-blue-200 underline-offset-2 hover:text-blue-800">Download file instead</a>
         </div>
       )}
     </div>

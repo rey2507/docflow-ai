@@ -112,6 +112,8 @@
 
 ## PHASE 13.3 — UI/UX STABILIZATION
 
+- [x] Started implementation: auth shell, loading state, and dashboard shell styling groundwork
+- [x] Implemented dashboard hierarchy, loading, and empty-state improvements
 - [ ] Audit every page and route for layout, spacing, and rendering quality
 - [ ] Improve all DocFlow AI screens, not just auth, to match a polished production UI
 - [ ] Review dashboard, auth, upload, document detail, workflow, reports, and settings screens individually

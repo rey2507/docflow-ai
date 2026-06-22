@@ -164,19 +164,31 @@ function App() {
 
   if (loading) {
     return (
-      <div className="app-shell">
-        <p className="app-shell__muted">Loading…</p>
+      <div className="app-shell app-shell--panel">
+        <div className="app-shell__card app-shell__card--narrow app-shell__card--centered" aria-busy="true">
+          <h1 className="app-shell__title app-shell__title--compact">DocFlow AI</h1>
+          <p className="app-shell__muted app-shell__muted--section">Restoring your session…</p>
+          <div className="app-shell__loading-line" />
+          <p className="app-shell__muted app-shell__muted--reset">Preparing the workspace and verifying your account.</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
+    const isSignIn = authMode === 'signin';
+
     return (
       <div className="app-shell app-shell--panel">
         <div className="app-shell__card app-shell__card--narrow">
           <h1 className="app-shell__title app-shell__title--compact">DocFlow AI</h1>
           <p className="app-shell__muted app-shell__muted--section">
-            {authMode === 'signin' ? 'Sign in to your account' : 'Create a new account'}
+            {isSignIn ? 'Sign in to your workspace' : 'Create your account'}
+          </p>
+          <p className="app-shell__body app-shell__body--compact">
+            {isSignIn
+              ? 'Use your email and password, or request a magic link if you prefer passwordless sign-in.'
+              : 'Create an account, confirm your email, and continue into the document workflow.'}
           </p>
           <form onSubmit={handleAuth}>
             <div className="app-shell__field">
@@ -189,8 +201,11 @@ function App() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
+                autoComplete="email"
+                spellCheck={false}
                 required
                 className="app-shell__input"
+                disabled={isSubmitting}
               />
             </div>
             <div className="app-shell__field">
@@ -203,31 +218,38 @@ function App() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
+                autoComplete={isSignIn ? 'current-password' : 'new-password'}
                 required
                 className="app-shell__input"
+                disabled={isSubmitting}
               />
             </div>
+            {pendingConfirmationEmail && (
+              <p className="app-shell__notice">
+                Confirmation email pending for {pendingConfirmationEmail}. You can resend it below.
+              </p>
+            )}
             {authMessage && (
-              <p className="app-shell__message">{authMessage}</p>
+              <p className="app-shell__message" role="status">{authMessage}</p>
             )}
             {authError && (
-              <p className="app-shell__error">{authError}</p>
+              <p className="app-shell__error" role="alert">{authError}</p>
             )}
             <button
               type="submit"
               className="app-shell__button"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Working...' : authMode === 'signin' ? 'Sign In' : 'Sign Up'}
+              {isSubmitting ? 'Working…' : isSignIn ? 'Sign in' : 'Create account'}
             </button>
-            {authMode === 'signin' && (
+            {isSignIn && (
               <button
                 type="button"
                 className="app-shell__button app-shell__button--secondary"
                 disabled={isSubmitting}
                 onClick={handleMagicLink}
               >
-                {isSubmitting ? 'Working...' : 'Email Me a Magic Link'}
+                {isSubmitting ? 'Working…' : 'Email me a magic link'}
               </button>
             )}
           </form>
@@ -244,18 +266,18 @@ function App() {
             </div>
           )}
           <p className="app-shell__muted app-shell__muted--centered">
-            {authMode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
+            {isSignIn ? "Don't have an account? " : 'Already have an account? '}
             <button
               type="button"
               onClick={() => {
                 setAuthError('');
                 setAuthMessage('');
                 setPendingConfirmationEmail('');
-                setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+                setAuthMode(isSignIn ? 'signup' : 'signin');
               }}
               className="app-shell__link-button"
             >
-              {authMode === 'signin' ? 'Sign up' : 'Sign in'}
+              {isSignIn ? 'Create an account' : 'Sign in'}
             </button>
           </p>
         </div>
