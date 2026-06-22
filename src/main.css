@@ -29,6 +29,12 @@ input {
     radial-gradient(circle at top, rgb(255 255 255 / 0.95), rgb(243 244 246 / 0.96));
 }
 
+.app-shell--unavailable {
+  background:
+    radial-gradient(circle at top, rgb(255 255 255 / 0.96), rgb(248 250 252 / 0.98)),
+    linear-gradient(180deg, rgb(248 250 252 / 1), rgb(241 245 249 / 1));
+}
+
 .app-shell__card {
   width: 100%;
   background-color: rgb(255 255 255 / 0.98);
@@ -59,6 +65,21 @@ input {
 
 .app-shell__title--spaced {
   margin-bottom: 0.75rem;
+}
+
+.app-shell__status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.06);
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .app-shell__title--compact {

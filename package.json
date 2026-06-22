@@ -23,11 +23,15 @@
     "jsdom": "^24.1.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.5",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "wrangler": "^4.103.0"
   },
   "scripts": {
     "build": "vite build && tsc --noEmit",
     "dev": "vite",
+    "dev:worker": "npm run build && npx wrangler dev",
+    "deploy:worker": "npm run build && npx wrangler deploy",
+    "deploy:worker:dry": "npm run build && npx wrangler deploy --dry-run",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

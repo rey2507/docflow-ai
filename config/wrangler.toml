@@ -1,4 +1,5 @@
-# Cloudflare Pages Configuration
+# Legacy Cloudflare Pages reference
+# The active Worker config is now in the root wrangler.jsonc file.
 name = "docflow-ai"
 pages_build_output_dir = "dist"
 

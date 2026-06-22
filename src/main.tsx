@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
 import type { User } from '@supabase/supabase-js';
-import { isSupabaseConfigured, supabase, supabaseConfigError } from './lib/supabase/client';
+import { isSupabaseConfigured, supabase } from './lib/supabase/client';
 import { formatErrorForUser, normalizeAuthError } from './lib/utils/error-normalization';
 import './main.css';
 
@@ -32,14 +32,17 @@ function App() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="app-shell app-shell--panel">
-        <div className="app-shell__card app-shell__card--wide">
+      <div className="app-shell app-shell--panel app-shell--unavailable">
+        <div className="app-shell__card app-shell__card--wide app-shell__card--centered">
+          <div className="app-shell__status-pill">Temporarily unavailable</div>
           <h1 className="app-shell__title app-shell__title--spaced">DocFlow AI</h1>
-          <p className="app-shell__body">Supabase is not configured for this deployment.</p>
-          <p className="app-shell__muted app-shell__muted--spaced">{supabaseConfigError}</p>
-          <p className="app-shell__muted app-shell__muted--reset">
-            Rebuild the site after setting the environment variables in the deployment environment.
+          <p className="app-shell__body">
+            This workspace is currently unavailable. Our team has been notified and service will be restored shortly.
           </p>
+          <p className="app-shell__muted app-shell__muted--spaced">
+            If you need immediate access, please contact support.
+          </p>
+          <p className="app-shell__muted app-shell__muted--reset">Please try again in a few minutes.</p>
         </div>
       </div>
     );

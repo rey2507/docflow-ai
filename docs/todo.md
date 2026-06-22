@@ -168,7 +168,7 @@
 ## PHASE 13.6 — DEPLOYMENT & PRODUCTION LAUNCH PREPARATION
 
 - [ ] Finalize production environment variables
-- [ ] Configure Cloudflare Pages deployment
+- [ ] Configure Cloudflare Workers deployment
 - [ ] Configure Supabase production settings
 - [ ] Verify production migrations
 - [ ] Configure storage buckets/policies

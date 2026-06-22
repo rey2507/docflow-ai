@@ -47,27 +47,47 @@ Recent Major Updates:
 
 1. Clone the repository.
 2. Install dependencies: `npm install`
-3. Configure environment variables in `.env.local` (for local development) or your Cloudflare Pages/Worker environment:
-    - `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL` for Cloudflare Pages build-time injection)
-    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY` for Cloudflare Pages build-time injection)
+3. Configure environment variables in `.env.local` (for local development) or your Cloudflare Worker build/deploy environment:
+    - `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL` for Worker build-time injection)
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `SUPABASE_ANON_KEY` for Worker build-time injection)
    - `AI_DEFAULT_PROVIDER` (e.g., `openai`, `gemini`)
    - `AI_DEFAULT_MODEL` (e.g., `gpt-4o`, `gemini-1.5-pro`)
    - `DATABASE_URL` (Supabase PostgreSQL connection string)
-4. Run the development server (if applicable for your frontend framework): `npm run dev`
+    - Copy/paste example for local development:
+
+      ```dotenv
+      DATABASE_URL=postgresql://postgres:your-password@db.your-project.supabase.co:5432/postgres
+      NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+      AI_DEFAULT_PROVIDER=openai
+      AI_DEFAULT_MODEL=gpt-4o
+      ```
+4. Run the development server: `npm run dev`
 
 ## 🚀 Deployment
 
-This project is designed for deployment on **Cloudflare Pages** for the frontend and API functions, with optional **Cloudflare Workers** for specialized triggers like email ingestion.
+This project is designed for deployment on **Cloudflare Workers** for the frontend, with Supabase handling the database/auth layer.
 
 1.  **Database Setup:**
     *   Ensure your Supabase project is created and `pgvector` is enabled.
     *   Run this SQL command in the Supabase SQL Editor: `CREATE EXTENSION IF NOT EXISTS vector;`
     *   Generate migrations: `npx drizzle-kit generate`
     *   Push migrations to Supabase: `npx drizzle-kit push`
-2.  **Cloudflare Pages:**
-    *   Connect your GitHub repository to Cloudflare Pages.
+2.  **Cloudflare Workers:**
+    *   Connect your GitHub repository to Cloudflare Workers.
+    *   Use the root [wrangler.jsonc](wrangler.jsonc) file as the Worker config.
+    *   Build locally or in CI with `npm run build`, then deploy with `npm run deploy:worker`.
     *   Configure environment variables (`SUPABASE_URL` and `SUPABASE_ANON_KEY`, or the `NEXT_PUBLIC_` equivalents, plus `AI_DEFAULT_PROVIDER` and `AI_DEFAULT_MODEL`).
-    *   Configure your Supabase PostgreSQL connection string in `DATABASE_URL` environment variable.
+    *   Configure your Supabase PostgreSQL connection string in `DATABASE_URL`.
+    *   Copy/paste example for Worker environment variables:
+
+        ```dotenv
+        SUPABASE_URL=https://your-project.supabase.co
+        SUPABASE_ANON_KEY=your-anon-key
+        AI_DEFAULT_PROVIDER=openai
+        AI_DEFAULT_MODEL=gpt-4o
+        DATABASE_URL=postgresql://postgres:your-password@db.your-project.supabase.co:5432/postgres
+        ```
 3.  **Cloudflare Email Worker (Optional):**
     *   If using email import, deploy a standalone Cloudflare Worker (e.g., from `src/workers/email-inbound.ts`) and configure an email route.
 
