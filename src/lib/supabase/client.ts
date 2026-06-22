@@ -15,11 +15,8 @@ export const supabaseConfigError = isSupabaseConfigured
   ? null
   : 'Missing Supabase environment variables. Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or provide SUPABASE_URL and SUPABASE_ANON_KEY at build time.';
 
-if (!isSupabaseConfigured) {
-  // We log an error but don't crash the process immediately to allow for 
-  // environment variable debugging in different deployments.
-  console.error(supabaseConfigError);
-}
+// Keep the deployment safe for customers by avoiding a raw console error here.
+// The app root renders a neutral unavailable screen when Supabase is missing.
 
 // Exported singleton instance
 export const supabase = createClient(
