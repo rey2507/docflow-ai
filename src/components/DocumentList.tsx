@@ -120,7 +120,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onRefresh, onVie
     <div className="w-full">
       {actionFeedback && (
         <div
-          role={actionFeedback.type === 'error' ? 'alert' : 'status'}
+          role="alert"
           aria-live="polite"
           className={`mb-3 rounded-xl border px-4 py-2 text-sm ${
             actionFeedback.type === 'error'
