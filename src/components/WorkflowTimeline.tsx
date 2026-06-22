@@ -22,13 +22,15 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({ documentId }) => {
   useEffect(() => {
     const fetchWorkflow = async () => {
       setLoading(true);
+      setError(null);
       try {
-const { data, error: fetchError } = await WorkflowService.getWorkflowByDocumentId({} as any, documentId);
+        const { data, error: fetchError } = await WorkflowService.getWorkflowByDocumentId({} as any, documentId);
 
         if (fetchError) throw fetchError;
+        if (!data) throw new Error('No workflow found');
         setWorkflow(data);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || 'Failed to load workflow');
       } finally {
         setLoading(false);
       }
@@ -50,7 +52,6 @@ const { data, error: fetchError } = await WorkflowService.getWorkflowByDocumentI
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.error(`[WorkflowTimeline] Realtime subscription ${status}:`, err);
-          setError(`Realtime connection error: ${status}. Live updates may be paused.`);
         }
       });
 

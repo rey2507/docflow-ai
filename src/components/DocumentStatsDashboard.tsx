@@ -57,45 +57,116 @@ const DocumentStatsDashboard: React.FC<DocumentStatsDashboardProps> = ({ userId 
     fetchReports();
   }, [userId]); // Dependency array ensures effect re-runs if userId changes
 
+  // Loading state
   if (loading) {
-    return <div className="p-4 text-gray-600">Loading reports...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-500">Error: {error}</div>;
-  }
-
-  return (
-    <div className="p-4 bg-white shadow rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Document Processing Dashboard</h2>
-
-      {documentStats && (
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-2">Document Statistics</h3>
-          <p className="text-gray-700">Total Documents: <span className="font-medium">{documentStats.total}</span></p>
-          <div className="mt-2">
-            <h4 className="text-lg font-medium">Status Breakdown:</h4>
-            <ul className="list-disc list-inside ml-4">
-              {Object.entries(documentStats.breakdown).map(([status, count]) => (
-                <li key={status}>{status}: <span className="font-medium">{count}</span></li>
-              ))}
-            </ul>
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
+        <div className="space-y-4">
+          <div className="h-8 bg-gray-200 rounded animate-pulse w-1/3"></div>
+          <div className="space-y-3">
+            <div className="h-24 bg-gray-100 rounded animate-pulse"></div>
+            <div className="h-24 bg-gray-100 rounded animate-pulse"></div>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {workflowEfficiency && (
-        <div>
-          <h3 className="text-xl font-semibold mb-2">Workflow Efficiency</h3>
-          <p className="text-gray-700">Active Workflows: <span className="font-medium">{workflowEfficiency.activeCount}</span></p>
-          <p className="text-gray-700">Completed Workflows: <span className="font-medium">{workflowEfficiency.completedCount}</span></p>
-          <p className="text-gray-700">Average Processing Time (minutes): <span className="font-medium">{workflowEfficiency.avgProcessingTimeMinutes !== null ? workflowEfficiency.avgProcessingTimeMinutes : 'N/A'}</span></p>
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-red-200">
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-red-800">Failed to Load Reports</h3>
+            <p className="mt-1 text-sm text-red-700">{error}</p>
+          </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {!documentStats && !workflowEfficiency && (
-        <p className="text-gray-600">No report data available for this user.</p>
-      )}
+  // Empty state
+  const hasData = (documentStats && documentStats.total > 0) || (workflowEfficiency && (workflowEfficiency.activeCount > 0 || workflowEfficiency.completedCount > 0));
+  
+  if (!hasData) {
+    return (
+      <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
+        <div className="text-center">
+          <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No report data available</h3>
+          <p className="mt-1 text-sm text-gray-500">Start processing documents to see statistics and efficiency metrics.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Data rendering state
+  return (
+    <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900">Dashboard</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Document Statistics Card */}
+        {documentStats && (
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+            <h3 className="text-lg font-semibold text-blue-900 mb-4">Document Statistics</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-blue-700">Total Documents</span>
+                <span className="text-2xl font-bold text-blue-900">{documentStats.total}</span>
+              </div>
+              {Object.keys(documentStats.breakdown).length > 0 && (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <p className="text-sm font-medium text-blue-700 mb-2">Status Breakdown</p>
+                  <div className="space-y-1">
+                    {Object.entries(documentStats.breakdown).map(([status, count]) => (
+                      <div key={status} className="flex justify-between text-sm">
+                        <span className="text-blue-700 capitalize">{status}</span>
+                        <span className="font-medium text-blue-900">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Workflow Efficiency Card */}
+        {workflowEfficiency && (
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+            <h3 className="text-lg font-semibold text-green-900 mb-4">Workflow Efficiency</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-green-700">Active Workflows</span>
+                <span className="text-2xl font-bold text-green-900">{workflowEfficiency.activeCount}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-green-700">Completed Workflows</span>
+                <span className="text-2xl font-bold text-green-900">{workflowEfficiency.completedCount}</span>
+              </div>
+              <div className="mt-4 pt-4 border-t border-green-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-green-700">Avg Processing Time</span>
+                  <span className="text-lg font-semibold text-green-900">
+                    {workflowEfficiency.avgProcessingTimeMinutes !== null 
+                      ? `${workflowEfficiency.avgProcessingTimeMinutes} min` 
+                      : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

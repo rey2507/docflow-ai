@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { ReportService } from '../services/reports/report.service';
-import type { Document, DocumentStatus, DocumentType } from '../types/document';
+import type { Document } from '../types/document';
 import DocumentList from './DocumentList';
 import DocumentDetails from './DocumentDetails';
 
@@ -40,6 +40,18 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   const [providerFilter, setProviderFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<'createdAt' | 'name'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const hasActiveFilters = search !== '' || statusFilter !== '' || typeFilter !== '' || providerFilter !== '';
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setTypeFilter('');
+    setProviderFilter('');
+    setSortBy('createdAt');
+    setSortOrder('desc');
+    setPage(1);
+  };
 
   const fetchStats = useCallback(async () => {
     const { data, error } = await ReportService.getUserDocumentStats(userId);
@@ -215,6 +227,14 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
               <span aria-hidden="true">{sortOrder === 'asc' ? '↑' : '↓'}</span>
               <span className="sr-only">Toggle sort direction</span>
             </button>
+            <button
+              type="button"
+              onClick={resetFilters}
+              disabled={!hasActiveFilters && sortBy === 'createdAt' && sortOrder === 'desc'}
+              className="rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Reset filters
+            </button>
             </div>
             <div className="text-slate-500">
               {page > 1 ? `Page ${page} of ${totalPages}` : 'First page'}
@@ -242,15 +262,25 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
                 Retry
               </button>
             </div>
+          ) : documents.length === 0 && hasActiveFilters ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+              <p className="text-base font-semibold text-slate-900">No documents match these filters.</p>
+              <p className="mt-2 text-sm text-slate-500">
+                Clear the current search or filters to return to the full queue.
+              </p>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+              >
+                Reset filters
+              </button>
+            </div>
           ) : documents.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-              <p className="text-base font-semibold text-slate-900">
-                {search || statusFilter || typeFilter || providerFilter ? 'No documents match these filters.' : 'No documents yet.'}
-              </p>
+              <p className="text-base font-semibold text-slate-900">No documents yet.</p>
               <p className="mt-2 text-sm text-slate-500">
-                {search || statusFilter || typeFilter || providerFilter
-                  ? 'Clear a filter or search term to return to the full queue.'
-                  : 'When documents arrive, they will appear here with processing status and review actions.'}
+                When documents arrive, they will appear here with processing status and review actions.
               </p>
             </div>
           ) : (
