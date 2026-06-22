@@ -2,14 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
+import AppShell from './components/layout/AppShell';
+import UploadPage from './pages/UploadPage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 import type { User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from './lib/supabase/client';
 import { formatErrorForUser, normalizeAuthError } from './lib/utils/error-normalization';
 import './main.css';
 
-/**
- * App root — handles auth state and renders the dashboard.
- */
+type Page = 'dashboard' | 'upload' | 'reports' | 'settings';
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +23,7 @@ function App() {
   const [authMessage, setAuthMessage] = useState('');
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const setFriendlyAuthError = (error: unknown) => {
     const normalized = normalizeAuthError(error);
@@ -49,29 +53,24 @@ function App() {
   }
 
   useEffect(() => {
-    // Resolve initial session
     AuthService.getSession()
       .then(({ session, error }) => {
         if (error) {
           setFriendlyAuthError(error);
         }
-
         setUser(session?.user ?? null);
       })
       .finally(() => {
         setLoading(false);
       });
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-
       if (event === 'SIGNED_IN' && session?.user) {
         setAuthError('');
         setAuthMessage('');
         setPendingConfirmationEmail('');
       }
-
       if (event === 'SIGNED_OUT') {
         setAuthMessage('');
       }
@@ -102,9 +101,8 @@ function App() {
         setUser(data.session.user);
         return;
       }
-
-  setPendingConfirmationEmail(email.trim());
-  setAuthMessage(`Account created. We sent a confirmation email to ${email.trim()}. Confirm your address, then sign in.`);
+      setPendingConfirmationEmail(email.trim());
+      setAuthMessage(`Account created. We sent a confirmation email to ${email.trim()}. Confirm your address, then sign in.`);
       setPassword('');
       setAuthMode('signin');
       return;
@@ -288,7 +286,28 @@ function App() {
     );
   }
 
-  return <MainDashboard userId={user.id} />;
+  const navigate = useCallback((page: Page) => setCurrentPage(page), []);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <MainDashboard userId={user.id} onNavigate={navigate} />;
+      case 'upload':
+        return <UploadPage userId={user.id} onUploadComplete={() => navigate('dashboard')} />;
+      case 'reports':
+        return <ReportsPage userId={user.id} />;
+      case 'settings':
+        return <SettingsPage user={user} onSignOut={() => setUser(null)} />;
+      default:
+        return <MainDashboard userId={user.id} onNavigate={navigate} />;
+    }
+  };
+
+  return (
+    <AppShell currentPage={currentPage} onNavigate={navigate}>
+      {renderPage()}
+    </AppShell>
+  );
 }
 
 const root = createRoot(document.getElementById('root')!);

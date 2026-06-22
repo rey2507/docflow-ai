@@ -14,17 +14,12 @@ interface DashboardStats {
 
 interface MainDashboardProps {
   userId: string;
+  onNavigate?: (page: string) => void;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-/**
- * MainDashboard Component
- * 
- * Implements Task 7.1: A comprehensive dashboard for managing documents
- * with stats, search, filtering, and pagination.
- */
-const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
+const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DashboardStats>({ total: 0, processing: 0, completed: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
@@ -32,8 +27,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-
-  // Filter and Sort State
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
@@ -75,16 +68,13 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
         .select('*', { count: 'exact' })
         .eq('userId', userId);
 
-      // Apply Filters
-      if (search) query = query.ilike('name', `%${search}%`);
+      if (search) query = query.ilike('name', '%' + search + '%');
       if (statusFilter) query = query.eq('status', statusFilter);
       if (typeFilter) query = query.eq('type', typeFilter);
       if (providerFilter) query = query.filter('metadata->>aiProvider', 'eq', providerFilter);
 
-      // Apply Sorting
       query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
-      // Apply Pagination
       const from = (page - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
       query = query.range(from, to);
@@ -109,7 +99,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  // Render Detail View if a document is selected
   if (selectedDocumentId) {
     return (
       <DocumentDetails documentId={selectedDocumentId} onBack={() => setSelectedDocumentId(null)} />
@@ -117,21 +106,29 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/70">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8 space-y-6 lg:space-y-8">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace dashboard</p>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Documents</h2>
-            <p className="mt-1 text-sm text-slate-600">Review processing status, filter the queue, and open a document when you need details.</p>
-          </div>
-          <div className="text-sm text-slate-500">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Workspace dashboard</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Documents</h2>
+          <p className="mt-1 text-sm text-slate-600">Review processing status, filter the queue, and open a document when you need details.</p>
+        </div>
+        <div className="flex gap-3">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('upload')}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Upload
+            </button>
+          )}
+          <div className="text-sm text-slate-500 self-center">
             Showing {documents.length} of {totalCount} documents
           </div>
         </div>
+      </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Total', value: stats.total, color: 'text-slate-900', bg: 'bg-white', hint: 'All documents in the workspace' },
           { label: 'Processing', value: stats.processing, color: 'text-blue-700', bg: 'bg-blue-50', hint: 'Pending, processing, or validating' },
@@ -144,12 +141,10 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             <p className="mt-2 text-sm text-slate-600">{item.hint}</p>
           </div>
         ))}
-        </div>
+      </div>
 
-        {/* Filter Bar */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 space-y-4">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          {/* Search */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 space-y-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <div className="lg:col-span-1">
             <input
               type="text"
@@ -161,7 +156,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             />
           </div>
 
-          {/* Status Filter */}
           <select
             aria-label="Filter by document status"
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -176,7 +170,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             <option value="failed">Failed</option>
           </select>
 
-          {/* Type Filter */}
           <select
             aria-label="Filter by document type"
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -190,7 +183,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             <option value="other">Other</option>
           </select>
 
-          {/* Provider Filter */}
           <select
             aria-label="Filter by AI provider"
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -202,25 +194,24 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             <option value="gemini">Gemini</option>
             <option value="anthropic">Anthropic</option>
           </select>
-          </div>
+        </div>
 
-          {/* Sorting Controls */}
-          <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="font-medium text-slate-500">Sort by</span>
-            <button 
+            <button
               onClick={() => setSortBy('createdAt')}
-              className={`rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ${sortBy === 'createdAt' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600'}`}
+              className={'rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ' + (sortBy === 'createdAt' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600')}
             >
               Date
             </button>
-            <button 
+            <button
               onClick={() => setSortBy('name')}
-              className={`rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ${sortBy === 'name' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600'}`}
+              className={'rounded-full px-3 py-1.5 transition hover:bg-slate-100 hover:text-blue-700 ' + (sortBy === 'name' ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600')}
             >
               Name
             </button>
-            <button 
+            <button
               onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
               className="flex items-center gap-1 rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-blue-700"
             >
@@ -235,96 +226,91 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId }) => {
             >
               Reset filters
             </button>
-            </div>
-            <div className="text-slate-500">
-              {page > 1 ? `Page ${page} of ${totalPages}` : 'First page'}
-            </div>
+          </div>
+          <div className="text-slate-500">
+            {page > 1 ? 'Page ' + page + ' of ' + totalPages : 'First page'}
           </div>
         </div>
+      </div>
 
-        {/* Document List */}
-        <div className="space-y-4">
-          {loading ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
-              <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-full bg-slate-200" />
-              <p className="font-medium text-slate-700">Loading documents</p>
-              <p className="mt-1 text-sm text-slate-500">Fetching the latest document queue and status updates.</p>
-            </div>
-          ) : fetchError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 shadow-sm">
-              <p className="font-semibold text-rose-900">Unable to load documents</p>
-              <p className="mt-1 text-sm text-rose-800">{fetchError}</p>
-              <button
-                type="button"
-                onClick={() => { fetchStats(); fetchDocuments(); }}
-                className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
-              >
-                Retry
-              </button>
-            </div>
-          ) : documents.length === 0 && hasActiveFilters ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-              <p className="text-base font-semibold text-slate-900">No documents match these filters.</p>
-              <p className="mt-2 text-sm text-slate-500">
-                Clear the current search or filters to return to the full queue.
-              </p>
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-              >
-                Reset filters
-              </button>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-              <p className="text-base font-semibold text-slate-900">No documents yet.</p>
-              <p className="mt-2 text-sm text-slate-500">
-                When documents arrive, they will appear here with processing status and review actions.
-              </p>
-            </div>
-          ) : (
-            <DocumentList 
-              documents={documents} 
-              onRefresh={() => { fetchStats(); fetchDocuments(); }}
-              onViewDetails={(id) => setSelectedDocumentId(id)}
-            />
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+      <div className="space-y-4">
+        {loading ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center text-slate-500 shadow-sm">
+            <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-full bg-slate-200" />
+            <p className="font-medium text-slate-700">Loading documents</p>
+            <p className="mt-1 text-sm text-slate-500">Fetching the latest document queue and status updates.</p>
+          </div>
+        ) : fetchError ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-10 shadow-sm">
+            <p className="font-semibold text-rose-900">Unable to load documents</p>
+            <p className="mt-1 text-sm text-rose-800">{fetchError}</p>
             <button
-              disabled={page === 1}
-              onClick={() => setPage(p => p - 1)}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={() => { fetchStats(); fetchDocuments(); }}
+              className="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700"
             >
-              Previous
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`h-10 min-w-10 rounded-xl border px-3 text-sm font-medium transition ${
-                    page === p ? 'border-blue-600 bg-blue-600 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage(p => p + 1)}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Next
+              Retry
             </button>
           </div>
+        ) : documents.length === 0 && hasActiveFilters ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+            <p className="text-base font-semibold text-slate-900">No documents match these filters.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Clear the current search or filters to return to the full queue.
+            </p>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            >
+              Reset filters
+            </button>
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+            <p className="text-base font-semibold text-slate-900">No documents yet.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              When documents arrive, they will appear here with processing status and review actions.
+            </p>
+          </div>
+        ) : (
+          <DocumentList
+            documents={documents}
+            onRefresh={() => { fetchStats(); fetchDocuments(); }}
+            onViewDetails={(id) => setSelectedDocumentId(id)}
+          />
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(p => p - 1)}
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={'h-10 min-w-10 rounded-xl border px-3 text-sm font-medium transition ' + (page === p ? 'border-blue-600 bg-blue-600 text-white shadow-sm' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50')}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(p => p + 1)}
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
