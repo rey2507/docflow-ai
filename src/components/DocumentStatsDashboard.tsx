@@ -16,6 +16,11 @@ interface DocumentStatsDashboardProps {
   userId: string;
 }
 
+const DASHBOARD_CARD_BASE = 'p-6 bg-white shadow rounded-lg border border-slate-200';
+const STAT_CARD_BASE = 'rounded-lg p-4 border';
+const DOCUMENT_STATS_CARD = `${STAT_CARD_BASE} bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200`;
+const WORKFLOW_EFFICIENCY_CARD = `${STAT_CARD_BASE} bg-gradient-to-br from-green-50 to-green-100 border-green-200`;
+
 /**
  * DocumentStatsDashboard Component
  * 
@@ -60,12 +65,12 @@ const DocumentStatsDashboard: React.FC<DocumentStatsDashboardProps> = ({ userId 
   // Loading state
   if (loading) {
     return (
-      <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
+      <div className={DASHBOARD_CARD_BASE}>
         <div className="space-y-4">
-          <div className="h-8 bg-gray-200 rounded animate-pulse w-1/3"></div>
+          <div className="h-8 bg-slate-200 rounded animate-pulse w-1/3"></div>
           <div className="space-y-3">
-            <div className="h-24 bg-gray-100 rounded animate-pulse"></div>
-            <div className="h-24 bg-gray-100 rounded animate-pulse"></div>
+            <div className="h-24 bg-slate-100 rounded animate-pulse"></div>
+            <div className="h-24 bg-slate-100 rounded animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -96,13 +101,13 @@ const DocumentStatsDashboard: React.FC<DocumentStatsDashboardProps> = ({ userId 
   
   if (!hasData) {
     return (
-      <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
+      <div className={DASHBOARD_CARD_BASE}>
         <div className="text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="mx-auto h-12 w-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No report data available</h3>
-          <p className="mt-1 text-sm text-gray-500">Start processing documents to see statistics and efficiency metrics.</p>
+          <h3 className="mt-2 text-sm font-medium text-slate-900">No report data available</h3>
+          <p className="mt-1 text-sm text-slate-500">Start processing documents to see statistics and efficiency metrics.</p>
         </div>
       </div>
     );
@@ -110,13 +115,13 @@ const DocumentStatsDashboard: React.FC<DocumentStatsDashboardProps> = ({ userId 
 
   // Data rendering state
   return (
-    <div className="p-6 bg-white shadow rounded-lg border border-gray-200">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900">Dashboard</h2>
+    <div className={DASHBOARD_CARD_BASE}>
+      <h2 className="text-2xl font-bold mb-6 text-slate-900">Dashboard</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Document Statistics Card */}
         {documentStats && (
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+          <div className={DOCUMENT_STATS_CARD}>
             <h3 className="text-lg font-semibold text-blue-900 mb-4">Document Statistics</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -142,7 +147,7 @@ const DocumentStatsDashboard: React.FC<DocumentStatsDashboardProps> = ({ userId 
 
         {/* Workflow Efficiency Card */}
         {workflowEfficiency && (
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+          <div className={WORKFLOW_EFFICIENCY_CARD}>
             <h3 className="text-lg font-semibold text-green-900 mb-4">Workflow Efficiency</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center">

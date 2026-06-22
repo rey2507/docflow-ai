@@ -100,8 +100,34 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12 text-center text-slate-500">
-        Loading document details…
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="h-4 w-40 animate-pulse rounded-full bg-slate-200" />
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="space-y-2">
+              <div className="h-3 w-16 animate-pulse rounded-full bg-slate-200" />
+              <div className="h-5 w-40 animate-pulse rounded-full bg-slate-200" />
+            </div>
+            <div className="aspect-[4/5] w-full animate-pulse rounded-2xl bg-slate-100" />
+          </div>
+
+          <div className="space-y-8">
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="h-5 w-44 animate-pulse rounded-full bg-slate-200" />
+              <div className="h-24 w-full animate-pulse rounded-2xl bg-slate-100" />
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="h-5 w-36 animate-pulse rounded-full bg-slate-200" />
+              <div className="space-y-3">
+                <div className="h-4 w-full animate-pulse rounded-full bg-slate-100" />
+                <div className="h-4 w-5/6 animate-pulse rounded-full bg-slate-100" />
+                <div className="h-4 w-4/6 animate-pulse rounded-full bg-slate-100" />
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
     );
   }
@@ -147,9 +173,6 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
         <button onClick={onBack} className="flex items-center text-sm font-medium text-slate-500 transition hover:text-slate-700">
           <span className="mr-1">←</span> Back to Dashboard
         </button>
-        <div className="flex space-x-2">
-           {/* Placeholder for future actions like 'Edit' or 'Export' */}
-        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">

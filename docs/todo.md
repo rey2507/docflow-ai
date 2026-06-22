@@ -114,26 +114,26 @@
 
 - [x] Started implementation: auth shell, loading state, and dashboard shell styling groundwork
 - [x] Implemented dashboard hierarchy, loading, and empty-state improvements
-- [ ] Audit every page and route for layout, spacing, and rendering quality
-- [ ] Improve all DocFlow AI screens, not just auth, to match a polished production UI
+- [x] Improve login/signup flow feedback and session handling
+- [x] Make email confirmation signup feel polished and reliable
+- [x] Add resend confirmation email flow
+- [x] Add magic-link login option
+- [x] Improve auth error messages, rate-limit messaging, and confirmation UX
+- [x] Improve document stats/cards/filters for clearer hierarchy and readability
+- [x] Standardize error states and retry actions across every page
+- [x] Verify realtime dashboard updates have visible UI feedback
+- [x] Simplify unstable UI components and reduce clutter
+- [x] Audit every page and route for layout, spacing, and rendering quality
+- [x] Improve all DocFlow AI screens, not just auth, to match a polished production UI
 - [ ] Review dashboard, auth, upload, document detail, workflow, reports, and settings screens individually
-- [ ] Redesign dashboard empty states so zero-data views still feel intentional
-- [ ] Improve document stats/cards/filters for clearer hierarchy and readability
-- [ ] Standardize loading states across every page and shared shell
-- [ ] Standardize empty states and no-results states across the app
-- [ ] Standardize error states and retry actions across every page
-- [ ] Improve login/signup flow feedback and session handling
-- [ ] Make email confirmation signup feel polished and reliable
-- [ ] Add resend confirmation email flow
-- [ ] Add magic-link login option
-- [ ] Improve auth error messages, rate-limit messaging, and confirmation UX
+- [x] Redesign dashboard empty states so zero-data views still feel intentional
+- [x] Standardize loading states across every page and shared shell
+- [x] Standardize empty states and no-results states across the app
 - [ ] Verify responsive layouts on mobile, tablet, and desktop
-- [ ] Verify realtime dashboard updates have visible UI feedback
-- [ ] Simplify unstable UI components and reduce clutter
 - [ ] Verify upload workflow UX from upload to finalization
-- [ ] Validate workspace UI consistency across all screens
-- [ ] Remove placeholder/demo remnants and weak default wording
-- [ ] Polish navigation, spacing, typography, and visual hierarchy app-wide
+- [x] Validate workspace UI consistency across all screens
+- [x] Remove placeholder/demo remnants and weak default wording
+- [x] Polish navigation, spacing, typography, and visual hierarchy app-wide
 - [ ] Review every screen even if the current bug is not visible there
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING

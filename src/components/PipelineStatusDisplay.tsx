@@ -144,6 +144,12 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
 
         {document && (
           <>
+            {!document.status && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                Workflow not started yet.
+              </div>
+            )}
+
             {document.status === 'failed' && (
               <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
                 <p className="text-sm font-semibold text-rose-800">Processing failed</p>
