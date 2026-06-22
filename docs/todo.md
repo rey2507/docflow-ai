@@ -135,6 +135,7 @@
 - [x] Remove placeholder/demo remnants and weak default wording
 - [x] Polish navigation, spacing, typography, and visual hierarchy app-wide
 - [x] Review every screen even if the current bug is not visible there
+- [ ] Redesign dashboard layout with modern cards, better color scheme, and improved document list
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 

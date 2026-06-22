@@ -22,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
       {navItems.map((item) => (
         <button
           key={item.id}
+          type="button"
           onClick={() => {
             onNavigate(item.id);
             setMobileOpen(false);
@@ -38,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
   return (
     <>
       <button
+        type="button"
         className="md:hidden fixed bottom-4 right-4 z-50 rounded-full bg-blue-600 p-3 text-white shadow-lg"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
@@ -52,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
           <aside className="w-64 bg-white h-full p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <span className="text-xl font-bold text-slate-900">DocFlow AI</span>
-              <button onClick={() => setMobileOpen(false)} className="text-slate-500 hover:text-slate-900">
+              <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" className="text-slate-500 hover:text-slate-900">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
