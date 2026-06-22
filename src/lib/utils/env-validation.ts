@@ -36,14 +36,14 @@ export function validateEnvironment(): EnvironmentConfig {
   }
 
   // Supabase Configuration (Required)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
   
   if (!supabaseUrl) {
-    errors.push('NEXT_PUBLIC_SUPABASE_URL environment variable is not set.');
+    errors.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL environment variable is not set.');
   }
   if (!supabaseAnonKey) {
-    errors.push('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is not set.');
+    errors.push('NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY environment variable is not set.');
   }
 
   // AI Provider Configuration (At least one provider key required)
@@ -98,8 +98,8 @@ export function logEnvironmentInfo(): void {
       url: `${process.env.DATABASE_URL?.substring(0, 30)}...` || 'NOT SET',
     },
     supabase: {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET',
-      anonKeySet: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'NOT SET',
+      anonKeySet: !!(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY),
     },
     ai: {
       defaultProvider: process.env.AI_DEFAULT_PROVIDER || 'openai',

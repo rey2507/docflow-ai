@@ -3,6 +3,8 @@ name = "docflow-ai"
 pages_build_output_dir = "dist"
 
 [vars]
+# Set these in Cloudflare Pages/Workers for production builds.
+# The app accepts either NEXT_PUBLIC_SUPABASE_* or SUPABASE_* names.
 SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_ANON_KEY = "your-anon-key"
 AI_DEFAULT_PROVIDER = "openai"
