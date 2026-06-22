@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AuthService } from './services/auth/auth.service';
 import MainDashboard from './components/MainDashboard';
-import AppShell from './components/layout/AppShell';
-import UploadPage from './pages/UploadPage';
-import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
 import type { User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from './lib/supabase/client';
 import { formatErrorForUser, normalizeAuthError } from './lib/utils/error-normalization';
 import './main.css';
 
-type Page = 'dashboard' | 'upload' | 'reports' | 'settings';
-
+/**
+ * App root — handles auth state and renders the dashboard.
+ */
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +20,6 @@ function App() {
   const [authMessage, setAuthMessage] = useState('');
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const setFriendlyAuthError = (error: unknown) => {
     const normalized = normalizeAuthError(error);
@@ -53,6 +49,7 @@ function App() {
   }
 
   useEffect(() => {
+    // Resolve initial session
     AuthService.getSession()
       .then(({ session, error }) => {
         if (error) {
@@ -64,6 +61,7 @@ function App() {
         setLoading(false);
       });
 
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === 'SIGNED_IN' && session?.user) {
@@ -286,28 +284,7 @@ function App() {
     );
   }
 
-  const navigate = useCallback((page: Page) => setCurrentPage(page), []);
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <MainDashboard userId={user.id} onNavigate={navigate} />;
-      case 'upload':
-        return <UploadPage userId={user.id} onUploadComplete={() => navigate('dashboard')} />;
-      case 'reports':
-        return <ReportsPage userId={user.id} />;
-      case 'settings':
-        return <SettingsPage user={user} onSignOut={() => setUser(null)} />;
-      default:
-        return <MainDashboard userId={user.id} onNavigate={navigate} />;
-    }
-  };
-
-  return (
-    <AppShell currentPage={currentPage} onNavigate={navigate}>
-      {renderPage()}
-    </AppShell>
-  );
+  return <MainDashboard userId={user.id} />;
 }
 
 const root = createRoot(document.getElementById('root')!);

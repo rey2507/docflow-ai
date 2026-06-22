@@ -125,16 +125,16 @@
 - [x] Simplify unstable UI components and reduce clutter
 - [x] Audit every page and route for layout, spacing, and rendering quality
 - [x] Improve all DocFlow AI screens, not just auth, to match a polished production UI
-- [ ] Review dashboard, auth, upload, document detail, workflow, reports, and settings screens individually
+- [x] Review dashboard, auth, upload, document detail, workflow, reports, and settings screens individually
 - [x] Redesign dashboard empty states so zero-data views still feel intentional
 - [x] Standardize loading states across every page and shared shell
 - [x] Standardize empty states and no-results states across the app
-- [ ] Verify responsive layouts on mobile, tablet, and desktop
-- [ ] Verify upload workflow UX from upload to finalization
+- [x] Verify responsive layouts on mobile, tablet, and desktop
+- [x] Verify upload workflow UX from upload to finalization
 - [x] Validate workspace UI consistency across all screens
 - [x] Remove placeholder/demo remnants and weak default wording
 - [x] Polish navigation, spacing, typography, and visual hierarchy app-wide
-- [ ] Review every screen even if the current bug is not visible there
+- [x] Review every screen even if the current bug is not visible there
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 

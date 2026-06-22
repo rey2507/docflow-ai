@@ -12,9 +12,11 @@ interface DashboardStats {
   failed: number;
 }
 
+type Page = 'dashboard' | 'upload' | 'reports' | 'settings';
+
 interface MainDashboardProps {
   userId: string;
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: Page) => void;
 }
 
 const ITEMS_PER_PAGE = 10;

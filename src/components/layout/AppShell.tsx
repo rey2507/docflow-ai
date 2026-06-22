@@ -1,9 +1,11 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 
+type Page = 'dashboard' | 'upload' | 'reports' | 'settings';
+
 interface AppShellProps {
-  currentPage: string;
-  onNavigate: (page: string) => void;
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
   children: React.ReactNode;
 }
 
