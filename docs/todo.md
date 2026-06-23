@@ -237,13 +237,13 @@
 - [x] Generate audit documentation files
 
 ### Phase 15.2 — Component Primitives
-- [ ] Create `src/components/ui/button.tsx` (primary/secondary/ghost/danger)
-- [ ] Create `src/components/ui/badge.tsx` (status variants)
-- [ ] Create `src/components/ui/input.tsx` (form field with label)
-- [ ] Create `src/components/ui/card.tsx` (container + header + body)
-- [ ] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
-- [ ] Create `src/components/ui/empty-state.tsx`
-- [ ] Create `src/components/ui/error-boundary.tsx`
+- [x] Create `src/components/ui/button.tsx` (primary/secondary/ghost/danger)
+- [x] Create `src/components/ui/badge.tsx` (status variants)
+- [x] Create `src/components/ui/input.tsx` (form field with label)
+- [x] Create `src/components/ui/card.tsx` (container + header + body)
+- [x] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
+- [x] Create `src/components/ui/empty-state.tsx`
+- [x] Create `src/components/ui/error-boundary.tsx`
 - [ ] Standardize existing components to use primitives
 
 ### Phase 15.3 — Layout Standardization
@@ -291,3 +291,14 @@
 3. **Routing Migration** — Implement router and fix broken sidebar routes
 4. **State Management** — Replace ad-hoc fetching with shared hooks
 5. **Accessibility Polish** — Fix focus, ARIA, and keyboard support
+
+## Completed Today
+
+- ✅ Created `src/components/ui/button.tsx` with primary/secondary/ghost/danger variants, loading state, and size variants (sm/md/lg)
+- ✅ Created `src/components/ui/badge.tsx` with default/success/warning/error/info variants
+- ✅ Created `src/components/ui/input.tsx` with label, error, helper text support and SearchInput variant
+- ✅ Created `src/components/ui/card.tsx` with Card, CardHeader, CardBody, CardFooter compound components
+- ✅ Created `src/components/ui/skeleton.tsx` with Skeleton, SkeletonCard, SkeletonTable variants
+- ✅ Created `src/components/ui/empty-state.tsx` with optional icon/action support
+- ✅ Created `src/components/ui/error-boundary.tsx` with reset capability
+- ✅ Created `src/components/ui/layout.tsx` with PageContainer and SectionContainer
