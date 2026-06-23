@@ -222,10 +222,72 @@
 
 ---
 
+## PHASE 15 — FRONTEND STABILIZATION & REBUILD
+
+### Phase 15.1 — Frontend Audit (Completed)
+- [x] Conduct folder structure audit
+- [x] Create component inventory
+- [x] Create route/screen inventory
+- [x] Conduct Tailwind/styling audit
+- [x] Define design system architecture
+- [x] Audit navigation and workflow UX
+- [x] Audit state UX (loading, error, empty states)
+- [x] Audit responsiveness across breakpoints
+- [x] Audit accessibility and usability
+- [x] Generate audit documentation files
+
+### Phase 15.2 — Component Primitives
+- [ ] Create `src/components/ui/button.tsx` (primary/secondary/ghost/danger)
+- [ ] Create `src/components/ui/badge.tsx` (status variants)
+- [ ] Create `src/components/ui/input.tsx` (form field with label)
+- [ ] Create `src/components/ui/card.tsx` (container + header + body)
+- [ ] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
+- [ ] Create `src/components/ui/empty-state.tsx`
+- [ ] Create `src/components/ui/error-boundary.tsx`
+- [ ] Standardize existing components to use primitives
+
+### Phase 15.3 — Layout Standardization
+- [ ] Refine AppShell for route-aware behavior
+- [ ] Consolidate Sidebar styles (remove duplicate patterns)
+- [ ] Standardize Header
+- [ ] Create `PageContainer` component
+- [ ] Create `SectionContainer` component
+
+### Phase 15.4 — Component Consolidation
+- [ ] Unify RecentDocumentsTable + DocumentList into single Table component
+- [ ] Unify UploadZone across pages
+- [ ] Create unified StatsCard
+- [ ] Create unified StatusBadge
+- [ ] Replace ad-hoc skeletons with Skeleton component
+- [ ] Standardize error states
+
+### Phase 15.5 — Routing & Navigation
+- [ ] Install TanStack Router or React Router
+- [ ] Define all application routes
+- [ ] Implement lazy loading for routes
+- [ ] Add breadcrumbs component
+- [ ] Add 404 page handling
+- [ ] Fix back button / browser history
+- [ ] Implement deep linking for document details
+
+### Phase 15.6 — State Management
+- [ ] Add TanStack Query for data fetching
+- [ ] Create custom hooks (useDocuments, useStats, etc.)
+- [ ] Add caching and optimistic update patterns
+- [ ] Standardize loading/error states via hooks
+
+### Phase 15.7 — Polish & Accessibility
+- [ ] Accessibility audit pass
+- [ ] Standardize focus states
+- [ ] Verify keyboard navigation
+- [ ] Add skip navigation
+- [ ] Test with screen readers
+- [ ] Prepare dark mode system
+
 ## CURRENT PRIORITY
 
-1. **Infrastructure stabilization** — Fix TypeScript paths, standardize imports, remove legacy code
-2. **UI/UX stabilization** — Improve every page and shared UI pattern across the app
-3. **Error handling & resilience** — Add boundaries, normalize responses, improve recovery
-4. **Real system testing** — E2E workflow validation, provider testing, RLS verification
-5. **Deployment preparation** — Environment config, production settings, final readiness audit
+1. **Component Primitives** — Create `ui/` library: Button, Badge, Card, Input, Skeleton
+2. **Component Consolidation** — Eliminate duplicated tables, uploads, stats cards
+3. **Routing Migration** — Implement router and fix broken sidebar routes
+4. **State Management** — Replace ad-hoc fetching with shared hooks
+5. **Accessibility Polish** — Fix focus, ARIA, and keyboard support
