@@ -1,23 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-
-type Page = 'dashboard' | 'upload' | 'reports' | 'settings';
+import Header from './Header';
+import type { Page } from '../../types/page';
 
 interface AppShellProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
+  userEmail?: string;
+  usagePercent?: number;
   children: React.ReactNode;
 }
 
-const AppShell: React.FC<AppShellProps> = ({ currentPage, onNavigate, children }) => {
+const AppShell: React.FC<AppShellProps> = ({
+  currentPage,
+  onNavigate,
+  userEmail,
+  usagePercent = 0,
+  children,
+}) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <div className="flex h-screen bg-slate-50">
-      <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b border-slate-200 shadow-sm flex items-center justify-between px-6">
-          <h1 className="text-lg font-semibold text-slate-900">DocFlow AI</h1>
-          <div className="text-sm text-slate-500">Workspace</div>
-        </header>
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={onNavigate}
+        userEmail={userEmail}
+        usagePercent={usagePercent}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header
+          title={
+            currentPage === 'dashboard'
+              ? 'Dashboard'
+              : currentPage === 'upload'
+              ? 'Uploads'
+              : currentPage === 'reports'
+              ? 'Reports'
+              : currentPage === 'settings'
+              ? 'Settings'
+              : currentPage === 'workflows'
+              ? 'Workflows'
+              : currentPage === 'chat'
+              ? 'AI Chat'
+              : 'Dashboard'
+          }
+          onUploadClick={() => onNavigate('upload')}
+        />
         <main className="flex-1 overflow-auto">
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             {children}

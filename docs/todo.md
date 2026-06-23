@@ -135,7 +135,33 @@
 - [x] Remove placeholder/demo remnants and weak default wording
 - [x] Polish navigation, spacing, typography, and visual hierarchy app-wide
 - [x] Review every screen even if the current bug is not visible there
-- [ ] Redesign dashboard layout with modern cards, better color scheme, and improved document list
+- [x] Redesign dashboard layout with modern cards, better color scheme, and improved document list
+- [x] Stat cards: add icons + gradient accent variants (Total/Processing/Completed/Failed)
+- [x] Filter bar: collapsible panel with pill/chip-style active filters and "Clear all" chip
+- [x] Document list: switch primary view to card grid (1/2/3 cols), table as optional toggle
+- [x] Add hover lift effect on cards (`hover:-translate-y-0.5 hover:shadow-md`)
+- [x] Standardize card token: `rounded-xl border border-slate-200 bg-white shadow-sm`
+- [x] Replace pulse skeleton rectangles with skeleton cards matching new layout
+- [x] Improve empty states: add subtle icon and upload CTA button
+- [x] Verify responsive breakpoints: 320px / 768px / 1280px
+- [x] Run build and visual regression check
+
+## PHASE 13.7 — PROFESSIONAL DASHBOARD UI
+
+- [x] Install lucide-react for professional icon system
+- [x] Create shared Page type (`src/types/page.ts`)
+- [x] Rewrite Sidebar.tsx with SaaS-style navigation (icons, workspace, usage bar, profile)
+- [x] Rewrite Header.tsx with search, notifications, workspace selector, quick upload
+- [x] Rewrite AppShell.tsx as proper layout shell (sidebar + header + content area)
+- [x] Create DashboardOverview.tsx with 6 compact metric cards
+- [x] Create RecentDocumentsTable.tsx with sort/filter/pagination/actions
+- [x] Create WorkflowActivity.tsx with timeline/activity feed
+- [x] Create AIInsights.tsx with usage progress and operational stats
+- [x] Create QuickActions.tsx + UploadZone.tsx for upload workflow
+- [x] Rebuild MainDashboard.tsx as professional page composition
+- [x] Update main.tsx to mount AppShell + client-side routing
+- [x] Verify responsive layouts (desktop/tablet/mobile)
+- [x] Build and deploy production dashboard
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 

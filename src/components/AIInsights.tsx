@@ -1,0 +1,74 @@
+import React from 'react';
+import { Zap, Activity, BarChart3, AlertTriangle } from 'lucide-react';
+
+interface AIInsightsProps {
+  usage?: { used: number; limit: number };
+  successRate?: number;
+  avgConfidence?: number;
+  failedCount?: number;
+}
+
+const AIInsights: React.FC<AIInsightsProps> = ({
+  usage = { used: 0, limit: 1000 },
+  successRate = 98.5,
+  avgConfidence = 0.87,
+  failedCount = 2,
+}) => {
+  const usagePct = Math.round((usage.used / Math.max(1, usage.limit)) * 100);
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-100">
+        <h3 className="text-sm font-semibold text-slate-900">AI Insights</h3>
+      </div>
+      <div className="p-4 space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-violet-50">
+                <Zap className="h-3.5 w-3.5 text-violet-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-700">Monthly Usage</span>
+            </div>
+            <span className="text-xs font-medium text-slate-900">
+              {usage.used} / {usage.limit}
+            </span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-1.5 rounded-full bg-violet-600 transition-all"
+              style={{ width: `${Math.min(100, usagePct)}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">{usagePct}% of monthly limit used</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Activity className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-[11px] font-medium text-slate-500">Success rate</span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900">{successRate}%</p>
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <BarChart3 className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-[11px] font-medium text-slate-500">Avg confidence</span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900">{Math.round(avgConfidence * 100)}%</p>
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+              <span className="text-[11px] font-medium text-slate-500">Failed</span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900">{failedCount}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AIInsights;
