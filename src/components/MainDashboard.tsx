@@ -4,10 +4,11 @@ import { ReportService } from '../services/reports/report.service';
 import type { Document } from '../types/document';
 import DocumentDetails from './DocumentDetails';
 import DashboardOverview from './DashboardOverview';
-import RecentDocumentsTable from './RecentDocumentsTable';
+import DocumentList from './DocumentList';
 import WorkflowActivity from './WorkflowActivity';
 import AIInsights from './AIInsights';
 import { UploadZone, QuickActions } from './QuickActions';
+import { PageContainer, SectionContainer } from './ui/layout';
 
 type Page = 'dashboard' | 'documents' | 'upload' | 'workflows' | 'chat' | 'reports' | 'settings';
 
@@ -84,39 +85,46 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => 
   }
 
   return (
-    <div className="space-y-6">
-      <DashboardOverview
-        stats={stats}
-        aiUsage={{ used: 847, limit: 1000 }}
-        memberCount={1}
-      />
+    <PageContainer>
+      <SectionContainer spacing="lg">
+        <DashboardOverview
+          stats={stats}
+          aiUsage={{ used: 847, limit: 1000 }}
+          memberCount={1}
+        />
+      </SectionContainer>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UploadZone onUpload={handleFileUpload} uploading={uploading} />
-            <QuickActions onUpload={() => onNavigate('upload')} onNavigate={onNavigate} />
-          </div>
+          <SectionContainer spacing="lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <UploadZone onUpload={handleFileUpload} uploading={uploading} />
+              <QuickActions onUpload={() => onNavigate('upload')} onNavigate={onNavigate} />
+            </div>
 
-          <RecentDocumentsTable
+          <DocumentList
             documents={documents}
-            loading={loading}
+            isLoading={loading}
             onViewDetails={setSelectedDocumentId}
             onRefresh={() => { fetchStats(); fetchDocuments(); }}
+            defaultViewMode="grid"
           />
+          </SectionContainer>
         </div>
 
         <div className="space-y-6">
-          <WorkflowActivity loading={loading} />
-          <AIInsights
-            usage={{ used: 847, limit: 1000 }}
-            successRate={98.5}
-            avgConfidence={0.87}
-            failedCount={stats.failed}
-          />
+          <SectionContainer spacing="lg">
+            <WorkflowActivity loading={loading} />
+            <AIInsights
+              usage={{ used: 847, limit: 1000 }}
+              successRate={98.5}
+              avgConfidence={0.87}
+              failedCount={stats.failed}
+            />
+          </SectionContainer>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

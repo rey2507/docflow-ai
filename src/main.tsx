@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
+import Providers from './components/providers/Providers';
 import { AuthService } from './services/auth/auth.service';
-import AppShell from './components/layout/AppShell';
-import MainDashboard from './components/MainDashboard';
-import UploadPage from './pages/UploadPage';
-import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
 import type { User } from '@supabase/supabase-js';
-import type { Page } from './types/page';
 import { isSupabaseConfigured, supabase } from './lib/supabase/client';
 import { formatErrorForUser, normalizeAuthError } from './lib/utils/error-normalization';
 
@@ -21,7 +18,6 @@ function App() {
   const [authMessage, setAuthMessage] = useState('');
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const setFriendlyAuthError = (error: unknown) => {
     const normalized = normalizeAuthError(error);
@@ -54,6 +50,9 @@ function App() {
     AuthService.getSession()
       .then(({ session, error }) => {
         if (error) setFriendlyAuthError(error);
+        if (session?.user) {
+          localStorage.setItem('docflow-user', session.user.email || session.user.id);
+        }
         setUser(session?.user ?? null);
       })
       .finally(() => setLoading(false));
@@ -61,11 +60,13 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (event === 'SIGNED_IN' && session?.user) {
+        localStorage.setItem('docflow-user', session.user.email || session.user.id);
         setAuthError('');
         setAuthMessage('');
         setPendingConfirmationEmail('');
       }
       if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('docflow-user');
         setAuthMessage('');
       }
     });
@@ -91,6 +92,7 @@ function App() {
 
     if (authMode === 'signup') {
       if (data.session?.user) {
+        localStorage.setItem('docflow-user', data.session.user.email || data.session.user.id);
         setUser(data.session.user);
         return;
       }
@@ -102,6 +104,7 @@ function App() {
     }
 
     if (data.session?.user) {
+      localStorage.setItem('docflow-user', data.session.user.email || data.session.user.id);
       setUser(data.session.user);
       return;
     }
@@ -270,28 +273,10 @@ function App() {
     );
   }
 
-  const pageContent = (() => {
-    switch (currentPage) {
-      case 'upload':
-        return <UploadPage userId={user.id} onUploadComplete={() => setCurrentPage('dashboard')} />;
-      case 'reports':
-        return <ReportsPage userId={user.id} />;
-      case 'settings':
-        return <SettingsPage user={user} onSignOut={async () => { await supabase.auth.signOut(); setUser(null); }} />;
-      default:
-        return <MainDashboard userId={user.id} onNavigate={setCurrentPage} />;
-    }
-  })();
-
   return (
-    <AppShell
-      currentPage={currentPage}
-      onNavigate={setCurrentPage}
-      userEmail={user.email}
-      usagePercent={84}
-    >
-      {pageContent}
-    </AppShell>
+    <Providers>
+      <RouterProvider router={router} />
+    </Providers>
   );
 }
 

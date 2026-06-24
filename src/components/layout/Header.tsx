@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Bell, Command, ChevronDown, Upload } from 'lucide-react';
+import { Button } from '../ui/button';
+import { SearchInput } from '../ui/input';
 
 interface HeaderProps {
   title: string;
@@ -36,27 +38,31 @@ const Header: React.FC<HeaderProps> = ({ title, onUploadClick }) => {
         </div>
 
         {onUploadClick && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={onUploadClick}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="hidden sm:inline-flex items-center gap-1.5"
           >
             <Upload className="h-3.5 w-3.5" />
             <span>Upload</span>
-          </button>
+          </Button>
         )}
 
-        <button
+        <Button
           type="button"
-          className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+          variant="ghost"
+          size="icon"
           aria-label="Notifications"
+          className="h-9 w-9 rounded-lg text-slate-500"
         >
           <Bell className="h-4 w-4" />
           <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-rose-500" />
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
           className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-lg hover:bg-slate-100 transition-colors"
           aria-label="User menu"
         >
@@ -65,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ title, onUploadClick }) => {
           <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
             W
           </div>
-        </button>
+        </Button>
       </div>
     </header>
   );

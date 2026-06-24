@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
+import { Card } from './ui/card';
 
 interface StatsCardProps {
   title: string;
@@ -20,7 +21,7 @@ interface StatsCardProps {
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, trend, icon, iconBg }) => (
-  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+  <Card>
     <div className="flex items-start justify-between">
       <div className="flex-1">
         <p className="text-xs font-medium text-slate-500 mb-1">{title}</p>
@@ -42,7 +43,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, trend, ic
         <span className="text-slate-500">{trend.label}</span>
       </div>
     )}
-  </div>
+  </Card>
 );
 
 interface DashboardOverviewProps {

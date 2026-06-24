@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import type { Page } from '../../types/page';
+import { PageContainer } from '../ui/layout';
 
 interface AppShellProps {
   currentPage: Page;
@@ -49,9 +50,9 @@ const AppShell: React.FC<AppShellProps> = ({
           onUploadClick={() => onNavigate('upload')}
         />
         <main className="flex-1 overflow-auto">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <PageContainer variant="default">
             {children}
-          </div>
+          </PageContainer>
         </main>
       </div>
     </div>

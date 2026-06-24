@@ -7,6 +7,9 @@ import {
   FileCheck,
   Clock,
 } from 'lucide-react';
+import { Button } from './ui/button';
+import { Card, CardHeader, CardBody } from './ui/card';
+import { Skeleton } from './ui/skeleton';
 
 interface ActivityItem {
   id: string;
@@ -90,53 +93,54 @@ const WorkflowActivity: React.FC<WorkflowActivityProps> = ({ activities = [], lo
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-100">
-          <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
-        </div>
-        <div className="divide-y divide-slate-100">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="px-4 py-3 flex items-start gap-3">
-              <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 animate-pulse rounded bg-slate-100" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-32" />
+        </CardHeader>
+        <CardBody>
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-100">
+    <Card>
+      <CardHeader>
         <h3 className="text-sm font-semibold text-slate-900">Recent Activity</h3>
-      </div>
-      <div className="divide-y divide-slate-100">
-        {items.map((item) => (
-          <div key={item.id} className={`px-4 py-3 flex items-start gap-3 ${getRowBg(item.status)}`}>
-            <div className="mt-0.5 shrink-0">{getIcon(item.type, item.status)}</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-900 truncate">{item.title}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+      </CardHeader>
+      <CardBody>
+        <div className="divide-y divide-slate-100">
+          {items.map((item) => (
+            <div key={item.id} className={`py-3 flex items-start gap-3 ${getRowBg(item.status)}`}>
+              <div className="mt-0.5 shrink-0">{getIcon(item.type, item.status)}</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-slate-900 truncate">{item.title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+              </div>
+              <span className="text-xs text-slate-400 shrink-0">{item.timestamp}</span>
             </div>
-            <span className="text-xs text-slate-400 shrink-0">{item.timestamp}</span>
-          </div>
-        ))}
-      </div>
-      {items.length > 0 && (
-        <div className="px-4 py-2.5 border-t border-slate-100">
-          <button
-            type="button"
-            className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            View all activity
-          </button>
+          ))}
         </div>
-      )}
-    </div>
+        {items.length > 0 && (
+          <div className="pt-2.5 mt-2 border-t border-slate-100">
+            <Button type="button" variant="ghost" size="sm">
+              View all activity
+            </Button>
+          </div>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 

@@ -1,7 +1,0 @@
-.usage-bar-fill {
-  height: 0.375rem;
-  border-radius: 9999px;
-  background-color: #7c3aed;
-  transition: all 0.3s ease;
-  width: var(--usage-width, 0%);
-}
