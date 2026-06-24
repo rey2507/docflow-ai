@@ -146,22 +146,20 @@
 - [x] Verify responsive breakpoints: 320px / 768px / 1280px
 - [x] Run build and visual regression check
 
-## PHASE 13.7 — PROFESSIONAL DASHBOARD UI
+## PHASE 13.8 — CUSTOM CSS THEME (LIGHT BLUE/WHITE PALETTE)
 
-- [x] Install lucide-react for professional icon system
-- [x] Create shared Page type (`src/types/page.ts`)
-- [x] Rewrite Sidebar.tsx with SaaS-style navigation (icons, workspace, usage bar, profile)
-- [x] Rewrite Header.tsx with search, notifications, workspace selector, quick upload
-- [x] Rewrite AppShell.tsx as proper layout shell (sidebar + header + content area)
-- [x] Create DashboardOverview.tsx with 6 compact metric cards
-- [x] Create RecentDocumentsTable.tsx with sort/filter/pagination/actions
-- [x] Create WorkflowActivity.tsx with timeline/activity feed
-- [x] Create AIInsights.tsx with usage progress and operational stats
-- [x] Create QuickActions.tsx + UploadZone.tsx for upload workflow
-- [x] Rebuild MainDashboard.tsx as professional page composition
-- [x] Update main.tsx to mount AppShell + client-side routing
-- [x] Verify responsive layouts (desktop/tablet/mobile)
-- [x] Build and deploy production dashboard
+> **Superseded by Phase 16** — Full Tailwind removal and structured CSS migration covers this entire phase.
+
+- [x] Create custom CSS variables for light blue palette (primary: #0ea5e9, primary-hover: #0284c7, background: #f8fafc, surface: #ffffff, border: #e2e8f0) (added tailwind.config.js and updated vite.config.ts)
+- [x] Replace all `blue-600`/`hover:bg-blue-700` with new primary CSS variables
+- [x] Replace all `slate-200` borders with new border variable
+- [x] Replace all `bg-white` surfaces with new surface variable
+- [x] Replace all `slate-50` backgrounds with new background variable
+- [x] Update Tailwind config to extend theme with custom color palette
+- [x] Verify all components use new CSS variables (buttons, cards, inputs, badges, focus rings)
+- [x] Remove any remaining hardcoded color classes in favor of semantic variables
+- [x] Build and visually verify consistent light blue/white theme across all pages
+- [x] ~~Full migration tracked in Phase 16~~ — Tailwind removal + structured CSS migration
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 
@@ -205,6 +203,56 @@
 - [ ] Configure custom domain
 - [ ] Verify HTTPS/security headers
 - [ ] Perform final production readiness audit
+
+---
+
+## PHASE 16 — TAILWIND REMOVAL & STRUCTURED CSS MIGRATION (Next Day)
+
+### Phase 16.1 — CSS Architecture Setup
+- [ ] Create `src/styles/main.css` with CSS custom properties (design tokens): colors, spacing, typography, shadows, borders, radii
+- [ ] Create component-scoped CSS files: `src/styles/components/button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `layout.css`, `sidebar.css`, `header.css`
+- [ ] Define class naming convention: BEM-style or semantic utility (`.btn`, `.btn--primary`, `.card`, `.card__header`)
+- [ ] Set up CSS import in `index.html` (or `main.tsx`) replacing inline `<style>` block
+- [ ] Verify build pipeline picks up CSS (no PostCSS/Tailwind needed)
+
+### Phase 16.2 — Remove Tailwind
+- [ ] Delete `src/styles/tailwind.config.js`
+- [ ] Remove inline utility CSS block from `index.html` (lines 8–78)
+- [ ] Remove any Tailwind-related npm packages if present
+- [ ] Remove `tailwind.config.js` references from docs
+
+### Phase 16.3 — Migrate UI Primitives
+- [ ] Rewrite `button.tsx` to use semantic CSS classes instead of Tailwind strings (e.g., `className="btn btn--primary btn--sm"`)
+- [ ] Rewrite `card.tsx` (`card`, `card__header`, `card__body`, `card__footer`)
+- [ ] Rewrite `badge.tsx` (`badge`, `badge--success`, `badge--warning`, etc.)
+- [ ] Rewrite `input.tsx` (`.form-group`, `.form-label`, `.form-input`, `.form-input--error`)
+- [ ] Rewrite `skeleton.tsx` (`.skeleton`, `.skeleton--card`, `.skeleton--table`)
+- [ ] Rewrite `empty-state.tsx`, `error-boundary.tsx`, `layout.tsx`
+
+### Phase 16.4 — Migrate Layout Components
+- [ ] Rewrite `AppShell.tsx` (`.app-shell`, `.app-shell__sidebar`, `.app-shell__main`, `.app-shell__header`)
+- [ ] Rewrite `Sidebar.tsx` (`.sidebar`, `.sidebar__nav`, `.sidebar__header`, `.sidebar__footer`)
+- [ ] Rewrite `Header.tsx` (`.header`, `.header__title`, `.header__actions`)
+
+### Phase 16.5 — Migrate Feature Components
+- [ ] Rewrite `MainDashboard.tsx` (`.dashboard`, `.dashboard__grid`, `.dashboard__stats`)
+- [ ] Rewrite `DashboardOverview.tsx` (`.stats-grid`, `.stat-card`)
+- [ ] Rewrite `QuickActions.tsx` & `UploadZone.tsx`
+- [ ] Rewrite `DocumentList.tsx` (`.doc-list`, `.doc-card`, `.doc-table`, `.filter-bar`)
+- [ ] Rewrite `DocumentDetails.tsx` (`.doc-details`, `.doc-preview`, `.doc-meta`)
+- [ ] Rewrite `PipelineStatusDisplay.tsx` (`.pipeline`, `.pipeline__status`)
+- [ ] Rewrite `WorkflowActivity.tsx` & `WorkflowTimeline.tsx`
+- [ ] Rewrite `AIInsights.tsx` (`.insights`, `.insights__usage`)
+- [ ] Rewrite `DocumentStatsDashboard.tsx`
+- [ ] Rewrite pages: `UploadPage.tsx`, `ReportsPage.tsx`, `SettingsPage.tsx`
+- [ ] Rewrite `FilePreview.tsx` & `DocumentInsights.tsx` & `DocumentStatsDashboard.tsx`
+- [ ] Rewrite `main.tsx` auth screens (`.auth-card`, `.auth-input`, `.auth-btn`)
+
+### Phase 16.6 — Polish
+- [ ] Remove `cn()` utility if no longer needed (or keep for conditional classes)
+- [ ] Verify responsive breakpoints (mobile/tablet/desktop)
+- [ ] Build and visually verify all screens
+- [ ] Run `npm run lint` / `npm run typecheck` / `npm run build`
 
 ---
 
