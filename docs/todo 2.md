@@ -146,22 +146,17 @@
 - [x] Verify responsive breakpoints: 320px / 768px / 1280px
 - [x] Run build and visual regression check
 
-## PHASE 13.7 — PROFESSIONAL DASHBOARD UI
+## PHASE 13.8 — CUSTOM CSS THEME (LIGHT BLUE/WHITE PALETTE)
 
-- [x] Install lucide-react for professional icon system
-- [x] Create shared Page type (`src/types/page.ts`)
-- [x] Rewrite Sidebar.tsx with SaaS-style navigation (icons, workspace, usage bar, profile)
-- [x] Rewrite Header.tsx with search, notifications, workspace selector, quick upload
-- [x] Rewrite AppShell.tsx as proper layout shell (sidebar + header + content area)
-- [x] Create DashboardOverview.tsx with 6 compact metric cards
-- [x] Create RecentDocumentsTable.tsx with sort/filter/pagination/actions
-- [x] Create WorkflowActivity.tsx with timeline/activity feed
-- [x] Create AIInsights.tsx with usage progress and operational stats
-- [x] Create QuickActions.tsx + UploadZone.tsx for upload workflow
-- [x] Rebuild MainDashboard.tsx as professional page composition
-- [x] Update main.tsx to mount AppShell + client-side routing
-- [x] Verify responsive layouts (desktop/tablet/mobile)
-- [x] Build and deploy production dashboard
+- [x] Create custom CSS variables for light blue palette (primary: #0ea5e9, primary-hover: #0284c7, background: #f8fafc, surface: #ffffff, border: #e2e8f0) (added tailwind.config.js and updated vite.config.ts)
+- [ ] Replace all `blue-600`/`hover:bg-blue-700` with new primary CSS variables
+- [ ] Replace all `slate-200` borders with new border variable
+- [ ] Replace all `bg-white` surfaces with new surface variable
+- [ ] Replace all `slate-50` backgrounds with new background variable
+- [ ] Update Tailwind config to extend theme with custom color palette
+- [ ] Verify all components use new CSS variables (buttons, cards, inputs, badges, focus rings)
+- [ ] Remove any remaining hardcoded color classes in favor of semantic variables
+- [ ] Build and visually verify consistent light blue/white theme across all pages
 
 ## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
 

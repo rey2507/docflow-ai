@@ -33,6 +33,17 @@ Modern SaaS dashboard: **clean, light, card-based**. Inspired by Linear/Notion/V
    - Success: `emerald-600`
    - Reduce excessive padding on filter bar (tighten from `p-4 sm:p-5` to `p-4`)
 
+5. **Custom CSS Theme (Light Blue/White Palette)**
+    - Define CSS variables for light blue palette:
+      - `--primary: #0ea5e9`
+      - `--primary-hover: #0284c7`
+      - `--background: #f8fafc`
+      - `--surface: #ffffff`
+      - `--border: #e2e8f0`
+    - Update Tailwind config to extend theme with custom colors
+    - Replace all hardcoded color classes with semantic variables
+    - Verify consistent theme across all components
+
 5. **Loading & Empty States**
    - Replace pulse rectangles with skeleton cards matching new card layout
    - Add subtle illustration or icon to empty states
