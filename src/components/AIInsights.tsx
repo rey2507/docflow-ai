@@ -1,5 +1,6 @@
 import React from 'react';
 import { Zap, Activity, BarChart3, AlertTriangle } from 'lucide-react';
+import './AIInsights.css';
 
 interface AIInsightsProps {
   usage?: { used: number; limit: number };
@@ -36,8 +37,8 @@ const AIInsights: React.FC<AIInsightsProps> = ({
           </div>
           <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-1.5 rounded-full bg-violet-600 transition-all"
-              style={{ width: `${Math.min(100, usagePct)}%` }}
+              className="usage-bar-fill"
+              style={{ '--usage-width': `${Math.min(100, usagePct)}%` } as React.CSSProperties}
             />
           </div>
           <p className="text-[11px] text-slate-500 mt-1">{usagePct}% of monthly limit used</p>
