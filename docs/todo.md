@@ -209,9 +209,9 @@
 ## PHASE 16 — TAILWIND REMOVAL & STRUCTURED CSS MIGRATION (Next Day)
 
 ### Phase 16.1 — CSS Architecture Setup
-- [ ] Create `src/styles/main.css` with CSS custom properties (design tokens): colors, spacing, typography, shadows, borders, radii
-- [ ] Create component-scoped CSS files: `src/styles/components/button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `layout.css`, `sidebar.css`, `header.css`
-- [ ] Define class naming convention: BEM-style or semantic utility (`.btn`, `.btn--primary`, `.card`, `.card__header`)
+- [x] Create `src/styles/main.css` with CSS custom properties (design tokens): colors, spacing, typography, shadows, borders, radii
+- [x] Create component-scoped CSS files: `src/styles/components/button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `layout.css`, `sidebar.css`, `header.css`
+- [x] Define class naming convention: BEM-style or semantic utility (`.btn`, `.btn--primary`, `.card`, `.card__header`)
 - [ ] Set up CSS import in `index.html` (or `main.tsx`) replacing inline `<style>` block
 - [ ] Verify build pipeline picks up CSS (no PostCSS/Tailwind needed)
 
@@ -222,17 +222,17 @@
 - [ ] Remove `tailwind.config.js` references from docs
 
 ### Phase 16.3 — Migrate UI Primitives
-- [ ] Rewrite `button.tsx` to use semantic CSS classes instead of Tailwind strings (e.g., `className="btn btn--primary btn--sm"`)
-- [ ] Rewrite `card.tsx` (`card`, `card__header`, `card__body`, `card__footer`)
-- [ ] Rewrite `badge.tsx` (`badge`, `badge--success`, `badge--warning`, etc.)
-- [ ] Rewrite `input.tsx` (`.form-group`, `.form-label`, `.form-input`, `.form-input--error`)
-- [ ] Rewrite `skeleton.tsx` (`.skeleton`, `.skeleton--card`, `.skeleton--table`)
-- [ ] Rewrite `empty-state.tsx`, `error-boundary.tsx`, `layout.tsx`
+- [x] Rewrite `button.tsx` to use semantic CSS classes instead of Tailwind strings (e.g., `className="btn btn--primary btn--sm"`)
+- [x] Rewrite `card.tsx` (`card`, `card__header`, `card__body`, `card__footer`)
+- [x] Rewrite `badge.tsx` (`badge`, `badge--success`, `badge--warning`, etc.)
+- [x] Rewrite `input.tsx` (`.form-group`, `.form-label`, `.form-input`, `.form-input--error`)
+- [x] Rewrite `skeleton.tsx` (`.skeleton`, `.skeleton--card`, `.skeleton--table`)
+- [x] Rewrite `empty-state.tsx`, `error-boundary.tsx`, `layout.tsx`
 
 ### Phase 16.4 — Migrate Layout Components
-- [ ] Rewrite `AppShell.tsx` (`.app-shell`, `.app-shell__sidebar`, `.app-shell__main`, `.app-shell__header`)
-- [ ] Rewrite `Sidebar.tsx` (`.sidebar`, `.sidebar__nav`, `.sidebar__header`, `.sidebar__footer`)
-- [ ] Rewrite `Header.tsx` (`.header`, `.header__title`, `.header__actions`)
+- [x] Rewrite `AppShell.tsx` (`.app-shell`, `.app-shell__sidebar`, `.app-shell__main`, `.app-shell__header`)
+- [x] Rewrite `Sidebar.tsx` (`.sidebar`, `.sidebar__nav`, `.sidebar__header`, `.sidebar__footer`)
+- [x] Rewrite `Header.tsx` (`.header`, `.header__title`, `.header__actions`)
 
 ### Phase 16.5 — Migrate Feature Components
 - [ ] Rewrite `MainDashboard.tsx` (`.dashboard`, `.dashboard__grid`, `.dashboard__stats`)
