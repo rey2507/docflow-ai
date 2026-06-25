@@ -235,24 +235,24 @@
 - [x] Rewrite `Header.tsx` (`.header`, `.header__title`, `.header__actions`)
 
 ### Phase 16.5 — Migrate Feature Components
-- [ ] Rewrite `MainDashboard.tsx` (`.dashboard`, `.dashboard__grid`, `.dashboard__stats`)
-- [ ] Rewrite `DashboardOverview.tsx` (`.stats-grid`, `.stat-card`)
-- [ ] Rewrite `QuickActions.tsx` & `UploadZone.tsx`
-- [ ] Rewrite `DocumentList.tsx` (`.doc-list`, `.doc-card`, `.doc-table`, `.filter-bar`)
-- [ ] Rewrite `DocumentDetails.tsx` (`.doc-details`, `.doc-preview`, `.doc-meta`)
-- [ ] Rewrite `PipelineStatusDisplay.tsx` (`.pipeline`, `.pipeline__status`)
-- [ ] Rewrite `WorkflowActivity.tsx` & `WorkflowTimeline.tsx`
-- [ ] Rewrite `AIInsights.tsx` (`.insights`, `.insights__usage`)
-- [ ] Rewrite `DocumentStatsDashboard.tsx`
-- [ ] Rewrite pages: `UploadPage.tsx`, `ReportsPage.tsx`, `SettingsPage.tsx`
-- [ ] Rewrite `FilePreview.tsx` & `DocumentInsights.tsx` & `DocumentStatsDashboard.tsx`
-- [ ] Rewrite `main.tsx` auth screens (`.auth-card`, `.auth-input`, `.auth-btn`)
+- [x] Rewrite `MainDashboard.tsx` (`.dashboard`, `.dashboard__grid`, `.dashboard__stats`)
+- [x] Rewrite `DashboardOverview.tsx` (`.stats-grid`, `.stat-card`)
+- [x] Rewrite `QuickActions.tsx`` & UploadZone.tsx`
+- [x] Rewrite `DocumentList.tsx` (`.doc-list`, `.doc-card`, `.doc-table`, `.filter-bar`)
+- [x] Rewrite `DocumentDetails.tsx` (`.doc-details`, `.doc-preview`, `.doc-meta`)
+- [x] Rewrite `PipelineStatusDisplay.tsx` (`.pipeline`, `.pipeline__status`)
+- [x] Rewrite `WorkflowActivity.tsx` & `WorkflowTimeline.tsx`
+- [x] Rewrite `AIInsights.tsx` (`.insights`, `.insights__usage`)
+- [x] Rewrite `DocumentStatsDashboard.tsx`
+- [x] Rewrite pages: `UploadPage.tsx`, `ReportsPage.tsx`, `SettingsPage.tsx`
+- [x] Rewrite `FilePreview.tsx` & `DocumentInsights.tsx` & `DocumentStatsDashboard.tsx`
+- [x] Rewrite `main.tsx` auth screens (`.auth-card`, `.auth-input`, `.auth-btn`)
 
 ### Phase 16.6 — Polish
-- [ ] Remove `cn()` utility if no longer needed (or keep for conditional classes)
-- [ ] Verify responsive breakpoints (mobile/tablet/desktop)
-- [ ] Build and visually verify all screens
-- [ ] Run `npm run lint` / `npm run typecheck` / `npm run build`
+- [x] Remove `cn()` utility if no longer needed (or keep for conditional classes)
+- [x] Verify responsive breakpoints (mobile/tablet/desktop)
+- [x] Build and visually verify all screens
+- [x] Run `npm run lint` / `npm run typecheck` / `npm run build`
 
 ---
 

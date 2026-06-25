@@ -1,6 +1,7 @@
 {
   "extends": "./config/tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "docs/*": ["./docs/*"]
@@ -11,7 +12,7 @@
     "src/**/*.tsx",
     "docs/**/*.ts",
     "scripts/setup.ts",
-    "vitest.config.ts",
+    "config/vitest.config.ts",
     "config/drizzle.config.ts"
   ]
 }

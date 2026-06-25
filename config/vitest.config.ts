@@ -7,15 +7,14 @@ export default defineConfig({
   plugins: [react() as any],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-      'docs': resolve(__dirname, './docs'),
+      '@': resolve(__dirname, '../src'),
+      'docs': resolve(__dirname, '../docs'),
     },
   },
   test: {
     environment: 'jsdom',
     globals: true,
-    // Ensure this path exists after the repo re-org.
-    setupFiles: [resolve(__dirname, './scripts/setup.ts')],
+    setupFiles: [resolve(__dirname, '../scripts/setup.ts')],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       reporter: ['text', 'json', 'html'],

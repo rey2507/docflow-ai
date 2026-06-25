@@ -16,14 +16,14 @@ const resolveEnvValue = (env: Record<string, string>, ...keys: string[]) => {
 // Vite config for building the production static site.
 // Output goes to dist/ — picked up by Cloudflare Pages.
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, __dirname, '');
+  const env = loadEnv(mode, resolve(__dirname, '..'), '');
 
   return {
     plugins: [react()],
     resolve: {
       alias: {
-        '@': resolve(__dirname, './src'),
-        'docs': resolve(__dirname, './docs'),
+        '@': resolve(__dirname, '../src'),
+        'docs': resolve(__dirname, '../docs'),
       },
     },
     build: {
@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       rollupOptions: {
         input: {
-          main: resolve(__dirname, 'index.html'),
+          main: resolve(__dirname, '../index.html'),
         },
       },
     },

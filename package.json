@@ -30,14 +30,14 @@
     "wrangler": "^4.103.0"
   },
   "scripts": {
-    "build": "vite build && tsc --noEmit",
-    "dev": "vite",
-    "dev:worker": "npm run build && npx wrangler dev",
-    "deploy:worker": "npm run build && npx wrangler deploy",
-    "deploy:worker:dry": "npm run build && npx wrangler deploy --dry-run",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui"
+    "build": "vite --config config/vite.config.ts build && tsc -p tsconfig.build.json --noEmit",
+    "dev": "vite --config config/vite.config.ts",
+    "dev:worker": "npm run build && npx wrangler dev --config config/wrangler.jsonc",
+    "deploy:worker": "npm run build && npx wrangler deploy --config config/wrangler.jsonc",
+    "deploy:worker:dry": "npm run build && npx wrangler deploy --config config/wrangler.jsonc --dry-run",
+    "preview": "vite --config config/vite.config.ts preview",
+    "test": "vitest --config config/vitest.config.ts run",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "test:ui": "vitest --config config/vitest.config.ts --ui"
   }
 }
