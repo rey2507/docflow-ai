@@ -1,0 +1,121 @@
+/* Header component styles */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.header__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.header__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  list-style: none;
+  padding: 0;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.action-item:hover .button {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.upload-button {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.upload-button:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.notification-button {
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xs);
+}
+
+.notification-button:hover {
+  background-color: var(--color-muted);
+  border-color: var(--color-muted);
+}
+
+.user-button {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.user-button:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.notification-badge {
+  background-color: rgba(255, 115, 115, 0.2);
+  border: 1px solid rgba(255, 115, 115, 0.3);
+  color: var(--color-text);
+  border-radius: 50%;
+  padding: var(--spacing-xs);
+}
+
+.notification-badge::before {
+  content: 'n';
+  font-size: var(--font-size-xs);
+}
+
+.notification-badge:hover {
+  background-color: rgba(255, 115, 115, 0.3);
+}
+
+.notification-button .bell-icon {
+  color: var(--color-muted);
+}
+
+.notification-button:hover .bell-icon {
+  color: var(--color-text);
+}
+
+.action-item:hover .notification-badge {
+  background-color: rgba(255, 115, 115, 0.4);
+}
+
+.action-item:hover .notification-badge::before {
+  font-size: var(--font-size-sm);
+}
+
+.action-item:hover .user-button {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.action-item:hover .upload-button {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.action-item:hover .notification-button {
+  background-color: var(--color-muted);
+  border-color: var(--color-muted);
+}
+
+.action-item:active .button {
+  filter: brightness(0.9);
+}

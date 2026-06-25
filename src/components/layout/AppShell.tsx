@@ -22,7 +22,7 @@ const AppShell: React.FC<AppShellProps> = ({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="app-shell">
       <Sidebar
         currentPage={currentPage}
         onNavigate={onNavigate}
@@ -30,7 +30,7 @@ const AppShell: React.FC<AppShellProps> = ({
         usagePercent={usagePercent}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="app-shell__main">
         <Header
           title={
             currentPage === 'dashboard'
@@ -49,7 +49,7 @@ const AppShell: React.FC<AppShellProps> = ({
           }
           onUploadClick={() => onNavigate('upload')}
         />
-        <main className="flex-1 overflow-auto">
+        <main className="app-shell__content">
           <PageContainer variant="default">
             {children}
           </PageContainer>

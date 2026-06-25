@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
     </nav>
   );
 
-  return (
+return (
     <>
       <Button
         type="button"
@@ -71,11 +71,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
 
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/30" onClick={() => setMobileOpen(false)}>
-          <aside
-            className="w-72 bg-white h-full shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200">
+          <aside className="sidebar" onClick={(e) => e.stopPropagation()}>
+            <div className="sidebar__header">
               <span className="text-lg font-bold text-slate-900 tracking-tight">DocFlow AI</span>
               <Button
                 type="button"
@@ -88,8 +85,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="flex-1 overflow-auto p-3">{navContent}</div>
-            <div className="p-3 border-t border-slate-200">
+            <div className="sidebar__nav">{navContent}</div>
+            <div className="sidebar__footer">
               <div className="rounded-lg bg-slate-50 p-3">
                 <p className="text-xs font-medium text-slate-900 mb-2">Workspace</p>
                 <p className="text-xs text-slate-500 truncate">{userEmail || 'user@example.com'}</p>
@@ -99,12 +96,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         </div>
       )}
 
-      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col h-screen sticky top-0">
-        <div className="h-14 flex items-center px-5 border-b border-slate-200">
+      <aside className="sidebar">
+        <div className="sidebar__header">
           <span className="text-lg font-bold text-slate-900 tracking-tight">DocFlow AI</span>
         </div>
 
-        <div className="flex-1 overflow-auto p-3">
+        <div className="sidebar__nav">
           {navContent}
 
           <div className="mt-6 pt-4 border-t border-slate-200">
@@ -128,7 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
           </div>
         </div>
 
-        <div className="p-3 border-t border-slate-200 space-y-3">
+        <div className="sidebar__footer space-y-3">
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-slate-600">Usage</span>

@@ -1,0 +1,30 @@
+/* Skeleton Styles */
+.skeleton {
+  background-color: var(--color-border);
+  border-radius: var(--border-radius);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton--card {
+  padding: var(--spacing-md);
+  height: 200px;
+  width: 100%;
+}
+
+.skeleton--table {
+  height: 1rem;
+  width: 100%;
+  margin-bottom: var(--spacing-sm);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
