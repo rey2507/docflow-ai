@@ -25,7 +25,7 @@ const UploadPage: React.FC<UploadPageProps> = ({ onUploadComplete }) => {
     setSuccess(null);
 
     try {
-      const { data, error: uploadError } = await DocumentUploadService.uploadDocument({} as any, supabase, file, userId);
+      const { data, error: uploadError } = await DocumentUploadService.uploadDocument(supabase, file, userId);
       
       if (uploadError) {
         setError(uploadError.message || 'Upload failed');
@@ -93,21 +93,23 @@ const UploadPage: React.FC<UploadPageProps> = ({ onUploadComplete }) => {
                 {dragOver ? 'Drop your file here' : 'Drag and drop your file here'}
               </p>
               <p className="mt-1 text-xs text-slate-500">or</p>
-              <Button
-                variant="primary"
-                disabled={uploading}
-                onClick={() => document.getElementById('file-upload')?.click()}
-              >
+              <div className="mt-4">
                 <input
                   id="file-upload"
                   type="file"
                   className="hidden"
-                  accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls"
+                  accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls,.doc,.docx"
                   onChange={handleFileChange}
                   disabled={uploading}
                 />
-                {uploading ? 'Uploading…' : 'Browse files'}
-              </Button>
+                <Button
+                  variant="primary"
+                  disabled={uploading}
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                >
+                  {uploading ? 'Uploading…' : 'Browse files'}
+                </Button>
+              </div>
               <p className="mt-3 text-xs text-slate-500">
                 Supported: PDF, PNG, JPG, JPEG, CSV, XLS, XLSX
               </p>

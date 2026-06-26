@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Upload, FileText, GitBranch, MessageSquare, BarChart3 } from 'lucide-react';
 
 interface QuickAction {
@@ -9,13 +9,26 @@ interface QuickAction {
 }
 
 interface QuickActionsProps {
-  onUpload: () => void;
+  onUpload: (file: File) => void;
   onNavigate: (page: 'workflows' | 'chat' | 'reports') => void;
+  uploading?: boolean;
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate }) => {
+const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploading = false }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onUpload(file);
+    e.target.value = '';
+  };
+
   const actions: QuickAction[] = [
-    { id: 'upload', label: 'Upload Document', icon: <FileText className="h-4 w-4" />, onClick: onUpload },
+    { id: 'upload', label: 'Upload Document', icon: <FileText className="h-4 w-4" />, onClick: handleUploadClick },
     { id: 'workflow', label: 'Start Workflow', icon: <GitBranch className="h-4 w-4" />, onClick: () => onNavigate('workflows') },
     { id: 'chat', label: 'Open AI Chat', icon: <MessageSquare className="h-4 w-4" />, onClick: () => onNavigate('chat') },
     { id: 'reports', label: 'View Reports', icon: <BarChart3 className="h-4 w-4" />, onClick: () => onNavigate('reports') },
@@ -39,6 +52,14 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate }) => 
           </button>
         ))}
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
     </div>
   );
 };
@@ -84,15 +105,15 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onUpload, uploading = false }) 
       <p className="text-sm font-medium text-slate-900">
         {uploading ? 'Uploading...' : 'Drop files here or click to upload'}
       </p>
-      <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG, CSV up to 10MB</p>
-      <label className="mt-3 inline-flex">
-        <input
-          type="file"
-          className="hidden"
-          accept=".pdf,.png,.jpg,.jpeg,.csv"
-          onChange={handleFileChange}
-          disabled={uploading}
-        />
+          <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG, CSV, DOC up to 10MB</p>
+        <label className="mt-3 inline-flex">
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
         <span className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white cursor-pointer hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           Browse files
         </span>

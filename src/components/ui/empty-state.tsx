@@ -9,6 +9,7 @@ interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   action?: {
     label: string;
     onClick: () => void;
+    variant?: 'primary' | 'secondary';
   };
 }
 
@@ -34,7 +35,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         )}
         {action && (
           <Button
-            variant="secondary"
+            variant={action.variant || 'secondary'}
             size="sm"
             onClick={action.onClick}
             className="mt-4"

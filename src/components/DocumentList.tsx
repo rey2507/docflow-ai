@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { ArrowUpDown, Search, FileText } from 'lucide-react';
 import type { Document } from '../types/document';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
@@ -19,7 +19,7 @@ interface DocumentListProps {
   onViewDetails: (id: string) => void;
   isLoading?: boolean;
   defaultViewMode?: ViewMode;
-  onUploadClick?: () => void;
+  onUpload?: (file: File) => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -28,11 +28,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onViewDetails,
   isLoading = false,
   defaultViewMode = 'grid',
-  onUploadClick,
+  onUpload,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -40,6 +41,24 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const pageSize = 8;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onUpload) {
+      setUploading(true);
+      try {
+        await onUpload(file);
+      } finally {
+        setUploading(false);
+        e.target.value = '';
+      }
+    }
+  };
 
   const filtered = useMemo(() => {
     let data = [...documents];
@@ -176,8 +195,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
       title={search || statusFilter ? 'No documents found' : 'No documents uploaded yet'}
       description={search || statusFilter ? 'Try adjusting your filters' : 'Upload a document to get started'}
       action={
-        !search && !statusFilter && onUploadClick
-          ? { label: 'Upload a document', onClick: onUploadClick }
+        !search && !statusFilter && onUpload
+          ? { label: 'Upload a document', onClick: triggerUpload, variant: 'primary' }
           : undefined
       }
     />
@@ -228,6 +247,14 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
   return (
     <div className="w-full">
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
       {actionFeedback && (
         <div role="alert" aria-live="polite" className={`mb-3 rounded-xl border px-4 py-2 text-sm ${
           actionFeedback.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -278,17 +305,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
           {filterBar}
 
           {pageData.length === 0 ? (
-            <div className="p-6">
-              <EmptyState
-                title={search || statusFilter ? 'No documents found' : 'No documents uploaded yet'}
-                description={search || statusFilter ? 'Try adjusting your filters' : 'Upload a document to get started'}
-                action={
-                  !search && !statusFilter && onUploadClick
-                    ? { label: 'Upload a document', onClick: onUploadClick }
-                    : undefined
-                }
-              />
-            </div>
+            renderEmptyState()
           ) : viewMode === 'table' ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">

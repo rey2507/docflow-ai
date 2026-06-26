@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { ReportService } from '../services/reports/report.service';
 import type { Document } from '../types/document';
@@ -66,7 +66,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
     setUploading(true);
     try {
       const { DocumentUploadService } = await import('../services/documents/upload.service');
-      const { data, error } = await DocumentUploadService.uploadDocument({} as any, supabase, file, userId);
+      const { data, error } = await DocumentUploadService.uploadDocument(supabase, file, userId);
       if (error) {
         setFetchError(error.message || 'Upload failed');
       } else if (data) {
@@ -80,37 +80,35 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
     }
   };
 
-  if (selectedDocumentId) {
-    return <DocumentDetails documentId={selectedDocumentId} onBack={() => setSelectedDocumentId(null)} />;
-  }
-
   return (
     <PageContainer>
-      <SectionContainer spacing="lg">
+      <SectionContainer spacing="md">
         <DashboardOverview stats={stats} />
       </SectionContainer>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <SectionContainer spacing="lg">
+        <div className="lg:col-span-2">
+          <SectionContainer spacing="md">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <UploadZone onUpload={handleFileUpload} uploading={uploading} />
-              <QuickActions onUpload={() => onNavigate('upload')} onNavigate={onNavigate} />
+              <QuickActions onUpload={handleFileUpload} onNavigate={onNavigate} uploading={uploading} />
             </div>
 
-          <DocumentList
-            documents={documents}
-            isLoading={loading}
-            onViewDetails={setSelectedDocumentId}
-            onRefresh={() => { fetchStats(); fetchDocuments(); }}
-            onUploadClick={() => onNavigate('upload')}
-            defaultViewMode="grid"
-          />
+            <div className="mt-6">
+              <DocumentList
+                documents={documents}
+                isLoading={loading}
+                onViewDetails={setSelectedDocumentId}
+                onRefresh={() => { fetchStats(); fetchDocuments(); }}
+                onUpload={handleFileUpload}
+                defaultViewMode="grid"
+              />
+            </div>
           </SectionContainer>
         </div>
 
         <div className="space-y-6">
-          <SectionContainer spacing="lg">
+          <SectionContainer spacing="md">
             <WorkflowActivity loading={loading} />
             <AIInsights />
           </SectionContainer>

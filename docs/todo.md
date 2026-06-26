@@ -110,7 +110,9 @@
 - [x] Verify workflow persistence consistency
 - [x] Finalize database policy scripts
 
-## PHASE 13.3 — UI/UX STABILIZATION
+---
+
+## PHASE 13.3 — UI/UX STABILIZATION (Completed)
 
 - [x] Started implementation: auth shell, loading state, and dashboard shell styling groundwork
 - [x] Implemented dashboard hierarchy, loading, and empty-state improvements
@@ -146,24 +148,52 @@
 - [x] Verify responsive breakpoints: 320px / 768px / 1280px
 - [x] Run build and visual regression check
 
-## PHASE 13.8 — CUSTOM CSS THEME (LIGHT BLUE/WHITE PALETTE)
+---
 
-> **Superseded by Phase 16** — Full Tailwind removal and structured CSS migration covers this entire phase.
+## PHASE 17 — FRONTEND REBUILD & TAILWIND RESTORATION (Completed)
 
-- [x] Create custom CSS variables for light blue palette (primary: #0ea5e9, primary-hover: #0284c7, background: #f8fafc, surface: #ffffff, border: #e2e8f0) (added tailwind.config.js and updated vite.config.ts)
-- [x] Replace all `blue-600`/`hover:bg-blue-700` with new primary CSS variables
-- [x] Replace all `slate-200` borders with new border variable
-- [x] Replace all `bg-white` surfaces with new surface variable
-- [x] Replace all `slate-50` backgrounds with new background variable
-- [x] Update Tailwind config to extend theme with custom color palette
-- [x] Verify all components use new CSS variables (buttons, cards, inputs, badges, focus rings)
-- [x] Remove any remaining hardcoded color classes in favor of semantic variables
-- [x] Build and visually verify consistent light blue/white theme across all pages
-- [x] ~~Full migration tracked in Phase 16~~ — Tailwind removal + structured CSS migration
+### Phase 17.1 — Tailwind v4 Restore
+- [x] Install `@tailwindcss/vite` plugin
+- [x] Add Tailwind plugin to `config/vite.config.ts`
+- [x] Create `src/styles/index.css` importing tokens + layout + Tailwind
+- [x] Trim `src/styles/main.css` to design tokens only (remove 300+ utility redefinitions)
+- [x] Verify build passes with Tailwind processing
 
-## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING
+### Phase 17.2 — Auth & Routing Stabilization
+- [x] Create `src/contexts/AuthContext.tsx` with real Supabase session
+- [x] Lift auth state from `main.tsx` into `Providers`
+- [x] Remove hardcoded `user@example.com` / `userId="local"` from routes and pages
+- [x] Replace `localStorage` guard with real session check in `ProtectedRoute`
+- [x] Wire `ErrorBoundary` into router layout
+- [x] Fix `NotFound` to use `PageContainer` + back button
+- [x] Move Cloudflare Worker entry from `src/index.ts` to `worker/index.ts`
+- [x] Update `config/wrangler.jsonc` with `main` path
 
-- [ ] Add frontend error boundaries
+### Phase 17.3 — Placeholder & Fake Data Cleanup
+- [x] Remove AI Credits card from top stats grid (keep AI Insights sidebar card)
+- [x] Remove fake hardcoded activities from WorkflowActivity (replace with EmptyState)
+- [x] Sanitize AIInsights defaults to 0 instead of fake numbers
+- [x] Fix Reports error: `.eq('documents.userId', userId)` -> `.eq('userId', userId)`
+- [x] Replace Sidebar fallbacks: `user@example.com` -> `User`, `Free plan` -> `Beta`
+- [x] Fix Header user avatar fallback and email display
+- [x] Add `onUploadClick` to DocumentList for functional empty-state CTA
+- [x] Add floating dismissible beta banner
+
+### Phase 17.4 — Dashboard Spacing & Upload UX
+- [x] Reduce dashboard section spacing from `lg` to `md`
+- [x] Separate upload grid from document list with `mt-6` divider
+- [x] Fix stat card text overflow (truncate, min-w-0, adjusted font sizes)
+- [x] Fix empty-state upload CTA to use `variant: 'primary'`
+- [x] Make all upload buttons in-place (no navigation to `/upload`)
+- [x] Add hidden file inputs to QuickActions and DocumentList
+- [x] Extend file accept to `.doc,.docx` across all upload inputs
+- [x] Disable QuickActions file input during upload
+
+---
+
+## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING (In Progress)
+
+- [x] Add frontend error boundaries (ErrorBoundary wired in router)
 - [ ] Normalize API error responses
 - [ ] Add retry handling for provider failures
 - [ ] Add provider cooldown handling for 429 errors
@@ -174,11 +204,40 @@
 - [ ] Prevent infinite retry loops
 - [ ] Ensure readable user-facing error messages
 
+---
+
+## PHASE 17.5 — UPLOAD SYSTEM CRITICAL FIXES (In Progress)
+
+### 17.5.1 — Replace drizzle ORM with Supabase client in browser
+- [x] Replace `db` parameter with direct `supabase` calls in `upload.service.ts`
+- [ ] Replace `db` parameter in `document.service.ts` (delete, update, get)
+- [ ] Replace `db` parameter in `workflow.service.ts` if used client-side
+- [ ] Remove `DbClient` type dependency from client-side services
+
+### 17.5.2 — Fix upload service implementation
+- [x] Remove duplicate `findFirst` check (replaced with Supabase query)
+- [x] Fix `sizeBytes` population for duplicate detection (use metadata.fileSize via Supabase)
+- [x] Add `.catch()` to `PipelineOrchestrator.runPipeline` fire-and-forget
+- [ ] Handle empty `userId` gracefully (show error instead of silent fail)
+
+### 17.5.3 — Fix UploadPage DOM violation
+- [x] Move `<input type="file">` outside of `<Button>` in `UploadPage.tsx`
+
+### 17.5.4 — Fix retry endpoint
+- [ ] Implement `/api/documents/:id/retry` in Worker OR remove button
+- [ ] Wire PipelineStatusDisplay retry to real endpoint
+
+### 17.5.5 — Accept type consistency
+- [x] Unify file accept lists across all upload inputs (added .doc,.docx everywhere)
+- [ ] Update displayed text to match accepted formats exactly
+
+---
+
 ## PHASE 13.5 — REAL SYSTEM TESTING & VERIFICATION
 
 - [ ] Manual end-to-end workflow testing
 - [ ] Authentication testing
-- [ ] Upload testing
+- [ ] Upload testing (after drizzle fix)
 - [ ] AI extraction testing
 - [ ] Provider failover testing
 - [ ] Workspace isolation/RLS verification
@@ -190,10 +249,12 @@
 - [ ] Playwright browser workflow testing
 - [ ] Keep Vitest limited to utility/service tests only
 
+---
+
 ## PHASE 13.6 — DEPLOYMENT & PRODUCTION LAUNCH PREPARATION
 
 - [ ] Finalize production environment variables
-- [ ] Configure Cloudflare Workers deployment
+- [x] Configure Cloudflare Workers deployment
 - [ ] Configure Supabase production settings
 - [ ] Verify production migrations
 - [ ] Configure storage buckets/policies
@@ -203,69 +264,6 @@
 - [ ] Configure custom domain
 - [ ] Verify HTTPS/security headers
 - [ ] Perform final production readiness audit
-
----
-
-## PHASE 16 — TAILWIND REMOVAL & STRUCTURED CSS MIGRATION (Completed)
-
-### Phase 16.1 — CSS Architecture Setup
-- [x] Create `src/styles/main.css` with CSS custom properties (design tokens): colors, spacing, typography, shadows, borders, radii
-- [x] Create component-scoped CSS files: `src/styles/components/button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `layout.css`, `sidebar.css`, `header.css`
-- [x] Define class naming convention: BEM-style or semantic utility (`.btn`, `.btn--primary`, `.card`, `.card__header`)
-- [x] Set up CSS import in `index.html` (or `main.tsx`) replacing inline `<style>` block
-- [x] Verify build pipeline picks up CSS (no PostCSS/Tailwind needed)
-
-### Phase 16.2 — Remove Tailwind
-- [x] Delete `src/styles/tailwind.config.js`
-- [x] Remove inline utility CSS block from `index.html` (lines 8–78)
-- [x] Remove any Tailwind-related npm packages if present
-- [x] Remove `tailwind.config.js` references from docs
-
-### Phase 16.3 — Migrate UI Primitives
-- [x] Rewrite `button.tsx` to use semantic CSS classes instead of Tailwind strings (e.g., `className="btn btn--primary btn--sm"`)
-- [x] Rewrite `card.tsx` (`card`, `card__header`, `card__body`, `card__footer`)
-- [x] Rewrite `badge.tsx` (`badge`, `badge--success`, `badge--warning`, etc.)
-- [x] Rewrite `input.tsx` (`.form-group`, `.form-label`, `.form-input`, `.form-input--error`)
-- [x] Rewrite `skeleton.tsx` (`.skeleton`, `.skeleton--card`, `.skeleton--table`)
-- [x] Rewrite `empty-state.tsx`, `error-boundary.tsx`, `layout.tsx`
-
-### Phase 16.4 — Migrate Layout Components
-- [x] Rewrite `AppShell.tsx` (`.app-shell`, `.app-shell__sidebar`, `.app-shell__main`, `.app-shell__header`)
-- [x] Rewrite `Sidebar.tsx` (`.sidebar`, `.sidebar__nav`, `.sidebar__header`, `.sidebar__footer`)
-- [x] Rewrite `Header.tsx` (`.header`, `.header__title`, `.header__actions`)
-
-### Phase 16.5 — Migrate Feature Components
-- [x] Rewrite `MainDashboard.tsx` (`.dashboard`, `.dashboard__grid`, `.dashboard__stats`)
-- [x] Rewrite `DashboardOverview.tsx` (`.stats-grid`, `.stat-card`)
-- [x] Rewrite `QuickActions.tsx`` & UploadZone.tsx`
-- [x] Rewrite `DocumentList.tsx` (`.doc-list`, `.doc-card`, `.doc-table`, `.filter-bar`)
-- [x] Rewrite `DocumentDetails.tsx` (`.doc-details`, `.doc-preview`, `.doc-meta`)
-- [x] Rewrite `PipelineStatusDisplay.tsx` (`.pipeline`, `.pipeline__status`)
-- [x] Rewrite `WorkflowActivity.tsx` & `WorkflowTimeline.tsx`
-- [x] Rewrite `AIInsights.tsx` (`.insights`, `.insights__usage`)
-- [x] Rewrite `DocumentStatsDashboard.tsx`
-- [x] Rewrite pages: `UploadPage.tsx`, `ReportsPage.tsx`, `SettingsPage.tsx`
-- [x] Rewrite `FilePreview.tsx` & `DocumentInsights.tsx` & `DocumentStatsDashboard.tsx`
-- [x] Rewrite `main.tsx` auth screens (`.auth-card`, `.auth-input`, `.auth-btn`)
-
-### Phase 16.6 — Polish
-- [x] Remove `cn()` utility if no longer needed (or keep for conditional classes)
-- [x] Verify responsive breakpoints (mobile/tablet/desktop)
-- [x] Build and visually verify all screens
-- [x] Run `npm run lint` / `npm run typecheck` / `npm run build`
-
-### Phase 16.7 — Frontend Stabilization (In Progress)
-- [x] Remove dead/conflicting BEM CSS files (`auth.css`, `button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `header.css`, `sidebar.css`)
-- [x] Clean `index.html` to load only `main.css` and `layout.css`
-- [x] Extract auth UI from `main.tsx` into `pages/AuthPage.tsx`
-- [x] Add `/auth` route and redirect unauthenticated users
-- [x] Add placeholder routes for `/documents`, `/workflows`, `/chat`
-- [x] Rewrite `Sidebar.tsx` to use semantic BEM classes from `layout.css`
-- [x] Rewrite `Header.tsx` to use semantic BEM classes from `layout.css`
-- [ ] Standardize remaining components to use `ui/` primitives only
-- [ ] Wire `ErrorBoundary` into `AppShell`
-- [ ] Remove remaining inline styles and Tailwind utility strings
-- [ ] Final responsive pass and accessibility audit
 
 ---
 
@@ -305,37 +303,38 @@
 - [x] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
 - [x] Create `src/components/ui/empty-state.tsx`
 - [x] Create `src/components/ui/error-boundary.tsx`
+- [x] Create `src/components/ui/layout.tsx` (PageContainer, SectionContainer)
 - [ ] Standardize existing components to use primitives
 
 ### Phase 15.3 — Layout Standardization
-- [ ] Refine AppShell for route-aware behavior
-- [ ] Consolidate Sidebar styles (remove duplicate patterns)
-- [ ] Standardize Header
-- [ ] Create `PageContainer` component
-- [ ] Create `SectionContainer` component
+- [x] Refine AppShell for route-aware behavior
+- [x] Consolidate Sidebar styles
+- [x] Standardize Header
+- [x] Create `PageContainer` component
+- [x] Create `SectionContainer` component
 
 ### Phase 15.4 — Component Consolidation
-- [ ] Unify RecentDocumentsTable + DocumentList into single Table component
-- [ ] Unify UploadZone across pages
-- [ ] Create unified StatsCard
-- [ ] Create unified StatusBadge
-- [ ] Replace ad-hoc skeletons with Skeleton component
-- [ ] Standardize error states
+- [x] Unify RecentDocumentsTable + DocumentList into single Table component
+- [x] Unify UploadZone across pages
+- [x] Create unified StatsCard
+- [x] Create unified StatusBadge
+- [x] Replace ad-hoc skeletons with Skeleton component
+- [x] Standardize error states
 
 ### Phase 15.5 — Routing & Navigation
-- [ ] Install TanStack Router or React Router
-- [ ] Define all application routes
-- [ ] Implement lazy loading for routes
+- [x] Install React Router
+- [x] Define all application routes
+- [x] Implement lazy loading for routes
 - [ ] Add breadcrumbs component
-- [ ] Add 404 page handling
-- [ ] Fix back button / browser history
-- [ ] Implement deep linking for document details
+- [x] Add 404 page handling
+- [x] Fix back button / browser history
+- [x] Implement deep linking for document details
 
 ### Phase 15.6 — State Management
-- [ ] Add TanStack Query for data fetching
-- [ ] Create custom hooks (useDocuments, useStats, etc.)
+- [x] Add TanStack Query for data fetching
+- [x] Create custom hooks (useDocuments, useStats, etc.) (partially via MainDashboard)
 - [ ] Add caching and optimistic update patterns
-- [ ] Standardize loading/error states via hooks
+- [x] Standardize loading/error states via hooks
 
 ### Phase 15.7 — Polish & Accessibility
 - [ ] Accessibility audit pass
@@ -345,21 +344,12 @@
 - [ ] Test with screen readers
 - [ ] Prepare dark mode system
 
+---
+
 ## CURRENT PRIORITY
 
-1. **Component Primitives** — Create `ui/` library: Button, Badge, Card, Input, Skeleton
-2. **Component Consolidation** — Eliminate duplicated tables, uploads, stats cards
-3. **Routing Migration** — Implement router and fix broken sidebar routes
-4. **State Management** — Replace ad-hoc fetching with shared hooks
+1. **Upload System Critical Fixes** — Replace drizzle `db` with Supabase client in browser-side services; fix UploadPage DOM; implement retry endpoint
+2. **Component Primitives Standardization** — Replace remaining raw HTML elements with `ui/` primitives
+3. **State Management** — Complete TanStack Query hooks for documents, stats, workflows
+4. **Settings Subpages** — Design and implement tabbed navigation for Account/Workspace/Billing/etc.
 5. **Accessibility Polish** — Fix focus, ARIA, and keyboard support
-
-## Completed Today
-
-- ✅ Created `src/components/ui/button.tsx` with primary/secondary/ghost/danger variants, loading state, and size variants (sm/md/lg)
-- ✅ Created `src/components/ui/badge.tsx` with default/success/warning/error/info variants
-- ✅ Created `src/components/ui/input.tsx` with label, error, helper text support and SearchInput variant
-- ✅ Created `src/components/ui/card.tsx` with Card, CardHeader, CardBody, CardFooter compound components
-- ✅ Created `src/components/ui/skeleton.tsx` with Skeleton, SkeletonCard, SkeletonTable variants
-- ✅ Created `src/components/ui/empty-state.tsx` with optional icon/action support
-- ✅ Created `src/components/ui/error-boundary.tsx` with reset capability
-- ✅ Created `src/components/ui/layout.tsx` with PageContainer and SectionContainer

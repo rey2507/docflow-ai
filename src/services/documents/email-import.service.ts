@@ -34,7 +34,7 @@ export const EmailImportService = {
         
         LogService.info(`Importing email attachment`, { attachmentName: attachment.name, userId });
         
-        const { data, error } = await DocumentUploadService.uploadDocument(db, supabase, file, userId);
+        const { data, error } = await DocumentUploadService.uploadDocument(supabase, file, userId);
         
         if (error) {
           errors.push(`Failed to upload ${attachment.name}: ${error.message}`); // Keep for return value

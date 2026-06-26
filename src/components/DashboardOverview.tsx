@@ -17,13 +17,13 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
   <Card>
-    <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <p className="text-xs font-medium text-slate-500 mb-1">{title}</p>
-        <p className="text-2xl font-semibold text-slate-900 tracking-tight">{value}</p>
-        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+    <div className="flex items-start gap-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-slate-500 mb-1 truncate">{title}</p>
+        <p className="text-xl font-semibold text-slate-900 tracking-tight truncate">{value}</p>
+        {subtitle && <p className="text-xs text-slate-500 mt-1 truncate">{subtitle}</p>}
       </div>
-      <div className={`rounded-lg p-2 ${iconBg}`}>{icon}</div>
+      <div className={`rounded-lg p-2 shrink-0 ${iconBg}`}>{icon}</div>
     </div>
   </Card>
 );
