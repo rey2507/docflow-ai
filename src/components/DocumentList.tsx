@@ -19,6 +19,7 @@ interface DocumentListProps {
   onViewDetails: (id: string) => void;
   isLoading?: boolean;
   defaultViewMode?: ViewMode;
+  onUploadClick?: () => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -27,6 +28,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onViewDetails,
   isLoading = false,
   defaultViewMode = 'grid',
+  onUploadClick,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
@@ -174,8 +176,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
       title={search || statusFilter ? 'No documents found' : 'No documents uploaded yet'}
       description={search || statusFilter ? 'Try adjusting your filters' : 'Upload a document to get started'}
       action={
-        !search && !statusFilter
-          ? { label: 'Upload a document', onClick: onRefresh }
+        !search && !statusFilter && onUploadClick
+          ? { label: 'Upload a document', onClick: onUploadClick }
           : undefined
       }
     />
@@ -281,8 +283,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 title={search || statusFilter ? 'No documents found' : 'No documents uploaded yet'}
                 description={search || statusFilter ? 'Try adjusting your filters' : 'Upload a document to get started'}
                 action={
-                  !search && !statusFilter
-                    ? { label: 'Upload a document', onClick: onRefresh }
+                  !search && !statusFilter && onUploadClick
+                    ? { label: 'Upload a document', onClick: onUploadClick }
                     : undefined
                 }
               />

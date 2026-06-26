@@ -47,6 +47,7 @@ const AppShell: React.FC<AppShellProps> = ({
               ? 'AI Chat'
               : 'Dashboard'
           }
+          userEmail={userEmail}
           onUploadClick={() => onNavigate('upload')}
         />
         <main className="app-shell__content">

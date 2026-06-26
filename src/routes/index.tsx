@@ -1,6 +1,11 @@
 import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
+import AuthPage from '../pages/AuthPage';
+import { ErrorBoundary } from '../components/ui/error-boundary';
+import { useAuth } from '../contexts/AuthContext';
+import { PageContainer } from '../components/ui/layout';
+import BetaBanner from '../components/ui/beta-banner';
 
 const MainDashboard = lazy(() => import('../components/MainDashboard'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
@@ -9,53 +14,103 @@ const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 
 const pathToPage: Record<string, string> = {
   '/': 'dashboard',
+  '/documents': 'documents',
   '/upload': 'upload',
+  '/workflows': 'workflows',
+  '/chat': 'chat',
   '/reports': 'reports',
   '/settings': 'settings',
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const user = localStorage.getItem('docflow-user');
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center" style={{ minHeight: '50vh' }}>
+          <p className="text-sm text-slate-500">Loading workspace…</p>
+        </div>
+      </PageContainer>
+    );
+  }
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   return <>{children}</>;
+}
+
+function AuthRoute() {
+  const navigate = useNavigate();
+  return <AuthPage onAuthenticated={() => navigate('/')} />;
 }
 
 function RootLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const currentPage = pathToPage[location.pathname] || 'dashboard';
+  const handleNavigate = (page: string) => navigate(page === 'dashboard' ? '/' : `/${page}`);
+  const userId = user?.id || '';
 
   return (
-    <AppShell currentPage={currentPage as any} onNavigate={(page) => navigate(page === 'dashboard' ? '/' : `/${page}`)} userEmail="user@example.com" usagePercent={0}>
-      <Suspense fallback={<div className="p-6">Loading…</div>}>
-        <Outlet />
-      </Suspense>
+    <AppShell
+      currentPage={currentPage as any}
+      onNavigate={handleNavigate}
+      userEmail={user?.email || ''}
+      usagePercent={0}
+    >
+      <ErrorBoundary>
+        <Suspense fallback={
+          <PageContainer>
+            <div className="flex items-center justify-center" style={{ minHeight: '50vh' }}>
+              <p className="text-sm text-slate-500">Loading…</p>
+            </div>
+          </PageContainer>
+        }>
+          <Outlet context={{ userId, handleNavigate }} />
+        </Suspense>
+      </ErrorBoundary>
+      <BetaBanner />
     </AppShell>
   );
 }
 
 function NotFound() {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
-        <p className="text-slate-600 mb-4">Page not found</p>
+    <PageContainer>
+      <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+        <h1 className="text-4xl font-bold text-slate-900">404</h1>
+        <p className="mt-2 text-sm text-slate-600">Page not found</p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mt-4 inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors"
+        >
+          Back to Dashboard
+        </button>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
 export const router = createBrowserRouter([
   {
+    path: '/auth',
+    element: <AuthRoute />,
+  },
+  {
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <MainDashboard userId="local" onNavigate={() => {}} /> },
-      { path: 'upload', element: <ProtectedRoute><UploadPage userId="local" onUploadComplete={() => {}} /></ProtectedRoute> },
-      { path: 'reports', element: <ProtectedRoute><ReportsPage userId="local" /></ProtectedRoute> },
-      { path: 'settings', element: <ProtectedRoute><SettingsPage user={{ email: 'user@example.com', id: 'local' }} onSignOut={() => {}} /></ProtectedRoute> },
+      { index: true, element: <ProtectedRoute><MainDashboard onNavigate={() => {}} /></ProtectedRoute> },
+      { path: 'documents', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Documents page coming soon.</div></ProtectedRoute> },
+      { path: 'upload', element: <ProtectedRoute><UploadPage onUploadComplete={() => {}} /></ProtectedRoute> },
+      { path: 'workflows', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Workflows page coming soon.</div></ProtectedRoute> },
+      { path: 'chat', element: <ProtectedRoute><div style={{ padding: '2rem' }}>AI Chat coming soon.</div></ProtectedRoute> },
+      { path: 'reports', element: <ProtectedRoute><ReportsPage /></ProtectedRoute> },
+      { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },
       { path: '*', element: <NotFound /> },
     ],
   },

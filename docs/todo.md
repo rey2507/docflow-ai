@@ -206,20 +206,20 @@
 
 ---
 
-## PHASE 16 — TAILWIND REMOVAL & STRUCTURED CSS MIGRATION (Next Day)
+## PHASE 16 — TAILWIND REMOVAL & STRUCTURED CSS MIGRATION (Completed)
 
 ### Phase 16.1 — CSS Architecture Setup
 - [x] Create `src/styles/main.css` with CSS custom properties (design tokens): colors, spacing, typography, shadows, borders, radii
 - [x] Create component-scoped CSS files: `src/styles/components/button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `layout.css`, `sidebar.css`, `header.css`
 - [x] Define class naming convention: BEM-style or semantic utility (`.btn`, `.btn--primary`, `.card`, `.card__header`)
-- [ ] Set up CSS import in `index.html` (or `main.tsx`) replacing inline `<style>` block
-- [ ] Verify build pipeline picks up CSS (no PostCSS/Tailwind needed)
+- [x] Set up CSS import in `index.html` (or `main.tsx`) replacing inline `<style>` block
+- [x] Verify build pipeline picks up CSS (no PostCSS/Tailwind needed)
 
 ### Phase 16.2 — Remove Tailwind
-- [ ] Delete `src/styles/tailwind.config.js`
-- [ ] Remove inline utility CSS block from `index.html` (lines 8–78)
-- [ ] Remove any Tailwind-related npm packages if present
-- [ ] Remove `tailwind.config.js` references from docs
+- [x] Delete `src/styles/tailwind.config.js`
+- [x] Remove inline utility CSS block from `index.html` (lines 8–78)
+- [x] Remove any Tailwind-related npm packages if present
+- [x] Remove `tailwind.config.js` references from docs
 
 ### Phase 16.3 — Migrate UI Primitives
 - [x] Rewrite `button.tsx` to use semantic CSS classes instead of Tailwind strings (e.g., `className="btn btn--primary btn--sm"`)
@@ -253,6 +253,19 @@
 - [x] Verify responsive breakpoints (mobile/tablet/desktop)
 - [x] Build and visually verify all screens
 - [x] Run `npm run lint` / `npm run typecheck` / `npm run build`
+
+### Phase 16.7 — Frontend Stabilization (In Progress)
+- [x] Remove dead/conflicting BEM CSS files (`auth.css`, `button.css`, `card.css`, `badge.css`, `input.css`, `skeleton.css`, `header.css`, `sidebar.css`)
+- [x] Clean `index.html` to load only `main.css` and `layout.css`
+- [x] Extract auth UI from `main.tsx` into `pages/AuthPage.tsx`
+- [x] Add `/auth` route and redirect unauthenticated users
+- [x] Add placeholder routes for `/documents`, `/workflows`, `/chat`
+- [x] Rewrite `Sidebar.tsx` to use semantic BEM classes from `layout.css`
+- [x] Rewrite `Header.tsx` to use semantic BEM classes from `layout.css`
+- [ ] Standardize remaining components to use `ui/` primitives only
+- [ ] Wire `ErrorBoundary` into `AppShell`
+- [ ] Remove remaining inline styles and Tailwind utility strings
+- [ ] Final responsive pass and accessibility audit
 
 ---
 

@@ -56,7 +56,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
     </nav>
   );
 
-return (
+  const displayEmail = userEmail || 'User';
+
+  return (
     <>
       <Button
         type="button"
@@ -70,10 +72,10 @@ return (
       </Button>
 
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/30" onClick={() => setMobileOpen(false)}>
-          <aside className="sidebar" onClick={(e) => e.stopPropagation()}>
-            <div className="sidebar__header">
-              <span className="text-lg font-bold text-slate-900 tracking-tight">DocFlow AI</span>
+        <div className="sidebar__mobile-backdrop" onClick={() => setMobileOpen(false)}>
+          <aside className="sidebar__mobile-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sidebar__mobile-header">
+              <span className="sidebar__brand">DocFlow AI</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -87,9 +89,11 @@ return (
             </div>
             <div className="sidebar__nav">{navContent}</div>
             <div className="sidebar__footer">
-              <div className="rounded-lg bg-slate-50 p-3">
-                <p className="text-xs font-medium text-slate-900 mb-2">Workspace</p>
-                <p className="text-xs text-slate-500 truncate">{userEmail || 'user@example.com'}</p>
+              <div className="sidebar__user-card">
+                <div>
+                  <p className="sidebar__user-name">{displayEmail}</p>
+                  <p className="sidebar__user-plan">Beta</p>
+                </div>
               </div>
             </div>
           </aside>
@@ -98,53 +102,50 @@ return (
 
       <aside className="sidebar">
         <div className="sidebar__header">
-          <span className="text-lg font-bold text-slate-900 tracking-tight">DocFlow AI</span>
+          <span className="sidebar__brand">DocFlow AI</span>
         </div>
 
         <div className="sidebar__nav">
           {navContent}
 
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full justify-between"
-              onClick={() => setWorkspaceOpen(!workspaceOpen)}
-            >
-              <span className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Workspace
-              </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
-            </Button>
-            {workspaceOpen && (
-              <div className="mt-1 px-3 py-2 text-xs text-slate-500">
-                <p className="truncate">{userEmail || 'user@example.com'}</p>
-              </div>
-            )}
-          </div>
+          <div className="sidebar__divider" />
+          <Button
+            type="button"
+            variant="ghost"
+            className="sidebar__workspace-toggle"
+            onClick={() => setWorkspaceOpen(!workspaceOpen)}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users className="h-4 w-4" />
+              Workspace
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+          </Button>
+          {workspaceOpen && (
+            <div className="sidebar__workspace-details">
+              <p style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayEmail}</p>
+            </div>
+          )}
         </div>
 
-        <div className="sidebar__footer space-y-3">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-slate-600">Usage</span>
-              <span className="text-xs text-slate-500">{usagePercent}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div
-                className="h-1.5 rounded-full bg-slate-900 transition-all"
-                style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
-              />
-            </div>
+        <div className="sidebar__footer">
+          <div className="sidebar__usage-label">
+            <span>Usage</span>
+            <span>{usagePercent}%</span>
           </div>
-          <div className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
-            <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
-              {userEmail ? userEmail.charAt(0).toUpperCase() : 'U'}
+          <div className="sidebar__usage-track">
+            <div
+              className="sidebar__usage-fill"
+              style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
+            />
+          </div>
+          <div className="sidebar__user-card" style={{ marginTop: '0.75rem' }}>
+            <div className="sidebar__user-avatar">
+              {displayEmail.charAt(0).toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-900 truncate">{userEmail || 'User'}</p>
-              <p className="text-[11px] text-slate-500">Free plan</p>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p className="sidebar__user-name">{displayEmail}</p>
+              <p className="sidebar__user-plan">Beta</p>
             </div>
           </div>
         </div>

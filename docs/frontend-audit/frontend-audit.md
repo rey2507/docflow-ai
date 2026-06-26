@@ -1,111 +1,138 @@
-# Frontend Audit - DocFlow AI
+# DocFlow AI Frontend Audit
 
-## Executive Summary
+## 1. Folder Structure Map
 
-The frontend architecture shows a **partially completed transition** from a minimal setup to a SaaS-oriented dashboard. Core layout components (AppShell, Sidebar, Header) are in place, but significant inconsistencies and technical debt exist.
-
-## 1. Folder Structure Audit
-
-### Current Structure
 ```
 src/
-â”œâ”€â”€ components/
-â”‚   â”œâ”€â”€ layout/           # AppShell, Sidebar, Header - GOOD
-â”‚   â”œâ”€â”€ documents/        # DocumentInsights.tsx - OK
-â”‚   â”œâ”€â”€ AIInsights.tsx    # Mixed: Tailwind + custom CSS
-â”‚   â”œâ”€â”€ DashboardOverview.tsx # Reusable stats cards
-â”‚   â”œâ”€â”€ RecentDocumentsTable.tsx # Complex table with inline state
-â”‚   â”œâ”€â”€ DocumentList.tsx  # Alternative document list
-â”‚   â”œâ”€â”€ DocumentDetails.tsx # Complex detail view
-â”‚   â”œâ”€â”€ FilePreview.tsx   # Good isolation
-â”‚   â”œâ”€â”€ PipelineStatusDisplay.tsx # Good isolation
-â”‚   â”œâ”€â”€ QuickActions.tsx  # Two components exported
-â”‚   â””â”€â”€ WorkflowActivity.tsx # Good isolation
-â”œâ”€â”€ pages/
-â”‚   â”œâ”€â”€ UploadPage.tsx    # Standalone page
-â”‚   â”œâ”€â”€ ReportsPage.tsx   # Standalone page
-â”‚   â””â”€â”€ SettingsPage.tsx  # Standalone page
-â”œâ”€â”€ services/             # Business logic - GOOD separation
-â”œâ”€â”€ types/                # TypeScript types - GOOD
-â””â”€â”€ lib/
-    â””â”€â”€ utils/          # Utility functions - GOOD
++-- components/
+¦   +-- layout/
+¦   ¦   +-- AppShell.tsx          # Root layout wrapper (uses PageContainer)
+¦   ¦   +-- Header.tsx            # Top navigation bar (inline styles + Tailwind)
+¦   ¦   +-- Sidebar.tsx           # Side navigation (BEM classes)
+¦   +-- ui/
+¦   ¦   +-- index.ts              # Barrel export for all UI primitives
+¦   ¦   +-- button.tsx            # Button primitive (variant, size, loading)
+¦   ¦   +-- card.tsx              # Card, CardHeader, CardBody, CardFooter
+¦   ¦   +-- input.tsx             # Input + SearchInput (label, error, helperText)
+¦   ¦   +-- badge.tsx             # Badge (5 variants)
+¦   ¦   +-- skeleton.tsx          # Skeleton + SkeletonCard + SkeletonTable
+¦   ¦   +-- empty-state.tsx       # EmptyState (icon, title, description, action)
+¦   ¦   +-- error-boundary.tsx    # Class-based ErrorBoundary (not used)
+¦   ¦   +-- layout.tsx            # PageContainer, SectionContainer
+¦   +-- providers/
+¦   ¦   +-- Providers.tsx         # QueryClientProvider wrapper
+¦   +-- documents/
+¦   ¦   +-- DocumentInsights.tsx  # AI summary/key-points card
+¦   +-- MainDashboard.tsx         # Dashboard page component (lazy-loaded)
+¦   +-- DashboardOverview.tsx     # Stats cards grid + StatsCard
+¦   +-- DocumentList.tsx          # Document table/grid view with filters, pagination
+¦   +-- DocumentStatsDashboard.tsx # Reports-style stats card (DUPLICATE of ReportsPage)
+¦   +-- AIInsights.tsx            # Usage + success rate + confidence metrics
+¦   +-- WorkflowActivity.tsx      # Recent activity feed (hardcoded fallback data)
+¦   +-- QuickActions.tsx          # QuickActions grid + UploadZone
+¦   +-- FilePreview.tsx           # Image/PDF/download previewer
+¦   +-- PipelineStatusDisplay.tsx # Real-time pipeline status + retry logic
+¦   +-- WorkflowTimeline.tsx      # Vertical workflow step timeline
+¦   +-- DocumentDetails.tsx       # Full document detail view with editing
++-- pages/
+¦   +-- UploadPage.tsx            # Dedicated upload page
+¦   +-- ReportsPage.tsx           # Reports/analytics page
+¦   +-- SettingsPage.tsx          # Settings page (placeholder content)
++-- hooks/
+¦   +-- useStats.ts               # React Query hook for stats
+¦   +-- useDocuments.ts           # React Query hooks for documents + delete
++-- styles/
+¦   +-- main.css                  # Massive custom utility + CSS-variable system
+¦   +-- components/
+¦       +-- auth.css              # BEM auth form styles
+¦       +-- layout.css            # BEM shell/sidebar/header styles
+¦       +-- header.css            # BEM header styles (CONFLICTS with layout.css)
+¦       +-- sidebar.css           # Empty file
+¦       +-- button.css            # BEM button styles (CONFLICTS with ui/button.tsx)
+¦       +-- card.css              # BEM card styles (CONFLICTS with ui/card.tsx)
+¦       +-- badge.css             # BEM badge styles (CONFLICTS with ui/badge.tsx)
+¦       +-- input.css             # BEM input styles (CONFLICTS with ui/input.tsx)
+¦       +-- skeleton.css          # BEM skeleton styles (CONFLICTS with ui/skeleton.tsx)
++-- services/
+¦   +-- auth/
+¦   ¦   +-- auth.service.ts       # Supabase auth wrapper
+¦   +-- documents/
+¦   ¦   +-- document.service.ts
+¦   ¦   +-- upload.service.ts
+¦   ¦   +-- extract.service.ts
+¦   ¦   +-- validate.service.ts
+¦   ¦   +-- validator.factory.ts
+¦   ¦   +-- finalization.service.ts
+¦   ¦   +-- orchestrator.service.ts
+¦   ¦   +-- storage.service.ts
+¦   ¦   +-- email-import.service.ts
+¦   ¦   +-- rate-limit.service.ts
+¦   ¦   +-- invoice.rules.ts
+¦   ¦   +-- contract.rules.ts
+¦   ¦   +-- form.rules.ts
+¦   ¦   +-- types.ts
+¦   ¦   +-- orchestrator.service.test.ts
+¦   +-- workflow/
+¦   ¦   +-- workflow.service.ts
+¦   +-- ai/
+¦   ¦   +-- provider.service.ts   # OpenAI + Gemini client abstraction
+¦   ¦   +-- prompt.service.ts     # Prompt templates per document type
+¦   ¦   +-- chat.service.ts       # RAG-based library chat
+¦   ¦   +-- provider.service.test.ts
+¦   +-- reports/
+¦   ¦   +-- report.service.ts
+¦   +-- usage/
+¦   ¦   +-- usage.service.ts
+¦   +-- security/
+¦   ¦   +-- rate-limit.service.ts
+¦   +-- logging/
+¦       +-- log.service.ts
++-- subscription/
+¦   +-- subscription.service.ts
++-- lib/
+¦   +-- queryClient.ts
+¦   +-- supabase/
+¦   ¦   +-- client.ts             # Supabase singleton + runtime config injection
+¦   +-- utils/
+¦       +-- index.ts              # cn(), formatBytes(), formatDate(), truncate()
+¦       +-- error-normalization.ts # AI/DB/Storage/Auth error normalizers
+¦       +-- retry.ts              # Exponential backoff utility
+¦       +-- env-validation.ts
++-- types/
+¦   +-- page.ts                   # Page type enum
+¦   +-- document.ts               # Document, DocumentMetadata, DocumentStatus
+¦   +-- document.types.ts         # EMPTY FILE (orphan)
+¦   +-- workflow.ts               # Workflow, WorkflowStep, WorkflowPriority
+¦   +-- workflow.types.ts         # EMPTY FILE (orphan)
+¦   +-- report.ts                 # Report, ReportFilter, ReportType
+¦   +-- report.types.ts           # EMPTY FILE (orphan)
+¦   +-- auth.ts                   # UserProfile, AuthState, UserRole
++-- routes/
+¦   +-- index.tsx                 # Browser router config (lazy routes)
++-- main.tsx                      # App root (auth state, signin/signup UI)
++-- index.ts                      # Cloudflare Worker entry (static asset serving)
++-- vite-env.d.ts
 ```
 
-### Issues Identified
+## 2. Key Architectural Observations
 
-**Missing Architectural Boundaries:**
-- No `ui/` folder for primitive components
-- No `hooks/` folder for shared logic (useDocument, useAuth, etc.)
-- No `features/` organization for domain-specific components
-- Mixed concerns in `components/` (layout + business + primitives)
+### Duplication
+- **DocumentStatsDashboard.tsx** contains nearly identical stats rendering logic to **ReportsPage.tsx**
+- **Document type definitions** exist in both `types/document.ts` and `types/document.types.ts` (empty)
+- **Button styles**: BEM `.btn` in `button.css` vs Tailwind-based `Button` component in `ui/button.tsx`
+- **Card styles**: BEM `.card` in `card.css` vs Tailwind-based `Card` components in `ui/card.tsx`
+- **Header styles**: `.header` in both `layout.css` and `header.css` with conflicting rules
+- **Auth UI**: Inline auth form in `main.tsx` (288 lines) vs `styles/components/auth.css` (only used by nothing)
 
-**Duplicated Structures:**
-- `src/types/document.ts` and `src/types/document.types.ts` (empty)
-- `src/types/workflow.ts` and `src/types/workflow.types.ts` (need to check)
+### Missing Boundaries
+- No `features/` directory or domain-driven module boundaries
+- Pages vs Components are inconsistently organized (Dashboard is a component, Upload is a page)
+- Services import `@/` aliases from multiple levels (`docs/client`, `docs/schema`), creating cross-cutting coupling
+- No separation between `pages/` and `features/`; feature components sit at `components/` root
 
-**Inconsistent Organization:**
-- Some components have inline styles, others use Tailwind
-- `AIInsights.css` exists alongside Tailwind-based components
-- No consistent export pattern for component types
-
-## 2. Component Architecture Analysis
-
-### Layout Components (GOOD)
-- `AppShell.tsx`: Clean composition, proper responsive handling
-- `Sidebar.tsx`: Well-structured with mobile/desktop variants
-- `Header.tsx`: Clean, SaaS-style header
-
-### Feature Components (MIXED)
-- Mixed Tailwind + custom CSS (AIInsights.css)
-- Duplicated loading state patterns across components
-- No shared state management patterns
-
-### Missing Primitives
-No shared primitive system for:
-- Button variants (primary, secondary, danger, ghost)
-- Input fields
-- Badges/tags
-- Modal/dialog system
-- Toast notifications
-
-## 3. Technology Stack Assessment
-
-| Layer | Technology | Status |
-|-------|-----------|--------|
-| Framework | React 19 + TypeScript | Current |
-| Build Tool | Vite 7 | Current |
-| Styling | Tailwind + Custom CSS | **INCONSISTENT** |
-| Icons | lucide-react | Good choice |
-| State | React useState/useCallback | Minimal, no external state lib |
-| Backend | Supabase | Integrated |
-
-## 4. Key Findings
-
-### Critical Issues (P0)
-1. **No design system primitives** - Every component reinvents buttons, cards, inputs
-2. **Inconsistent spacing** - Mix of arbitrary Tailwind values and inconsistent padding
-3. **Missing responsive consistency** - Some components use different breakpoints
-4. **Mixed styling approaches** - Custom CSS alongside Tailwind
-
-### Architecture Issues (P1)
-1. Components are not feature-organized
-2. No shared hooks for data fetching
-3. Inline state management duplicated
-4. Missing error boundary system
-
-### Maintenance Issues (P2)
-1. Hard-coded empty state text in components
-2. Repeated color classes across components
-3. No theme/dark mode support
-4. No accessibility testing setup
-
-## 5. Reusable Patterns Found
-
-### Positive Patterns
-- `rounded-xl border border-slate-200 bg-white shadow-sm` - Card pattern (repeated)
-- Loading skeleton pattern (duplicated 4 times)
-- Error state pattern (inconsistent variants)
-- Status badge pattern (repeated)
-
-### Recommendations
-Extract these to shared primitives before further development.
+### Reusable Opportunities
+- `DocumentStatsDashboard.tsx` and `ReportsPage.tsx` should share a single `StatsCards` component
+- `UploadZone` logic is duplicated between `QuickActions.tsx` and `UploadPage.tsx` with different styling
+- `EmptyState` is used in `DocumentList` but not leveraged for error/loading fallbacks in other pages
+- `ErrorBoundary` component is defined but **never imported or used anywhere**
+- Multiple hardcoded loading skeletons across components instead of using `SkeletonCard`/`SkeletonTable`

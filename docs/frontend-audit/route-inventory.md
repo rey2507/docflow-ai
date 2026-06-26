@@ -1,110 +1,42 @@
-# Route Inventory - DocFlow AI
+# Route / Screen Inventory
 
-## Current Routes
+## 1. Implemented Routes
 
-### Implemented Routes
-| Route | Component | Status | Documented? |
-|-------|-----------|--------|-------------|
-| `/` (Dashboard) | MainDashboard | Stable | ✅ |
-| `/documents` | *Not implemented* | Missing | ❌ |
-| `/upload` | UploadPage | Basic | ✅ |
-| `/workflows` | *Not implemented* | Missing | ❌ |
-| `/chat` | *Not implemented* | Missing | ❌ |
-| `/reports` | ReportsPage | Basic | ✅ |
-| `/settings` | SettingsPage | Placeholder | ✅ |
+| Route | File | Component | UX Concerns |
+|-------|------|-----------|-------------|
+| `/` | `routes/index.tsx` | `MainDashboard` (lazy) | Default landing. `userId="local"` is hardcoded. `onNavigate` is a no-op. Must wrap `MainDashboard` in `ErrorBoundary`. |
+| `/upload` | `routes/index.tsx` | `UploadPage` (lazy, ProtectedRoute) | `userId="local"`, `onUploadComplete={() => {}}`. Drag-and-drop upload is duplicated from `QuickActions`. No progress bar for uploads, only text state. |
+| `/reports` | `routes/index.tsx` | `ReportsPage` (lazy, ProtectedRoute) | `userId="local"`. Stats and efficiency cards are nearly identical to `DocumentStatsDashboard.tsx`. Missing charts/visualizations. |
+| `/settings` | `routes/index.tsx` | `SettingsPage` (lazy, ProtectedRoute) | `user={{ email: 'user@example.com', id: 'local' }}`, `onSignOut={() => {}}`. Workspace, Integrations, and Danger Zone are placeholder text. No actual settings forms. |
+| `/*` | `routes/index.tsx` | `NotFound` | Generic 404. No link back to dashboard or suggested routes. |
 
-### Routing System
-- **Current**: Client-side conditional rendering in `main.tsx`
-- **Pattern**: Switch/case in `pageContent` IIFE
-- **State**: `currentPage` in App component
-- **Navigation**: `onNavigate` prop passed through AppShell
+## 2. Referenced-but-Nonexistent Routes
 
-### Route Issues
-1. **No `/documents` route** - Only accessible via back button from details
-2. **No `/workflows` route** - Referenced in Sidebar but missing
-3. **No `/chat` route** - Referenced in Sidebar but missing
-4. **No URL/routing library** - React Router not installed
-5. **No browser history** - No `pushState`/`popstate` handling
-6. **Deep linking broken** - Cannot bookmark document details
+The `Sidebar.tsx` navigation includes these items, but they have **no routes** defined in `routes/index.tsx`:
 
-## Route to Screen Map
+| Sidebar Item | Click Handler | Result |
+|--------------|---------------|--------|
+| Documents | `onNavigate('documents')` | Navigates to `/documents`, which hits the `*` NotFound route |
+| Workflows | `onNavigate('workflows')` | Navigates to `/workflows`, which hits NotFound |
+| AI Chat | `onNavigate('chat')` | Navigates to `/chat`, which hits NotFound |
 
-### 1. Dashboard (`currentPage: 'dashboard'`)
-- **Component**: MainDashboard
-- **Sub-components**: DashboardOverview, RecentDocumentsTable, WorkflowActivity, AIInsights, UploadZone, QuickActions
-- **Purpose**: Home hub, document list, metrics
-- **UX Issues**:
-  - Detail view replaces dashboard (no nested routing)
-  - Upload zone on dashboard vs dedicated upload page (confusing)
-  - Detail view has full document handling
+**Impact**: Users clicking sidebar items for Documents, Workflows, or AI Chat are silently shown a generic 404 with no recovery path.
 
-### 2. Upload (`currentPage: 'upload'`)
-- **Component**: UploadPage
-- **Purpose**: Dedicated upload page
-- **UX Issues**:
-  - Duplicates UploadZone styling
-  - Success state forces navigation back after 1.5s (invasive)
-  - No batch upload
-  - Type-specific UI missing
+## 3. Auth Screens (handled in main.tsx, not routed)
 
-### 3. Reports (`currentPage: 'reports'`)
-- **Component**: ReportsPage
-- **Purpose**: Document statistics and efficiency
-- **UX Issues**:
-  - Very basic (2 cards)
-  - Repetitive with DashboardOverview
-  - No date range filtering
-  - No export functionality
+| State | File | Notes |
+|-------|------|-------|
+| Loading session | `main.tsx` | Full-screen loader with progress bar animation. |
+| Unauthenticated | `main.tsx` | Sign-in / Sign-up toggle form with email, password, magic link, and resend confirmation. 288 lines in App root -- should be extracted to `pages/AuthPage.tsx`. |
+| Supabase missing | `main.tsx` | "Temporarily unavailable" fallback. |
 
-### 4. Settings (`currentPage: 'settings'`)
-- **Component**: SettingsPage
-- **Purpose**: Account/workspace management
-- **UX Issues**:
-  - Placeholder content
-  - No actual settings
-  - Sign out on same page as settings
-  - No profile editing
+## 4. Current UX Concerns
 
-### 5. Document Details (`selectedDocumentId set`)
-- **Component**: DocumentDetails
-- **Purpose**: Single document lifecycle
-- **Access**: Only from RecentDocumentsTable click
-- **UX Issues**:
-  - Replaces entire dashboard (disorienting)
-  - No dedicated URL
-  - Cannot share/bookmark document
-
-## Route Deficiencies
-
-### Navigation Flow Problems
-1. **No deep linking** - Cannot land on specific document
-2. **No breadcrumbs** - User loses context
-3. **Back button broken** - React state only, no browser history
-4. **Sidebar routes don't match screens** - 4 sidebar items missing
-
-### Missing Screens
-1. `/documents` - Full document listing
-2. `/documents/:id` - Document detail (nested)
-3. `/workflows` - Workflow management
-4. `/workflows/:id` - Individual workflow
-5. `/chat` - AI Chat interface
-6. `/settings/profile` - User profile
-7. `/settings/workspace` - Workspace settings
-8. `/settings/billing` - Subscription management
-
-## Rebuild Priority
-
-### P0 (Critical)
-1. Implement React Router or similar
-2. Fix document detail deep linking
-3. Implement all sidebar routes
-
-### P1 (High)
-1. Add breadcrumbs
-2. Add nested routes for document workflows
-3. Back navigation handling
-
-### P2 (Medium)
-1. Route guards for auth
-2. Loading states per route
-3. Error boundaries per route
+- **Hardcoded props**: `userId="local"`, `userEmail="user@example.com"` are passed to every page. No real user identity is wired up.
+- **Missing real routing**: Sidebar navigation does not match actual routes. `pathToPage` in `RootLayout` maps only 4 paths.
+- **No route guards beyond localStorage**: `ProtectedRoute` checks localStorage for a user email string. No token validation.
+- **No breadcrumbs or history**: `DocumentDetails` returns to dashboard via `onBack`, ignoring browser back.
+- **No route-level loading**: Suspense fallback is `<div className="p-6">Loading...</div>` -- not styled.
+- **Search bar non-functional**: `Header.tsx` search input has no `onChange` handler or action.
+- **Notification bell**: No dropdown or panel. The badge dot is purely decorative.
+- **Upload page vs UploadZone**: Two separate upload UIs (`UploadPage` and `QuickActions.UploadZone`) with inconsistent drag-over colors (`border-blue-400 bg-blue-50` vs `border-slate-900 bg-slate-50`).

@@ -63,7 +63,7 @@ export const ReportService = {
           completedAt,
           documents!inner(userId)
         `)
-        .eq('documents.userId', userId);
+        .eq('userId', userId);
 
       if (error) throw error;
 

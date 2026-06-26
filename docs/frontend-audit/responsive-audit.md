@@ -1,124 +1,94 @@
-# Responsive Audit - DocFlow AI
+# Responsive Audit
 
-## Viewport Analysis
+## 1. Breakpoint Strategy
 
-### Breakpoints Used
-```
-sm: 640px
-md: 768px
-lg: 1024px
-xl: 1280px
-```
+The project uses Tailwind default breakpoints:
+- `sm:` 640px
+- `md:` 768px
+- `lg:` 1024px
+- `xl:` 1280px
 
-## Component-by-Component Review
+No custom breakpoints are defined.
 
-### AppShell
-| Feature | Mobile (<768px) | Tablet (768-1024px) | Desktop (>1024px) | Status |
-|---------|------------------|---------------------|-------------------|--------|
-| Sidebar | Hidden, floating button | Hidden, floating button | Visible | ✅ |
-| Content width | Full | Full | max-w-7xl | ✅ |
-| Header | Compact | Compact | Full | ✅ |
-| Padding | px-4 | px-4 sm:px-6 | px-4 sm:px-6 lg:px-8 | ✅ |
+## 2. Layout Responsiveness
 
-### Sidebar
-| Feature | Status | Issues |
-|---------|--------|--------|
-| Mobile drawer | ✅ Works | No swipe-to-close |
-| Desktop sidebar | ✅ 64 width | OK |
-| Collapsed state | ❌ | Doesn't exist |
-| Push content | ❌ | Overlays content instead |
+### AppShell (App Shell)
+- **File**: `components/layout/AppShell.tsx`, `Sidebar.tsx`
+- **Desktop**: Fixed 260px sidebar, scrollable main content area.
+- **Mobile (`md:hidden`)**: Sidebar is hidden. A floating action button (`fixed bottom-4 right-4 z-50`) opens a mobile drawer with `fixed inset-0 z-40` overlay.
+- **Issue**: The mobile close button (`X`) works, but clicking the overlay also closes. There is no transition animation. The `Header` search bar is `hidden md:flex` meaning it is completely missing on mobile with no alternative search input.
 
 ### Header
-| Feature | Status | Issues |
-|---------|--------|--------|
-| Search visibility | ✅ hidden md:flex | OK |
-| Upload button | ✅ hidden sm:inline-flex | OK |
-| User menu | ✅ hidden lg:inline | OK |
-| Title | ✅responsive | OK |
-
-### RecentDocumentsTable
-| Feature | Mobile | Desktop | Issues |
-|---------|---------|---------|--------|
-| Display | ❌ **Not rendered** | ✅ Table | **CRITICAL** |
-| Alternative | Card view | Table view | Separate view, not responsive |
-| Columns shown | N/A | 7 columns | Some hidden: md:table-cell |
+- **File**: `components/layout/Header.tsx`
+- **Desktop**: Title on left, search + upload + notifications + user menu on right.
+- **Mobile**: Search is hidden. Upload button is `hidden sm:inline-flex` (missing on small phones). Only bell and user menu remain.
+- **Issue**: Mobile users lose search and upload capabilities.
 
 ### DocumentList
-| Feature | Mobile | Desktop | Issues |
-|---------|---------|---------|--------|
-| Display | ✅ Card view | ✅ Table view | Good pattern |
-| PipelineStatus | ✅ Renders | ✅ Renders | Long content |
-| Actions | Buttons | Dropdown hover | Inconsistent |
+- **File**: `components/DocumentList.tsx`
+- **Table view**: `overflow-x-auto` wrapper allows horizontal scrolling on small screens. That is functional but not ideal.
+- **Grid view**: `grid-cols-1 md:grid-cols-2 xl:grid-cols-3` -- scales well.
+- **Filter bar**: `flex-col sm:flex-row` -- stacks vertically on mobile, which is fine.
+- **Issue**: Action buttons on table rows are `opacity-0 group-hover:opacity-100`, making them inaccessible on mobile where hover does not fire.
 
 ### DashboardOverview
-| Feature | Mobile | Tablet | Desktop | Status |
-|---------|--------|--------|---------|--------|
-| Grid | grid-cols-1 | sm:grid-cols-2 | lg:grid-cols-3 xl:grid-cols-6 | ✅ |
-| Overflow | OK | OK | Possibly crowded at xl | ⚠️ |
+- **File**: `components/DashboardOverview.tsx`
+- **Grid**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6`
+- **Issue**: `xl:grid-cols-6` on a `max-w-7xl` container means cards become very narrow on ultrawide screens (> 1536px). Should cap with `xl:grid-cols-6` and wider container or enforce card min-width.
 
-### FilePreview
-| Feature | Mobile | Desktop | Issues |
-|---------|---------|---------|--------|
-| Height | min-h-[300px] | min-h-[500px] | OK |
-| Image | w-full, object-contain | w-full, object-contain | OK |
-| PDF iframe | ❌ h-full undefined | ❌ h-full undefined | **BROKEN** |
+### MainDashboard
+- **File**: `components/MainDashboard.tsx`
+- **Main grid**: `lg:grid-cols-3` with `lg:col-span-2` for list and `space-y-6` for sidebar widgets.
+- **Issue**: On `lg` (1024px), the sidebar widgets stack to the right. On `md` (768px), they drop below. No `md:grid-cols-1` explicitly, but implicitly they stack. Works but could be tested for narrow heights.
+
+### QuickActions
+- **File**: `components/QuickActions.tsx`
+- **Grid**: `grid-cols-2` without responsive modifiers. On very narrow screens (< 300px), two columns may be too cramped.
+
+### ReportsPage
+- **File**: `pages/ReportsPage.tsx`
+- **Grid**: `grid-cols-1 md:grid-cols-2` -- safe and functional.
 
 ### DocumentDetails
-| Feature | Mobile | Desktop | Issues |
-|---------|---------|---------|--------|
-| Grid | Single column | Two columns | OK |
-| Padding | px-4 py-6 | Same | OK |
-| Form inputs | Full width | Full width | OK |
+- **File**: `components/DocumentDetails.tsx`
+- **Grid**: `grid-cols-1 gap-8 lg:grid-cols-2` -- stacks preview and metadata on mobile.
+- **Issue**: `FilePreview` has `min-h-[300px] md:min-h-[500px]`. On mobile, `min-h-[300px]` may be taller than the viewport for short documents, causing excessive scrolling.
 
-## Responsive Issues
+## 3. Typography & Scale
 
-### Critical (P0)
-1. **RecentDocumentsTable not rendering on mobile** - `hidden md:block` applied, no mobile alternative
-2. **PDF iframe `min-h-[600px]`** - Overflow on mobile screens
+- **Font sizes** are mostly consistent (`text-xs`, `text-sm`, `text-lg`, `text-2xl`).
+- **Line heights** are not explicitly set. Tailwind default is used, which can lead to tight spacing in `text-xs` metadata.
+- **Heading hierarchy**: `MainDashboard` uses `text-2xl font-semibold` for page title, but `DashboardOverview` uses the same for card titles. `DocumentDetails` uses `text-lg font-semibold` as a sub-heading, which is smaller than the page title. This is mostly consistent.
 
-### High (P1)
-1. **Sidebar overlay** - On mobile, sidebar overlays content rather than pushing
-2. **DocumentList action buttons** - Desktop has hover actions, mobile has always-visible; inconsistent UX
-3. **Upload zone sizing** - Consistent but could be wider on mobile
-4. **Card padding** - p-3 on mobile seems cramped for some content
+## 4. Touch Target Sizes
 
-### Medium (P2)
-1. **Stat cards grid** - At xl (1280px), 6 cards in a row is cramped
-2. **Table column visibility** - Only "Workflow" column hidden; others remain too wide
-3. **Text truncation** - `truncate max-w-xs` on document names may cut too much
+- **Buttons**: `h-9` (36px) default, `h-8` (32px) for icon buttons. WCAG recommends 44px minimum touch target.
+- **Icon buttons** in `DocumentList` table are `h-8 w-8` -- **below WCAG AA** touch target size.
+- **Sidebar nav buttons**: `h-9` (36px) -- borderline.
 
-### Low (P3)
-1. **Logo/brand text** - No responsive sizing
-2. **Search bar width** - Fixed w-40/sm:w-56 not ideal on tablets
+## 5. Color Contrast
 
-## Mobile-Specific Issues
+- **Slate scale**: Tailwind `slate-500` (#64748b) on white (#ffffff) has a contrast ratio of ~3.5:1. This fails WCAG AA for normal text (< 4.5:1) but passes for large text.
+- **Slate-400** (#94a3b8) on white has ~2.0:1 -- fails for all text sizes. Used for placeholder text and disabled text, which is acceptable if properly labeled.
+- **Blue-600** (#2563eb) on white is ~4.5:1 -- passes AA.
+- **No dark mode**: Contrast is only evaluated for light backgrounds.
 
-### Touch Targets
-- Search input: OK
-- Sidebar buttons: ✅ large targets
-- Table action buttons: ❌ h-3.5 w-3.5 too small
-- Filter dropdown: OK
+## 6. Orientation & Viewport
 
-### Typography on Mobile
-- Body text: 14px ✅
-- Small text: 12px ⚠️ borderline for readability
-- Tiny text: 10-11px ❌ potentially too small
+- **No `lang` attribute issues**: `<html lang="en">` is set in `index.html`.
+- **Viewport meta tag**: `<meta name="viewport" content="width=device-width, initial-scale=1.0" />` is correct.
+- **No `user-scalable=no`**: Good.
+- **No orientation lock**: Good.
 
-### Layout on Small Screles
-- Header: ✅ collapses search
-- Dashboard grid: ✅ stacks cards
-- Document list: ❌ **broken** (missing)
+## 7. Specific Findings by Component
 
-## Tablet-Specific Issues
-- No specific tablet optimizations
-- md: (768px) used as both tablet and mobile break
-- Desktop sidebar switches at 768px rather than 1024px
-
-## Recommendations
-1. Fix RecentDocumentsTable mobile rendering (critical)
-2. Consider breakpoint reorganization:
-   - Mobile: < 640px
-   - Tablet: ≥ 640px and < 1024px
-   - Desktop: ≥ 1024px
-3. Review touch target size minimums (44px by 44px recommended)
-4. Test PDF preview on mobile separately
+| Component | Issue | Severity |
+|-----------|-------|----------|
+| `Sidebar` | Mobile menu has no transition, no escape-to-close, no focus trap | Medium |
+| `Header` | Search hidden on mobile with no fallback | High |
+| `DocumentList` | Table actions invisible on touch (hover-only) | High |
+| `DocumentList` | Table scrolls horizontally instead of reflowing to cards | Medium |
+| `DocumentDetails` | FilePreview `min-h` too tall on small screens | Low |
+| `QuickActions` | 2-column grid may be cramped on 320px width | Low |
+| `Button` | Icon buttons at 32px below 44px touch target | Medium |
+| `DashboardOverview` | 6-up grid may have ultra-narrow cards on wide screens | Low |

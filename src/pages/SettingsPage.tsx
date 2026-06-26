@@ -1,14 +1,12 @@
 import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
-interface SettingsPageProps {
-  user: { email?: string; id: string };
-  onSignOut: () => void;
-}
+const SettingsPage: React.FC = () => {
+  const { user, signOut } = useAuth();
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ user, onSignOut }) => {
   return (
     <PageContainer variant="narrow">
       <SectionContainer spacing="md">
@@ -28,11 +26,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onSignOut }) => {
               <div className="mt-4 space-y-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Email</p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">{user.email || 'Not available'}</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{user?.email || 'Not available'}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">User ID</p>
-                  <p className="mt-1 text-sm font-mono text-slate-700">{user.id}</p>
+                  <p className="mt-1 text-sm font-mono text-slate-700">{user?.id || '—'}</p>
                 </div>
               </div>
             </CardBody>
@@ -44,7 +42,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onSignOut }) => {
             </CardHeader>
             <CardBody>
               <p className="mt-2 text-sm text-slate-600">
-                Workspace configuration and team management will appear here.
+                Workspace settings and team management are coming soon.
               </p>
             </CardBody>
           </Card>
@@ -55,7 +53,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onSignOut }) => {
             </CardHeader>
             <CardBody>
               <p className="mt-2 text-sm text-slate-600">
-                Connect Supabase, AI providers, and other services from this section.
+                Integration settings are coming soon.
               </p>
             </CardBody>
           </Card>
@@ -70,7 +68,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user, onSignOut }) => {
               </p>
               <Button
                 variant="danger"
-                onClick={onSignOut}
+                onClick={signOut}
                 className="mt-4"
               >
                 Sign out

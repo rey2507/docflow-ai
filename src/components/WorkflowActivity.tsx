@@ -10,6 +10,7 @@ import {
 import { Button } from './ui/button';
 import { Card, CardHeader, CardBody } from './ui/card';
 import { Skeleton } from './ui/skeleton';
+import { EmptyState } from './ui/empty-state';
 
 interface ActivityItem {
   id: string;
@@ -26,43 +27,6 @@ interface WorkflowActivityProps {
 }
 
 const WorkflowActivity: React.FC<WorkflowActivityProps> = ({ activities = [], loading = false }) => {
-  const defaultActivities: ActivityItem[] = [
-    {
-      id: '1',
-      type: 'finalized',
-      title: 'Invoice_2024_001.pdf finalized',
-      description: 'Document passed all validation checks',
-      timestamp: '2 min ago',
-      status: 'success',
-    },
-    {
-      id: '2',
-      type: 'extracted',
-      title: 'Contract_v2.png extraction completed',
-      description: 'AI extracted 12 fields with 94% confidence',
-      timestamp: '15 min ago',
-      status: 'success',
-    },
-    {
-      id: '3',
-      type: 'validation',
-      title: 'Receipt_March.pdf validation warning',
-      description: '2 fields need manual review',
-      timestamp: '1 hour ago',
-      status: 'warning',
-    },
-    {
-      id: '4',
-      type: 'failed',
-      title: 'Scan_2024.tif processing failed',
-      description: 'OCR could not read scanned document',
-      timestamp: '3 hours ago',
-      status: 'error',
-    },
-  ];
-
-  const items = activities.length > 0 ? activities : defaultActivities;
-
   const getIcon = (type: string, status: string) => {
     if (status === 'error') return <XCircle className="h-4 w-4 text-rose-600" />;
     if (status === 'warning') return <AlertTriangle className="h-4 w-4 text-amber-600" />;
@@ -114,6 +78,27 @@ const WorkflowActivity: React.FC<WorkflowActivityProps> = ({ activities = [], lo
     );
   }
 
+  if (activities.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <h3 className="text-sm font-semibold text-slate-900">Recent Activity</h3>
+        </CardHeader>
+        <CardBody>
+          <EmptyState
+            icon={
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            title="No activity yet"
+            description="Processed documents and workflow events will appear here."
+          />
+        </CardBody>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -121,7 +106,7 @@ const WorkflowActivity: React.FC<WorkflowActivityProps> = ({ activities = [], lo
       </CardHeader>
       <CardBody>
         <div className="divide-y divide-slate-100">
-          {items.map((item) => (
+          {activities.map((item) => (
             <div key={item.id} className={`py-3 flex items-start gap-3 ${getRowBg(item.status)}`}>
               <div className="mt-0.5 shrink-0">{getIcon(item.type, item.status)}</div>
               <div className="min-w-0 flex-1">
@@ -132,7 +117,7 @@ const WorkflowActivity: React.FC<WorkflowActivityProps> = ({ activities = [], lo
             </div>
           ))}
         </div>
-        {items.length > 0 && (
+        {activities.length > 0 && (
           <div className="pt-2.5 mt-2 border-t border-slate-100">
             <Button type="button" variant="ghost" size="sm">
               View all activity

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { ReportService } from '../services/reports/report.service';
 import type { Document } from '../types/document';
+import { useAuth } from '../contexts/AuthContext';
 import DocumentDetails from './DocumentDetails';
 import DashboardOverview from './DashboardOverview';
 import DocumentList from './DocumentList';
@@ -10,14 +11,13 @@ import AIInsights from './AIInsights';
 import { UploadZone, QuickActions } from './QuickActions';
 import { PageContainer, SectionContainer } from './ui/layout';
 
-type Page = 'dashboard' | 'documents' | 'upload' | 'workflows' | 'chat' | 'reports' | 'settings';
-
 interface MainDashboardProps {
-  userId: string;
-  onNavigate: (page: Page) => void;
+  onNavigate: (page: string) => void;
 }
 
-const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => {
+const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
+  const { user } = useAuth();
+  const userId = user?.id || '';
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState({ total: 0, processing: 0, completed: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
@@ -87,11 +87,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => 
   return (
     <PageContainer>
       <SectionContainer spacing="lg">
-        <DashboardOverview
-          stats={stats}
-          aiUsage={{ used: 847, limit: 1000 }}
-          memberCount={1}
-        />
+        <DashboardOverview stats={stats} />
       </SectionContainer>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,6 +103,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => 
             isLoading={loading}
             onViewDetails={setSelectedDocumentId}
             onRefresh={() => { fetchStats(); fetchDocuments(); }}
+            onUploadClick={() => onNavigate('upload')}
             defaultViewMode="grid"
           />
           </SectionContainer>
@@ -115,12 +112,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ userId, onNavigate }) => 
         <div className="space-y-6">
           <SectionContainer spacing="lg">
             <WorkflowActivity loading={loading} />
-            <AIInsights
-              usage={{ used: 847, limit: 1000 }}
-              successRate={98.5}
-              avgConfidence={0.87}
-              failedCount={stats.failed}
-            />
+            <AIInsights />
           </SectionContainer>
         </div>
       </div>

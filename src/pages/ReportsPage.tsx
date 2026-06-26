@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ReportService } from '../services/reports/report.service';
+import { useAuth } from '../contexts/AuthContext';
 import DocumentStatsDashboard from '../components/DocumentStatsDashboard';
 import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 
-interface ReportsPageProps {
-  userId: string;
-}
-
-const ReportsPage: React.FC<ReportsPageProps> = ({ userId }) => {
+const ReportsPage: React.FC = () => {
+  const { user } = useAuth();
+  const userId = user?.id || '';
   const [stats, setStats] = useState<{ total: number; breakdown: Record<string, number> } | null>(null);
   const [efficiency, setEfficiency] = useState<{ activeCount: number; completedCount: number; avgProcessingTimeMinutes: number | null } | null>(null);
   const [loading, setLoading] = useState(true);

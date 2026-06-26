@@ -1,165 +1,141 @@
-# Frontend Rebuild Plan - DocFlow AI
+# Frontend Rebuild Plan
 
-## Guiding Principles
-1. **Stability first** - No shipping broken
-2. **Progressive enhancement** - One layer at a time
-3. **Non-breaking changes** - Preserve existing functionality
-4. **Component purity** - Isolate, test, document
+## 1. Phase 1: Cleanup & Consolidation (1-2 days)
 
-## Rebuild Phases
+### 1.1 Remove Dead Code
+- Delete empty type files: `types/document.types.ts`, `types/workflow.types.ts`, `types/report.types.ts`
+- Delete unused BEM CSS: `styles/components/auth.css`, `styles/components/button.css`, `styles/components/card.css`, `styles/components/badge.css`, `styles/components/input.css`, `styles/components/skeleton.css`, `styles/components/header.css`, `styles/components/sidebar.css`
+- Delete `src/index.ts` (Cloudflare Worker entry) if not actively maintaining the Worker bundle, or move to `worker/`
+- Remove unused exports from `components/ui/index.ts` if any
 
-### Phase 1: Primitives (Foundation)
-**Time**: 1 sprint
-**Goal**: Create reusable building blocks
+### 1.2 Extract Auth to Page
+- Move auth UI from `main.tsx` into `pages/AuthPage.tsx`
+- Add route `/auth` or keep as unauthenticated root view before router mounts
+- Use existing `Input`, `Button` primitives instead of raw HTML elements
 
-```
-Deliverables:
-- `src/components/ui/button.tsx` - Primary, secondary, danger, ghost
-- `src/components/ui/badge.tsx` - Status variants
-- `src/components/ui/input.tsx` - Form input with label
-- `src/components/ui/card.tsx` - Card container + header + body
-- `src/components/ui/skeleton.tsx` - Consistent loading placeholder
-- `src/components/ui/empty-state.tsx` - Unified empty state
-- `src/components/ui/error-boundary.tsx` - Error fallback
-- `src/lib/utils/cn.ts` - Class name helper (already exists)
-```
+### 1.3 Wire Up ErrorBoundary
+- Wrap `<RouterProvider>` in `AppShell` with `<ErrorBoundary>`
+- Add a global fallback UI with retry capability
 
-**Success Criteria:**
-- All new screens use primitives
-- Visual consistency >80%
+### 1.4 Fix Navigation
+- Implement missing routes: `/documents`, `/workflows`, `/chat`
+- Update `Sidebar.tsx` to match implemented routes
+- Replace hardcoded `userEmail` and `usagePercent` with real context provider
 
-### Phase 2: Layout Standardization
-**Time**: 1 sprint
-**Goal**: Stable, reusable shell
+## 2. Phase 2: Design System Foundation (2-3 days)
 
-```
-Deliverables:
-- Refine AppShell with route-aware layout changes
-- Consolidate Sidebar (remove duplicate styles)
-- Standardize Header
-- Add layout containers: `PageContainer`, `SectionContainer`
-```
-
-**Success Criteria:**
-- All routes render within AppShell
-- Layout doesn't break on resize
-
-### Phase 3: Component Consolidation
-**Time**: 1-2 sprints
-**Goal**: Remove duplicates, improve each component
-
-```
-Deliverables:
-- Replace RecentDocumentsTable + DocumentList with unified Table component
-- Replace UploadZone with consistent file upload component
-- Create unified StatsCard
-- Create unified StatusBadge
-- Create unified Skeleton (replace all ad-hoc ones)
-- Standardize ErrorState across all components
+### 2.1 Tailwind Config Extension
+```js
+// tailwind.config.js (or vite.config JS object)
+theme: {
+  extend: {
+    colors: {
+      primary: { DEFAULT: '#0f172a', hover: '#1e293b' }, // match slate-900
+      surface: '#ffffff',
+      background: '#f8fafc',
+    },
+    fontFamily: {
+      sans: ['system-ui', '-apple-system', ...],
+    },
+  }
+}
 ```
 
-**Success Criteria:**
-- Zero duplicated component logic
-- Reduced bundle size
+### 2.2 Component Standardization
+- Replace all inline `<button>` elements with `<Button>` component
+- Replace all custom card-like divs with `<Card>` + `<CardHeader>` + `<CardBody>`
+- Replace all custom badge spans with `<Badge>`
+- Replace all raw `<input>` with `<Input>` or `<SearchInput>`
+- Replace inline loading spinners with `<Skeleton>` or `<SkeletonCard>`
+- Replace inline empty states with `<EmptyState>`
 
-### Phase 4: Routing & Navigation
-**Time**: 1 sprint
-**Goal**: Proper navigation UX
+### 2.3 Shared Stats Component
+- Extract `StatsCard` from `DashboardOverview.tsx` into `components/ui/stats-card.tsx`
+- Refactor `ReportsPage.tsx` and `DocumentStatsDashboard.tsx` to use shared component
 
-```
-Deliverables:
-- Install TanStack Router or React Router
-- Define all routes with lazy loading
-- Add breadcrumbs component
-- Add 404 handling
-- Implement back navigation properly
-```
+## 3. Phase 3: Missing Primitives (2-3 days)
 
-**Success Criteria:**
-- All sidebar routes work
-- Browser back/forward buttons work
-- Deep linking works
+### 3.1 Modal / Dialog
+- Create `components/ui/modal.tsx` with `Modal`, `ModalHeader`, `ModalBody`, `ModalFooter`
+- Use for document delete confirmation, settings forms, and image previews
 
-### Phase 5: State Management
-**Time**: 1 sprint
-**Goal**: Predictable async state
+### 3.2 Dropdown / Menu
+- Create `components/ui/dropdown.tsx` with `Dropdown`, `DropdownItem`, `DropdownTrigger`
+- Implement for: user menu, notification bell, workspace selector
 
-```
-Deliverables:
-- Add TanStack Query (React Query)
-- Convert data fetching to hooks
-- Add caching layer
-- Add optimistic updates patterns
-```
+### 3.3 Toast / Notification System
+- Create `components/ui/toast.tsx` + `useToast()` hook
+- Replace inline `actionFeedback` divs in `DocumentList` with toasts
 
-**Success Criteria:**
-- No page-level loading/error state repetition
-- Loading states consistent
+### 3.4 Table Primitive
+- Create `components/ui/table.tsx` with wrappers for `<table>`, `<thead>`, `<tbody>`, `TableRow`, `TableCell`
+- Refactor `DocumentList` table rendering to use primitives
 
-### Phase 6: Polish & Accessibility
-**Time**: 1 sprint
-**Goal**: Production quality
+### 3.5 Form Primitives
+- Create `components/ui/select.tsx`, `components/ui/textarea.tsx`, `components/ui/checkbox.tsx`
+- Replace raw `<select>` in `DocumentList` with `<Select>`
 
-```
-Deliverables:
-- Accessibility audit pass
-- Focus state standardization
-- Keyboard navigation testing
-- Screen reader testing
-- Dark mode preparation
-```
+## 4. Phase 4: UX Improvements (2-3 days)
 
-**Success Criteria:**
-- WCAG AA compliance
-- Keyboard-only navigation possible
+### 4.1 Loading & Empty States
+- Add `SkeletonPage` wrapper for route-level loading
+- Use `EmptyState` consistently across all pages when data is absent
+- Add retry buttons to all error states, wired to `refetch` functions
 
-## Rollback Strategy
-Each phase must:
-1. Keep old code until new code proven stable
-2. Feature flag new components
-3. Test in staging before merge
-4. Preserve git history
+### 4.2 Upload Experience
+- Unify `UploadZone` styling between `QuickActions` and `UploadPage`
+- Add progress indicator for file uploads
+- Add file type/size validation with user-friendly errors
 
-## Migration Order
-1. Primitives first (no dependencies)
-2. Layout uses primitives
-3. Components use primitives + layout
-4. Pages use components + layout
-5. Old components removed one by one
+### 4.3 Search
+- Wire up `Header` search bar to a document search filter or command palette (Cmd+K)
+- Add debounce and keyboard navigation
 
-## Rebuild Priority Matrix
+### 4.4 Notifications
+- Replace bell icon with functional dropdown showing activity feed
+- Mark notifications as read / persist state
 
-| Component/Issue | Priority | Confidence | Effort |
-|-----------------|----------|------------|--------|
-| Routing (TanStack Router) | P0 | High | Med |
-| Button primitive | P0 | High | Low |
-| Card primitive | P0 | High | Low |
-| Skeleton system | P0 | High | Low |
-| Status badge | P0 | High | Low |
-| Unify tables | P0 | High | High |
-| Unify uploads | P0 | High | Med |
-| Input primitive | P1 | High | Low |
-| Error boundary | P1 | Med | Low |
-| Toast system | P1 | Med | Med |
-| Modal system | P1 | Med | Med |
-| React Query migration | P1 | Med | High |
-| Accessibility | P2 | High | Med |
-| Dark mode | P2 | Low | High |
+### 4.5 Dark Mode
+- Add `class="dark"` toggling on root
+- Define all surface, text, and border colors with `dark:` variants
+- Ensure charts and gradients adapt
 
-## Risk Register
+## 5. Phase 5: Responsive & Accessibility (1-2 days)
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Components not adopted | High | Med | Phase gating, code review |
-| Styling drift continues | Med | High | Lint rules |
-| Performance regressions | Med | Med | Bundle size checks |
-| Routing breaks | High | Low | Feature flags |
-| Over-engineering | Med | Low | Simple first |
+### 5.1 Responsive
+- Audit all breakpoints: `sm`, `md`, `lg`, `xl`
+- Ensure `DocumentList` table collapses to cards on mobile (partially done)
+- Add `max-h` and scroll to sidebar on mobile
+- Test `AppShell` layout on narrow viewports (320px - 768px)
 
-## Success Metrics
-- Component reuse rate: >70%
-- Bundle size: Reduced by 15%
-- Accessibility score: 90+
-- TypeScript type coverage: 100%
-- Test coverage: >60%
-- Time to new feature: Reduced by 30%
+### 5.2 Accessibility
+- Add `role="alert"` and `aria-live="polite"` to all error/success toasts
+- Ensure all icon-only buttons have `aria-label` (partially done)
+- Add `scope="col"` to table headers in `DocumentList`
+- Add skip-to-content link
+- Ensure focus management in modals and navigation
+- Verify color contrast ratios meet WCAG AA
+- Add `lang` and proper heading hierarchy
+
+## 6. Phase 6: State Management & Data Fetching (1-2 days)
+
+### 6.1 Replace manual useState with React Query
+- `MainDashboard` uses manual `useState` for documents and stats. Replace with `useDocuments()` and `useStats()` hooks.
+- `UploadPage` uses local state only. Add mutation with optimistic update.
+
+### 6.2 Global State
+- Introduce `AuthContext` instead of passing `userEmail` through props
+- Introduce `WorkspaceContext` for subscription/usage data
+- Use React Query for server state, Zustand/Context for client state
+
+## 7. Phase 7: Testing & Documentation (1 day)
+
+### 7.1 Component Tests
+- Add vitest tests for all `ui/` primitives
+- Add interaction tests for `DocumentList` sorting/filtering
+- Add tests for auth flow
+
+### 7.2 Documentation
+- Generate Storybook or Docgen for component library
+- Add README to `components/ui/` with usage examples
+- Document design tokens and spacing scale

@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 
 const resolveEnvValue = (env: Record<string, string>, ...keys: string[]) => {
@@ -14,12 +15,12 @@ const resolveEnvValue = (env: Record<string, string>, ...keys: string[]) => {
 };
 
 // Vite config for building the production static site.
-// Output goes to dist/ — picked up by Cloudflare Pages.
+// Output goes to dist/ — picked up by Cloudflare Workers static asset serving.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, resolve(__dirname, '..'), '');
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': resolve(__dirname, '../src'),

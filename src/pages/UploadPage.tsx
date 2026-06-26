@@ -1,17 +1,19 @@
 import React, { useCallback, useState } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { DocumentUploadService } from '../services/documents/upload.service';
+import { useAuth } from '../contexts/AuthContext';
 import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { EmptyState } from '../components/ui/empty-state';
 
 interface UploadPageProps {
-  userId: string;
   onUploadComplete: () => void;
 }
 
-const UploadPage: React.FC<UploadPageProps> = ({ userId, onUploadComplete }) => {
+const UploadPage: React.FC<UploadPageProps> = ({ onUploadComplete }) => {
+  const { user } = useAuth();
+  const userId = user?.id || '';
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

@@ -10,10 +10,10 @@ interface AIInsightsProps {
 }
 
 const AIInsights: React.FC<AIInsightsProps> = ({
-  usage = { used: 0, limit: 1000 },
-  successRate = 98.5,
-  avgConfidence = 0.87,
-  failedCount = 2,
+  usage = { used: 0, limit: 0 },
+  successRate = 0,
+  avgConfidence = 0,
+  failedCount = 0,
 }) => {
   const usagePct = Math.round((usage.used / Math.max(1, usage.limit)) * 100);
 
