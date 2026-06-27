@@ -28,18 +28,71 @@ export const DocumentUploadService = {
 
       if (storageError) throw storageError;
 
-      // 4. Find workspaceId from subscriptions
-      const { data: subscriptionRows, error: subError } = await supabase
+      // 4. Resolve workspace for this user.
+      //    1st: try via subscriptions
+      //    2nd: try via workspace_members  
+      //    3rd: create profile (if missing), then default workspace + membership
+      let workspaceId: string | undefined;
+
+      const { data: subRows, error: subError } = await supabase
         .from('subscriptions')
         .select('workspace_id')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .limit(1);
 
-      if (subError) throw subError;
-      const workspaceId = subscriptionRows?.[0]?.workspace_id;
-      if (!workspaceId) {
-        throw new Error('Unable to determine workspace for this user.');
+      if (!subError && subRows && subRows.length > 0) {
+        workspaceId = subRows[0].workspace_id;
+      } else {
+        const { data: memberRows, error: memberError } = await supabase
+          .from('workspace_members')
+          .select('workspace_id')
+          .eq('user_id', userId)
+          .limit(1);
+
+        if (!memberError && memberRows && memberRows.length > 0) {
+          workspaceId = memberRows[0].workspace_id;
+        } else {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .maybeSingle();
+
+          if (!existingProfile) {
+            const fallbackEmail = `${userId.slice(0, 8)}@local.workspace`;
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({ id: userId, email: fallbackEmail });
+
+            if (profileError) {
+              LogService.error('Profile creation failed', profileError as Error, { userId });
+            }
+          }
+
+          const newWorkspaceId = uuidv4();
+          const { error: wsError } = await supabase
+            .from('workspaces')
+            .insert({
+              id: newWorkspaceId,
+              name: 'My Workspace',
+              slug: newWorkspaceId,
+            });
+
+          if (wsError) throw wsError;
+
+          const { error: memberCreateError } = await supabase
+            .from('workspace_members')
+            .insert({
+              workspace_id: newWorkspaceId,
+              user_id: userId,
+              role: 'admin',
+            });
+
+          if (memberCreateError) throw memberCreateError;
+
+          workspaceId = newWorkspaceId;
+        }
       }
 
       // 5. Check for duplicate by name + size in metadata
@@ -101,9 +154,6 @@ export const DocumentUploadService = {
       }
 
       // 8. Trigger pipeline in background (fire-and-forget with safety catch)
-      // Note: Full pipeline requires drizzle-backed services; this calls the orchestrator
-      // which will skip drizzle-dependent steps if db is unavailable.
-      // For now, we attempt it and ignore failures to avoid blocking the UI.
       try {
         const { PipelineOrchestrator } = await import('@/services/documents/orchestrator.service');
         PipelineOrchestrator.runPipeline({} as any, document.id, userId).catch((err) => {

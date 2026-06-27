@@ -23,7 +23,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
   const loadDocument = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
-    const { data, error } = await DocumentService.getDocumentById({} as any, documentId);
+    const { data, error } = await DocumentService.getDocumentById(null, documentId);
 
     if (error) {
       setLoadError(error.message || 'Unable to load document details.');
@@ -69,7 +69,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
     };
 
     // DocumentService expects (db, documentId, metadata)
-    const { error } = await DocumentService.updateMetadata({} as any, documentId, updatedMetadata);
+    const { error } = await DocumentService.updateMetadata(null, documentId, updatedMetadata);
 
     if (error) {
       setSaveError(`Failed to save corrections: ${error.message}`);

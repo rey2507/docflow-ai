@@ -1,28 +1,38 @@
 ﻿# DocFlow AI - Build Status Tracking
 
-## PHASE 1 — CORE FOUNDATION
+## PHASE 1 — CORE FOUNDATION (Completed)
 - [x] Supabase client setup (`src/lib/supabase/client.ts`)
 - [x] Auth system (`src/services/auth/auth.service.ts`)
 - [x] Types foundation (`src/types/*`)
 - [x] Utility layer (`src/lib/utils/*`)
 
-## PHASE 2 — DOCUMENT CORE SYSTEM
+---
+
+## PHASE 2 — DOCUMENT CORE SYSTEM (Completed)
 - [x] Document upload service (`src/services/documents/upload.service.ts`)
 - [x] Document storage service (`src/services/documents/storage.service.ts`)
 - [x] Document processing pipeline (`src/services/documents/extract.service.ts`)
 
-## PHASE 3 — AI LAYER
+---
+
+## PHASE 3 — AI LAYER (Completed)
 - [x] AI provider abstraction (`src/services/ai/provider.service.ts`)
 - [x] Prompt manager (`src/services/ai/prompt.service.ts`)
 
-## PHASE 4 — WORKFLOW ENGINE
+---
+
+## PHASE 4 — WORKFLOW ENGINE (Completed)
 - [x] Workflow service (`src/services/workflow/workflow.service.ts`)
 
-## PHASE 5 — REPORTING
+---
+
+## PHASE 5 — REPORTING (Completed)
 - [x] Report generation service (`src/services/reports/report.service.ts`)
 - [x] Document finalization service (`src/services/documents/finalization.service.ts`)
 
-## PHASE 6 — INTEGRATION
+---
+
+## PHASE 6 — INTEGRATION (Completed)
 - [x] Orchestrate full pipeline (Upload -> Extract -> Validate -> Finalize)
 - [x] Implement specific validation rules for invoice documents in ValidateService
 - [x] Create WorkflowTimeline component
@@ -30,30 +40,40 @@
 - [x] Refactor validation logic into rule-based factory pattern
 - [x] Implement real-time Supabase subscriptions in UI components
 
-## PHASE 7 — PRODUCTIZATION
+---
+
+## PHASE 7 — PRODUCTIZATION (Partial)
 - [x] Main Documents Dashboard with stats and filters (Task 7.1)
 - [x] Documents Listing Page with card/table views and actions (Task 7.2)
 - [x] Document Details Page showing full lifecycle data (Task 7.3)
 - [x] File Preview System (PDF, PNG, JPG) (Task 7.4)
 - [ ] Extraction Correction UI for manual field edits (Task 7.5)
 
-## PHASE 8 — AI QUALITY IMPROVEMENTS
+---
+
+## PHASE 8 — AI QUALITY IMPROVEMENTS (Partial)
 - [x] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
 - [ ] Field-level Confidence Scoring (Task 8.2)
 - [ ] AI-generated Validation Suggestions (Task 8.3)
 
-## PHASE 9 — SAAS READINESS
+---
+
+## PHASE 9 — SAAS READINESS (Partial)
 - [x] Usage tracking and User Quotas (Task 9.1)
 - [x] Subscription Plan limits enforcement (Task 9.2)
 - [ ] Billing Integration (Stripe/Razorpay) (Task 9.3)
 
-## PHASE 10 — BUSINESS FEATURES
+---
+
+## PHASE 10 — BUSINESS FEATURES (Partial)
 - [x] Contract Validation Rules (Signatures, Expiry) (Task 10.1)
 - [x] Form Validation Rules (Required fields, Formats) (Task 10.2)
 - [ ] Duplicate Upload/Invoice Detection (Task 10.3)
 - [ ] AI Summary and Key Point Generation (Task 10.4)
 
-## PHASE 11 — GROWTH FEATURES
+---
+
+## PHASE 11 — GROWTH FEATURES (Partial)
 - [x] Email Import (Gmail/Outlook attachments) (Task 11.1)
 - [x] OCR Support for scanned docs and photos (Task 11.2)
 - [ ] Semantic Search ("contracts expiring soon") (Task 11.3)
@@ -62,7 +82,6 @@
 ---
 
 ## PHASE 12 — PRODUCTION HARDENING (Completed)
-
 - [x] Processing credit enforcement implemented
 - [x] AI provider failover chain implemented (OpenAI → Gemini → Anthropic)
 - [x] Supabase RLS and ownership security audit completed
@@ -76,8 +95,9 @@
 
 ---
 
-## PHASE 13.1 — SCHEMA CORRECTIONS & POSTGRESQL MIGRATION (Completed)
+## PHASE 13 — DATABASE & INFRASTRUCTURE
 
+### Phase 13.1 — Schema Corrections & PostgreSQL Migration (Completed)
 - [x] PostgreSQL migration from SQLite/D1 to Supabase
 - [x] Workspace-centric architecture migration
 - [x] Embedding dimension standardization
@@ -94,10 +114,7 @@
 - [x] Workflow insertion verified
 - [x] Document insertion verified
 
----
-
-## PHASE 13.2 — INFRASTRUCTURE STABILIZATION & INTEGRATION CLEANUP (Completed)
-
+### Phase 13.2 — Infrastructure Stabilization & Integration Cleanup (Completed)
 - [x] Fix TypeScript path alias resolution
 - [x] Standardize schema exports/imports
 - [x] Remove remaining D1/SQLite legacy logic
@@ -110,10 +127,7 @@
 - [x] Verify workflow persistence consistency
 - [x] Finalize database policy scripts
 
----
-
-## PHASE 13.3 — UI/UX STABILIZATION (Completed)
-
+### Phase 13.3 — UI/UX Stabilization (Completed)
 - [x] Started implementation: auth shell, loading state, and dashboard shell styling groundwork
 - [x] Implemented dashboard hierarchy, loading, and empty-state improvements
 - [x] Improve login/signup flow feedback and session handling
@@ -147,6 +161,129 @@
 - [x] Improve empty states: add subtle icon and upload CTA button
 - [x] Verify responsive breakpoints: 320px / 768px / 1280px
 - [x] Run build and visual regression check
+
+### Phase 13.4 — Error Handling & Resilience Hardening (Partial)
+- [x] Add frontend error boundaries (ErrorBoundary wired in router)
+- [ ] Normalize API error responses
+- [ ] Add retry handling for provider failures
+- [ ] Add provider cooldown handling for 429 errors
+- [ ] Prevent stuck workflows
+- [ ] Add graceful timeout handling
+- [ ] Verify upload recovery logic
+- [ ] Improve structured logging coverage
+- [ ] Prevent infinite retry loops
+- [ ] Ensure readable user-facing error messages
+
+### Phase 13.5 — Real System Testing & Verification (Pending)
+- [ ] Manual end-to-end workflow testing
+- [ ] Authentication testing
+- [ ] Upload testing
+- [ ] AI extraction testing
+- [ ] Provider failover testing
+- [ ] Workspace isolation/RLS verification
+- [ ] Semantic search verification
+- [ ] AI chat verification
+- [ ] Realtime update verification
+- [ ] OCR/image extraction verification
+- [ ] Playwright installation and setup
+- [ ] Playwright browser workflow testing
+- [ ] Keep Vitest limited to utility/service tests only
+
+### Phase 13.6 — Deployment & Production Launch Preparation (Partial)
+- [ ] Finalize production environment variables
+- [x] Configure Cloudflare Workers deployment
+- [ ] Configure Supabase production settings
+- [ ] Verify production migrations
+- [ ] Configure storage buckets/policies
+- [ ] Configure monitoring/logging
+- [ ] Configure production rate limits
+- [ ] Verify production failover handling
+- [ ] Configure custom domain
+- [ ] Verify HTTPS/security headers
+- [ ] Perform final production readiness audit
+
+---
+
+## PHASE 14 — POST-LAUNCH ENHANCEMENTS (Pending)
+- [ ] Team collaboration UI
+- [ ] Workspace invitations/permissions UI
+- [ ] Mobile app (Expo)
+- [ ] Advanced analytics dashboard
+- [ ] AI-assisted correction workflows
+- [ ] Bulk document processing
+- [ ] Advanced filtering/search
+- [ ] External API access
+- [ ] Enterprise export/audit tooling
+
+---
+
+## PHASE 15 — FRONTEND STABILIZATION
+
+### Phase 15.1 — Frontend Audit (Completed)
+- [x] Conduct folder structure audit
+- [x] Create component inventory
+- [x] Create route/screen inventory
+- [x] Conduct Tailwind/styling audit
+- [x] Define design system architecture
+- [x] Audit navigation and workflow UX
+- [x] Audit state UX (loading, error, empty states)
+- [x] Audit responsiveness across breakpoints
+- [x] Audit accessibility and usability
+- [x] Generate audit documentation files
+
+### Phase 15.2 — Component Primitives (Complete, usage in progress)
+- [x] Create `src/components/ui/button.tsx` (primary/secondary/ghost/danger)
+- [x] Create `src/components/ui/badge.tsx` (status variants)
+- [x] Create `src/components/ui/input.tsx` (form field with label)
+- [x] Create `src/components/ui/card.tsx` (container + header + body)
+- [x] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
+- [x] Create `src/components/ui/empty-state.tsx`
+- [x] Create `src/components/ui/error-boundary.tsx`
+- [x] Create `src/components/ui/layout.tsx` (PageContainer, SectionContainer)
+- [ ] Standardize existing components to use primitives (AuthPage, Header, Sidebar inline styles remain)
+
+### Phase 15.3 — Layout Standardization (Completed)
+- [x] Refine AppShell for route-aware behavior
+- [x] Consolidate Sidebar styles
+- [x] Standardize Header
+- [x] Create `PageContainer` component
+- [x] Create `SectionContainer` component
+
+### Phase 15.4 — Component Consolidation (Completed)
+- [x] Unify RecentDocumentsTable + DocumentList into single Table component
+- [x] Unify UploadZone across pages
+- [x] Create unified StatsCard
+- [x] Create unified StatusBadge
+- [x] Replace ad-hoc skeletons with Skeleton component
+- [x] Standardize error states
+
+### Phase 15.5 — Routing & Navigation (Complete, minor items pending)
+- [x] Install React Router
+- [x] Define all application routes
+- [x] Implement lazy loading for routes
+- [ ] Add breadcrumbs component
+- [x] Add 404 page handling
+- [x] Fix back button / browser history
+- [x] Implement deep linking for document details
+
+### Phase 15.6 — State Management (Partial)
+- [x] Add TanStack Query for data fetching
+- [x] Create custom hooks (useDocuments, useStats, etc.) (partially via MainDashboard)
+- [ ] Add caching and optimistic update patterns
+- [x] Standardize loading/error states via hooks
+
+### Phase 15.7 — Polish & Accessibility (Pending)
+- [ ] Accessibility audit pass
+- [ ] Standardize focus states
+- [ ] Verify keyboard navigation
+- [ ] Add skip navigation
+- [ ] Test with screen readers
+- [ ] Prepare dark mode system
+
+---
+
+## PHASE 16 — CUSTOM CSS THEME (Superseded by Phase 17)
+- [x] ~~Full migration tracked in Phase 17~~ — Tailwind restoration + structured CSS migration covers this entire phase
 
 ---
 
@@ -191,165 +328,59 @@
 
 ---
 
-## PHASE 13.4 — ERROR HANDLING & RESILIENCE HARDENING (In Progress)
+## PHASE 18 — UPLOAD SYSTEM CRITICAL FIXES (Completed)
 
-- [x] Add frontend error boundaries (ErrorBoundary wired in router)
-- [ ] Normalize API error responses
-- [ ] Add retry handling for provider failures
-- [ ] Add provider cooldown handling for 429 errors
-- [ ] Prevent stuck workflows
-- [ ] Add graceful timeout handling
-- [ ] Verify upload recovery logic
-- [ ] Improve structured logging coverage
-- [ ] Prevent infinite retry loops
-- [ ] Ensure readable user-facing error messages
-
----
-
-## PHASE 17.5 — UPLOAD SYSTEM CRITICAL FIXES (In Progress)
-
-### 17.5.1 — Replace drizzle ORM with Supabase client in browser
+### Phase 18.1 — Replace drizzle ORM with Supabase client in browser
 - [x] Replace `db` parameter with direct `supabase` calls in `upload.service.ts`
-- [ ] Replace `db` parameter in `document.service.ts` (delete, update, get)
-- [ ] Replace `db` parameter in `workflow.service.ts` if used client-side
-- [ ] Remove `DbClient` type dependency from client-side services
+- [x] Replace `db` parameter in `document.service.ts` (getDocumentById, updateMetadata, deleteDocument)
+- [ ] Replace `db` parameter in `workflow.service.ts` if used client-side — deferred, orchestrator runs in background
+- [x] Remove `DbClient` type dependency from client-side upload service
 
-### 17.5.2 — Fix upload service implementation
-- [x] Remove duplicate `findFirst` check (replaced with Supabase query)
+### Phase 18.2 — Fix upload service implementation
+- [x] Replace fragile pre-upload duplicate check with reliable post-insert check via Supabase `metadata->>'fileSize'`
 - [x] Fix `sizeBytes` population for duplicate detection (use metadata.fileSize via Supabase)
-- [x] Add `.catch()` to `PipelineOrchestrator.runPipeline` fire-and-forget
-- [ ] Handle empty `userId` gracefully (show error instead of silent fail)
+- [x] Handle empty `userId` / missing workspace gracefully (auto-create workspace + membership)
+- [x] Fix workspace slug collision (use UUID as slug for guaranteed uniqueness)
+- [x] Fix profile FK constraint: ensure profile exists before creating workspace_members
+- [x] Create `documents` storage bucket in Supabase (confirmed exists, SQL in `database/setup/03-storage-buckets.sql`)
 
-### 17.5.3 — Fix UploadPage DOM violation
+### Phase 18.3 — Fix UploadPage DOM violation
 - [x] Move `<input type="file">` outside of `<Button>` in `UploadPage.tsx`
 
-### 17.5.4 — Fix retry endpoint
-- [ ] Implement `/api/documents/:id/retry` in Worker OR remove button
-- [ ] Wire PipelineStatusDisplay retry to real endpoint
+### Phase 18.4 — Fix column name mismatches (snake_case in Postgres)
+- [x] Fix `.eq('userId', userId)` → `.eq('user_id', userId)` in all Supabase queries
+- [x] Fix `.order('createdAt', ...)` → `.order('created_at', ...)` in all Supabase queries
+- [x] Fix join syntax `documents!inner(userId)` → `documents!inner(user_id)`
 
-### 17.5.5 — Accept type consistency
+### Phase 18.5 — Accept type consistency
 - [x] Unify file accept lists across all upload inputs (added .doc,.docx everywhere)
-- [ ] Update displayed text to match accepted formats exactly
+- [x] Map DOC/DOCX MIME types to `other` document type in upload service
+- [x] Disable QuickActions file input during upload
 
----
+### Phase 18.6 — Retry endpoint (Completed - button removed)
+- [x] Removed broken retry button from `PipelineStatusDisplay.tsx` (no backend endpoint exists; Worker has no DB access)
+- [ ] Implement `/api/documents/:id/retry` in Worker if retry feature is needed later
 
-## PHASE 13.5 — REAL SYSTEM TESTING & VERIFICATION
+### Phase 18.7 — Fix background pipeline services (extract, validate, finalize) (Completed)
+- [x] Replace `db` parameter with direct `supabase` calls in `extract.service.ts`
+- [x] Replace `db` parameter with direct `supabase` calls in `validate.service.ts` (also called from `DocumentDetails.tsx` in browser)
+- [x] Replace `db` parameter with direct `supabase` calls in `finalization.service.ts`
+- [x] Replace `db` parameter with direct `supabase` calls in `storage.service.ts` (called from `FilePreview.tsx` via `getDownloadUrl`) — was already clean
+- [x] Replace `db` parameter with direct `supabase` calls in `workflow.service.ts` (dependency of extract/validate/finalize)
+- [x] Replace `db` parameter with direct `supabase` calls in `usage.service.ts` (dependency of extract)
+- [x] Verify orchestrator can run full pipeline without drizzle client
 
-- [ ] Manual end-to-end workflow testing
-- [ ] Authentication testing
-- [ ] Upload testing (after drizzle fix)
-- [ ] AI extraction testing
-- [ ] Provider failover testing
-- [ ] Workspace isolation/RLS verification
-- [ ] Semantic search verification
-- [ ] AI chat verification
-- [ ] Realtime update verification
-- [ ] OCR/image extraction verification
-- [ ] Playwright installation and setup
-- [ ] Playwright browser workflow testing
-- [ ] Keep Vitest limited to utility/service tests only
-
----
-
-## PHASE 13.6 — DEPLOYMENT & PRODUCTION LAUNCH PREPARATION
-
-- [ ] Finalize production environment variables
-- [x] Configure Cloudflare Workers deployment
-- [ ] Configure Supabase production settings
-- [ ] Verify production migrations
-- [ ] Configure storage buckets/policies
-- [ ] Configure monitoring/logging
-- [ ] Configure production rate limits
-- [ ] Verify production failover handling
-- [ ] Configure custom domain
-- [ ] Verify HTTPS/security headers
-- [ ] Perform final production readiness audit
-
----
-
-## PHASE 14 — POST-LAUNCH ENHANCEMENTS
-
-- [ ] Team collaboration UI
-- [ ] Workspace invitations/permissions UI
-- [ ] Mobile app (Expo)
-- [ ] Advanced analytics dashboard
-- [ ] AI-assisted correction workflows
-- [ ] Bulk document processing
-- [ ] Advanced filtering/search
-- [ ] External API access
-- [ ] Enterprise export/audit tooling
-
----
-
-## PHASE 15 — FRONTEND STABILIZATION & REBUILD
-
-### Phase 15.1 — Frontend Audit (Completed)
-- [x] Conduct folder structure audit
-- [x] Create component inventory
-- [x] Create route/screen inventory
-- [x] Conduct Tailwind/styling audit
-- [x] Define design system architecture
-- [x] Audit navigation and workflow UX
-- [x] Audit state UX (loading, error, empty states)
-- [x] Audit responsiveness across breakpoints
-- [x] Audit accessibility and usability
-- [x] Generate audit documentation files
-
-### Phase 15.2 — Component Primitives
-- [x] Create `src/components/ui/button.tsx` (primary/secondary/ghost/danger)
-- [x] Create `src/components/ui/badge.tsx` (status variants)
-- [x] Create `src/components/ui/input.tsx` (form field with label)
-- [x] Create `src/components/ui/card.tsx` (container + header + body)
-- [x] Create `src/components/ui/skeleton.tsx` (unified loading placeholder)
-- [x] Create `src/components/ui/empty-state.tsx`
-- [x] Create `src/components/ui/error-boundary.tsx`
-- [x] Create `src/components/ui/layout.tsx` (PageContainer, SectionContainer)
-- [ ] Standardize existing components to use primitives
-
-### Phase 15.3 — Layout Standardization
-- [x] Refine AppShell for route-aware behavior
-- [x] Consolidate Sidebar styles
-- [x] Standardize Header
-- [x] Create `PageContainer` component
-- [x] Create `SectionContainer` component
-
-### Phase 15.4 — Component Consolidation
-- [x] Unify RecentDocumentsTable + DocumentList into single Table component
-- [x] Unify UploadZone across pages
-- [x] Create unified StatsCard
-- [x] Create unified StatusBadge
-- [x] Replace ad-hoc skeletons with Skeleton component
-- [x] Standardize error states
-
-### Phase 15.5 — Routing & Navigation
-- [x] Install React Router
-- [x] Define all application routes
-- [x] Implement lazy loading for routes
-- [ ] Add breadcrumbs component
-- [x] Add 404 page handling
-- [x] Fix back button / browser history
-- [x] Implement deep linking for document details
-
-### Phase 15.6 — State Management
-- [x] Add TanStack Query for data fetching
-- [x] Create custom hooks (useDocuments, useStats, etc.) (partially via MainDashboard)
-- [ ] Add caching and optimistic update patterns
-- [x] Standardize loading/error states via hooks
-
-### Phase 15.7 — Polish & Accessibility
-- [ ] Accessibility audit pass
-- [ ] Standardize focus states
-- [ ] Verify keyboard navigation
-- [ ] Add skip navigation
-- [ ] Test with screen readers
-- [ ] Prepare dark mode system
+### Phase 18.8 — Fix AI chat service (Completed)
+- [x] Replace `db` parameter with direct `supabase` calls in `chat.service.ts`
+- [x] Rewrite vector similarity search to use Supabase JS client (fetch embeddings + cosine similarity in JS)
+- [x] Verify chat page can load conversation history without drizzle client
 
 ---
 
 ## CURRENT PRIORITY
 
-1. **Upload System Critical Fixes** — Replace drizzle `db` with Supabase client in browser-side services; fix UploadPage DOM; implement retry endpoint
-2. **Component Primitives Standardization** — Replace remaining raw HTML elements with `ui/` primitives
-3. **State Management** — Complete TanStack Query hooks for documents, stats, workflows
-4. **Settings Subpages** — Design and implement tabbed navigation for Account/Workspace/Billing/etc.
-5. **Accessibility Polish** — Fix focus, ARIA, and keyboard support
+1. **E2E testing** — Upload flow, auth flow, workspace isolation/RLS verification
+2. **Settings subpages** — Implement tabbed navigation (Account / Workspace / Billing / AI / Integrations / Security / Danger Zone)
+3. **AuthPage inline styles** — Convert to `PageContainer` + `SectionContainer` + `Card` primitives
+4. **Header/Sidebar inline styles** — Replace remaining `style=` props with Tailwind utilities
+5. **Accessibility** — Standardize focus states, verify keyboard navigation, add skip link

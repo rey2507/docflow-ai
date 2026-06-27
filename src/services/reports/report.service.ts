@@ -20,7 +20,7 @@ export const ReportService = {
       const { data, error } = await supabase
         .from('documents')
         .select('status')
-        .eq('userId', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -61,9 +61,9 @@ export const ReportService = {
           status,
           startedAt,
           completedAt,
-          documents!inner(userId)
+          documents!inner(user_id)
         `)
-        .eq('userId', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
 

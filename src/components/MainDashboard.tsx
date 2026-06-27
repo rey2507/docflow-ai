@@ -44,8 +44,8 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
       const { data, count, error } = await supabase
         .from('documents')
         .select('*', { count: 'exact' })
-        .eq('userId', userId)
-        .order('createdAt', { ascending: false });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDocuments((data as Document[]) || []);

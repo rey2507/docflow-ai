@@ -1,156 +1,161 @@
-import { eq } from 'drizzle-orm';
-import { DbClient } from 'docs/client';
-import { workflows } from 'docs/schema';
+import { supabase } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import type { Workflow, WorkflowStep, WorkflowPriority } from '../../types/workflow';
+import { LogService } from '@/services/logging/log.service';
 
-/**
- * WorkflowService
- * 
- * Manages the lifecycle of document workflows. 
- * Orchestrates the transitions between extraction, validation, and completion.
- */
 export const WorkflowService = {
-  /**
-   * Initializes a new workflow for a document.
-   */
-  async createWorkflow(db: DbClient, documentId: string, priority: WorkflowPriority = 'medium'): Promise<{ data: Workflow | null; error: Error | null }> {
+  async createWorkflow(
+    _db: any,
+    documentId: string,
+    priority: WorkflowPriority = 'medium'
+  ): Promise<{ data: Workflow | null; error: Error | null }> {
     try {
-      const defaultSteps: WorkflowStep[] = [ // Ensure WorkflowStep has an 'id' property
-        { id: uuidv4(), name: 'Extraction', order: 1, status: 'pending' },
-        { id: uuidv4(), name: 'Validation', order: 2, status: 'pending' },
-        { id: uuidv4(), name: 'Finalization', order: 3, status: 'pending' }
-      ];
-
+      const firstStepId = uuidv4();
       const newWorkflowData = {
         id: uuidv4(),
         documentId,
         status: 'active' as const,
         priority,
-        currentStepId: defaultSteps[0].id, // Reference the ID of the first step
-        steps: defaultSteps,
-        startedAt: new Date()
+        currentStepId: firstStepId,
+        steps: [
+          { id: firstStepId, name: 'Extraction', order: 1, status: 'pending' },
+          { id: uuidv4(), name: 'Validation', order: 2, status: 'pending' },
+          { id: uuidv4(), name: 'Finalization', order: 3, status: 'pending' },
+        ],
+        startedAt: new Date().toISOString(),
       };
 
-      await db.insert(workflows).values(newWorkflowData);
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert(newWorkflowData)
+        .select()
+        .single();
 
-      return { data: newWorkflowData as Workflow, error: null };
+      if (error) throw error;
+      return { data: data as Workflow, error: null };
     } catch (error: any) {
-      console.error('[WorkflowService] createWorkflow Error:', error.message);
+      LogService.error('Workflow creation failed', error, { documentId });
       return { data: null, error };
     }
   },
 
-  /**
-   * Retrieves the workflow associated with a specific document.
-   */
-  async getWorkflowByDocumentId(db: DbClient, documentId: string): Promise<{ data: Workflow | null; error: Error | null }> {
+  async getWorkflowByDocumentId(
+    _db: any,
+    documentId: string
+  ): Promise<{ data: Workflow | null; error: Error | null }> {
     try {
-      const data = await db.query.workflows.findFirst({
-        where: eq(workflows.documentId, documentId)
-      });
+      const { data, error } = await supabase
+        .from('workflows')
+        .select('*')
+        .eq('document_id', documentId)
+        .maybeSingle();
 
+      if (error) throw error;
       if (!data) return { data: null, error: new Error('Workflow not found') };
-      return { data: { ...data, steps: data.steps as WorkflowStep[] } as unknown as Workflow, error: null };
+      return { data: data as Workflow, error: null };
     } catch (error: any) {
-      console.error('[WorkflowService] getWorkflowByDocumentId Error:', error.message);
+      LogService.error('getWorkflowByDocumentId failed', error, { documentId });
       return { data: null, error };
     }
   },
 
-  /**
-   * Updates the status of a specific step within a workflow.
-   */
   async updateStepStatus(
-    db: DbClient,
-    workflowId: string, 
-    stepName: string, 
+    _db: any,
+    workflowId: string,
+    stepName: string,
     status: WorkflowStep['status']
   ): Promise<{ error: Error | null }> {
     try {
-      const workflow = await db.query.workflows.findFirst({
-        columns: { steps: true, currentStepId: true },
-        where: eq(workflows.id, workflowId)
-      });
+      const { data: workflow, error: fetchError } = await supabase
+        .from('workflows')
+        .select('steps, current_step_id')
+        .eq('id', workflowId)
+        .single();
 
-      if (!workflow) throw new Error('Workflow not found');
+      if (fetchError || !workflow) throw fetchError || new Error('Workflow not found');
 
-      const steps = workflow.steps as any as WorkflowStep[];
-      const currentUpdatingStep = steps.find(s => s.name === stepName);
-      let newCurrentStepId = workflow.currentStepId;
+      const steps = (workflow.steps || []) as WorkflowStep[];
+      const currentUpdatingStep = steps.find((s) => s.name === stepName);
+      let newCurrentStepId = workflow.current_step_id;
 
-      // If the step being updated is completed, advance currentStepId to the next step in order
       if (currentUpdatingStep && status === 'completed') {
-        const nextStep = steps.find(s => s.order === currentUpdatingStep.order + 1);
-        if (nextStep) {
-          newCurrentStepId = nextStep.id;
-        }
+        const nextStep = steps.find((s) => s.order === currentUpdatingStep.order + 1);
+        if (nextStep) newCurrentStepId = nextStep.id;
       }
 
-      const updatedSteps = steps.map(step => {
-        return step.name === stepName ? { ...step, status } : step;
-      });
+      const updatedSteps = steps.map((step) =>
+        step.name === stepName ? { ...step, status } : step
+      );
 
-      await db.update(workflows)
-        .set({ steps: updatedSteps, currentStepId: newCurrentStepId })
-        .where(eq(workflows.id, workflowId));
+      const { error: updateError } = await supabase
+        .from('workflows')
+        .update({
+          steps: updatedSteps,
+          current_step_id: newCurrentStepId,
+        })
+        .eq('id', workflowId);
 
+      if (updateError) throw updateError;
       return { error: null };
     } catch (error: any) {
-      console.error('[WorkflowService] updateStepStatus Error:', error.message);
+      LogService.error('updateStepStatus failed', error, { workflowId, stepName });
       return { error };
     }
   },
 
-  /**
-   * Marks a workflow as completed.
-   */
-  async completeWorkflow(db: DbClient, workflowId: string): Promise<{ error: Error | null }> {
+  async completeWorkflow(
+    _db: any,
+    workflowId: string
+  ): Promise<{ error: Error | null }> {
     try {
-      await db.update(workflows)
-        .set({ 
+      const { error } = await supabase
+        .from('workflows')
+        .update({
           status: 'completed',
-          completedAt: new Date()
+          completedAt: new Date().toISOString(),
         })
-        .where(eq(workflows.id, workflowId));
+        .eq('id', workflowId);
 
+      if (error) throw error;
       return { error: null };
     } catch (error: any) {
-      console.error('[WorkflowService] completeWorkflow Error:', error.message);
+      LogService.error('completeWorkflow failed', error, { workflowId });
       return { error };
     }
   },
 
-  /**
-   * Resets a workflow to its initial state for a retry.
-   */
-  async resetWorkflow(db: DbClient, workflowId: string): Promise<{ error: Error | null }> {
+  async resetWorkflow(
+    _db: any,
+    workflowId: string
+  ): Promise<{ error: Error | null }> {
     try {
-      const workflow = await db.query.workflows.findFirst({
-        where: eq(workflows.id, workflowId)
-      });
+      const { data: workflow, error: fetchError } = await supabase
+        .from('workflows')
+        .select('steps, current_step_id')
+        .eq('id', workflowId)
+        .single();
 
-      if (!workflow) throw new Error('Workflow not found');
+      if (fetchError || !workflow) throw fetchError || new Error('Workflow not found');
 
-      const steps = workflow.steps as any as WorkflowStep[];
-      const resetSteps = steps.map(step => ({ ...step, status: 'pending' as const }));
-      
-      // Find the ID of the first step (order 1)
-      const firstStepId = steps.find(s => s.order === 1)?.id || workflow.currentStepId;
+      const steps = (workflow.steps || []) as WorkflowStep[];
+      const resetSteps = steps.map((step) => ({ ...step, status: 'pending' as const }));
+      const firstStepId = steps.find((s) => s.order === 1)?.id || workflow.current_step_id;
 
-      await db.update(workflows)
-        .set({ 
+      const { error: updateError } = await supabase
+        .from('workflows')
+        .update({
           status: 'active',
-          currentStepId: firstStepId,
+          current_step_id: firstStepId,
           steps: resetSteps,
-          completedAt: null 
+          completedAt: null,
         })
-        .where(eq(workflows.id, workflowId));
+        .eq('id', workflowId);
 
+      if (updateError) throw updateError;
       return { error: null };
     } catch (error: any) {
-      console.error('[WorkflowService] resetWorkflow Error:', error.message);
+      LogService.error('resetWorkflow failed', error, { workflowId });
       return { error };
     }
-  }
+  },
 };

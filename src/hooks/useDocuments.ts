@@ -9,8 +9,8 @@ export function useDocuments(userId: string) {
       const { data, error } = await supabase
         .from('documents')
         .select('*', { count: 'exact' })
-        .eq('userId', userId)
-        .order('createdAt', { ascending: false });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return (data as Document[]) || [];

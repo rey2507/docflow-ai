@@ -107,7 +107,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const handleDelete = async (id: string, name: string) => {
     setDeletingId(id);
     setActionFeedback(null);
-    const { error } = await DocumentService.deleteDocument({} as any, id);
+    const { error } = await DocumentService.deleteDocument(null, id);
 
     if (error) {
       setActionFeedback({ type: 'error', message: `Could not delete "${name}": ${error.message}` });

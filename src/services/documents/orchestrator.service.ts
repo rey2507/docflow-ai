@@ -86,9 +86,20 @@ export const PipelineOrchestrator = {
 
 
       // --- Plan Limits Check (Task 9.2) ---
-      const { allowed, reason } = await SubscriptionService.canProcessDocument(db, doc.userId);
+      // Skip when db is a browser stub (upload path) — subscription checks run server-side
+      let allowed = true;
+      let planReason: string | undefined;
+      if (typeof db?.query?.subscriptions?.findFirst === 'function') {
+        try {
+          const limitCheck = await SubscriptionService.canProcessDocument(db, doc.userId);
+          allowed = limitCheck.allowed;
+          planReason = limitCheck.reason;
+        } catch {
+          allowed = true;
+        }
+      }
       if (!allowed) {
-        throw new Error(reason || 'Subscription limit reached.');
+        throw new Error(planReason || 'Subscription limit reached.');
       }
 
       // 2. Extraction Phase

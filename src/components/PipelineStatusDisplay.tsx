@@ -17,7 +17,6 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryLoading, setRetryLoading] = useState<boolean>(false);
 
   const fetchDocument = useCallback(async () => {
     setLoading(true);
@@ -65,39 +64,10 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
     };
   }, [documentId, fetchDocument]);
 
-  const handleRetry = async () => {
-    setRetryLoading(true);
-    setError(null);
-    try {
-      // Call the server-side API endpoint that handles the pipeline execution
-      const response = await fetch(`/api/documents/${documentId}/retry`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        let errorMessage = 'Server failed to initiate retry.';
-        if (typeof errData === 'object' && errData !== null && 'message' in errData && typeof errData.message === 'string') {
-          errorMessage = errData.message;
-        }
-        throw new Error(errorMessage);
-      }
-      
-      // We don't need to manually set the document state here; 
-      // the Supabase Realtime subscription will catch the 'processing' update.
-    } catch (err: any) {
-      setError(`Retry failed: ${err.message}`);
-    } finally {
-      setRetryLoading(false);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'failed': return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'retrying':
       case 'processing':
       case 'validating': return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'error': return 'bg-rose-50 text-rose-700 border-rose-200';
@@ -105,7 +75,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
     }
   };
 
-  const displayStatus = retryLoading ? 'retrying' : loading ? 'loading' : document?.status || (error ? 'error' : 'unknown');
+  const displayStatus = loading ? 'loading' : document?.status || (error ? 'error' : 'unknown');
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -169,19 +139,6 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
                     </a>
                   )}
                 </div>
-                <button
-                  onClick={handleRetry}
-                  disabled={retryLoading}
-                  className="mt-4 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {retryLoading ? 'Retrying…' : 'Retry processing'}
-                </button>
-              </div>
-            )}
-
-            {retryLoading && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-                Restarting the pipeline and waiting for realtime status updates…
               </div>
             )}
 
