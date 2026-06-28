@@ -76,10 +76,25 @@ export const AIProviderService = {
         };
       }
 
+      if (provider === 'gemini') {
+        const embedModel = genAI.getGenerativeModel({ model: 'embedding-001' });
+        const result = await withRetry(() => embedModel.embedContent(text));
+        const embedding = result.embedding?.values || null;
+
+        if (!embedding) {
+          return { embedding: null, error: new Error('Gemini returned no embedding data') };
+        }
+
+        return {
+          embedding,
+          error: null
+        };
+      }
+
       return { embedding: null, error: new Error(`Embedding not yet implemented for ${provider}`) };
     } catch (error: any) {
-      console.error(`[AIProviderService] Embedding error:`, error.message);
-      return { embedding: null, error };
+      LogService.error(`[AIProviderService] Embedding error`, error);
+      return { embedding: null, error: error instanceof Error ? error : new Error(String(error)) };
     }
   },
 

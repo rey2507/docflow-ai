@@ -15,42 +15,20 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick }) => {
   const initials = userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
 
   return (
-    <header className="header">
-      <div className="header__title">
-        <h1 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text)' }}>{title}</h1>
-      </div>
+    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:px-8">
+      <h1 className="text-sm font-semibold text-slate-800">{title}</h1>
 
-      <div className="header__actions">
-        <div
-          className={`header__search ${searchFocused ? 'header__search--focused' : ''}`}
-        >
-          <Search className="h-3.5 w-3.5" style={{ color: 'var(--color-muted)' }} />
+      <div className="flex items-center gap-2">
+        <div className={`hidden items-center gap-2 rounded-md border px-2 py-1 text-sm transition lg:inline-flex ${searchFocused ? 'border-slate-400 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+          <Search className="h-3.5 w-3.5 text-slate-500" />
           <input
             type="text"
             placeholder="Search..."
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              outline: 'none',
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--color-text)',
-              width: '10rem',
-            }}
+            className="bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500 w-40"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
-          <kbd style={{
-            display: 'none',
-            alignItems: 'center',
-            gap: '0.25rem',
-            borderRadius: 'var(--border-radius-sm)',
-            border: '1px solid var(--color-border)',
-            backgroundColor: 'var(--color-surface)',
-            padding: '0 0.375rem',
-            fontSize: '0.625rem',
-            fontWeight: 'var(--font-weight-medium)',
-            color: 'var(--color-muted)',
-          }} className="hidden lg:inline-flex">
+          <kbd className="hidden items-center gap-1 rounded-sm border border-slate-200 bg-white px-1.5 text-xs font-medium text-slate-500 lg:inline-flex">
             <Command className="h-3 w-3" />
             K
           </kbd>
@@ -61,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick }) => {
             variant="primary"
             size="sm"
             onClick={onUploadClick}
-            className="hidden sm:inline-flex items-center gap-1.5"
+            className="hidden items-center gap-1.5 sm:inline-flex"
           >
             <Upload className="h-3.5 w-3.5" />
             <span>Upload</span>
@@ -73,19 +51,10 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick }) => {
           variant="ghost"
           size="icon"
           aria-label="Notifications"
-          className="h-9 w-9"
-          style={{ position: 'relative' }}
+          className="relative h-9 w-9"
         >
-          <Bell className="h-4 w-4" style={{ color: 'var(--color-muted)' }} />
-          <span style={{
-            position: 'absolute',
-            top: '0.375rem',
-            right: '0.375rem',
-            height: '0.375rem',
-            width: '0.375rem',
-            borderRadius: '9999px',
-            backgroundColor: '#f43f5e',
-          }} />
+          <Bell className="h-4 w-4 text-slate-500" />
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-rose-500" />
         </Button>
 
         <Button
@@ -94,20 +63,9 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick }) => {
           className="flex items-center gap-2"
           aria-label="User menu"
         >
-          <span className="hidden lg:inline" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-muted)' }}>{userEmail || 'User'}</span>
-          <ChevronDown className="h-3.5 w-3.5" style={{ color: 'var(--color-muted)' }} />
-          <div style={{
-            height: '1.75rem',
-            width: '1.75rem',
-            borderRadius: '9999px',
-            backgroundColor: 'var(--color-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'var(--font-size-xs)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-muted)',
-          }}>
+          <span className="hidden text-sm font-medium text-slate-600 lg:inline">{userEmail || 'User'}</span>
+          <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
             {initials}
           </div>
         </Button>

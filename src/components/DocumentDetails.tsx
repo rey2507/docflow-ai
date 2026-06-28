@@ -5,6 +5,7 @@ import type { Document } from '../types/document';
 import { cn } from '../lib/utils';
 import FilePreview from './FilePreview';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
+import { ErrorState } from './ui/empty-state';
 
 interface DocumentDetailsProps {
   documentId: string;
@@ -26,7 +27,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
     const { data, error } = await DocumentService.getDocumentById(null, documentId);
 
     if (error) {
-      setLoadError(error.message || 'Unable to load document details.');
+      setLoadError('Unable to load document details.');
       setDocument(null);
       setLoading(false);
       return;
@@ -52,7 +53,6 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
     setSaveError(null);
     setSavingStage('saving');
     
-    // When saving manual corrections, we update values and set confidence to 1.0
     const correctedData = { ...editedData };
     Object.keys(correctedData).forEach(key => {
       correctedData[key] = {
@@ -68,11 +68,10 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
       correctedAt: new Date().toISOString(),
     };
 
-    // DocumentService expects (db, documentId, metadata)
     const { error } = await DocumentService.updateMetadata(null, documentId, updatedMetadata);
 
     if (error) {
-      setSaveError(`Failed to save corrections: ${error.message}`);
+      setSaveError('Failed to save corrections. Please try again.');
       setSavingStage('idle');
       return;
     }
@@ -80,7 +79,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
     setSavingStage('revalidating');
     const { error: validationError } = await ValidateService.validateData({} as any, documentId, correctedData);
     if (validationError) {
-      setSaveError(`Saved, but revalidation failed: ${validationError.message}`);
+      setSaveError('Saved, but revalidation failed.');
       setSavingStage('idle');
       return;
     }
@@ -97,6 +96,12 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
   );
   const isSaving = savingStage !== 'idle';
   const suggestions = document?.metadata?.validationSuggestions || [];
+
+  const handleReport = () => {
+    const subject = encodeURIComponent(`DocFlow AI Error Report - Document ${documentId}`);
+    const body = encodeURIComponent(`An error occurred in DocFlow AI.\n\nDocument ID: ${documentId}\nError: ${document?.metadata?.lastExtractionError || loadError || saveError || 'Unknown error'}\nTime: ${new Date().toISOString()}\n\nPlease investigate this issue.`);
+    window.open(`mailto:reyahmen25@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  };
 
   if (loading) {
     return (
@@ -135,16 +140,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
   if (loadError) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center">
-          <p className="text-sm font-semibold text-rose-800">Could not load document</p>
-          <p className="mt-1 text-sm text-rose-700">{loadError}</p>
-          <button
-            onClick={loadDocument}
-            className="mt-4 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
-          >
-            Retry
-          </button>
-        </div>
+        <ErrorState message="Unable to load document details." onReport={handleReport} />
       </div>
     );
   }
@@ -197,11 +193,11 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
             <PipelineStatusDisplay documentId={document.id} />
           </section>
 
-          {/* Error Details Section for Debugging (Task 8.2) */}
+          {/* Error Details Section - User-friendly error with report option */}
           {document.metadata?.lastExtractionError && (
             <section className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">
-                <h3 className="text-lg font-semibold text-rose-900">Extraction issue</h3>
+                <h3 className="text-lg font-semibold text-rose-900">Processing issue</h3>
                 {document.metadata?.failedProvider && (
                   <span className="rounded-full border border-rose-200 bg-white px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-rose-700">
                     {document.metadata.failedProvider}
@@ -209,22 +205,20 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
                 )}
               </div>
               <p className="text-sm text-rose-800">
-                Extraction produced an error. You can still review and edit fields manually below.
+                Extraction could not be completed. You can still review and edit fields manually below.
               </p>
-              <div className="overflow-x-auto rounded-lg border border-rose-100 bg-white/70 p-3 font-mono text-xs whitespace-pre-wrap text-rose-900">
-                {document.metadata.lastExtractionError}
-              </div>
+              <ErrorState onReport={handleReport} message="An error occurred during processing." />
             </section>
           )}
 
-          {/* Validation Suggestions Section (Task 8.3) */}
+          {/* Validation Suggestions Section */}
           {/* Extracted Data Section */}
           <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-2">
               <div className="flex items-center space-x-4">
                 <h3 className="text-lg font-semibold text-slate-900">Extracted data</h3>
                 <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium capitalize text-blue-700">
-                  AI: {document.metadata?.aiProvider} ({document.metadata?.aiModel})
+                  AI: {document.metadata?.aiProvider || 'Pending'}
                 </span>
               </div>
               {!isEditing ? (

@@ -49,5 +49,37 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 );
 EmptyState.displayName = 'EmptyState';
 
-export { EmptyState };
-export type { EmptyStateProps };
+interface ErrorStateProps {
+  title?: string;
+  message?: string;
+  errorCode?: string;
+  onReport?: () => void;
+}
+
+const ErrorState = React.forwardRef<HTMLDivElement, ErrorStateProps>(
+  ({ title = 'Something went wrong', message = 'Unable to process your request. Please try again.', errorCode, onReport }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"
+      >
+        <p className="text-sm font-semibold text-rose-800">{title}</p>
+        <p className="mt-1 text-xs text-rose-700">{message}</p>
+        {onReport && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onReport}
+            className="mt-3"
+          >
+            Send report
+          </Button>
+        )}
+      </div>
+    );
+  }
+);
+ErrorState.displayName = 'ErrorState';
+
+export { EmptyState, ErrorState };
+export type { EmptyStateProps, ErrorStateProps };

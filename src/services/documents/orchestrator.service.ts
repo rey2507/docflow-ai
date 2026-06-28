@@ -128,9 +128,9 @@ export const PipelineOrchestrator = {
         throw new Error(planReason || 'Subscription limit reached.');
       }
 
-      // 2. Extraction Phase
+// 2. Extraction Phase
       // Implement Task 12.2: Provider Failover Chain
-      const providerChain: AIProvider[] = ['openai', 'gemini', 'anthropic'];
+      const providerChain: AIProvider[] = ['openai', 'gemini'];
       let lastError: Error | null = null;
       let extractionSuccessful = false;
       const failoverAttempts: {
@@ -150,18 +150,12 @@ export const PipelineOrchestrator = {
         
         LogService.logProviderFailure(documentId, provider, extractError);
         
-        // Capture failure stats for Task 12.2
         failoverAttempts.push({
           provider,
           error: extractError.message,
           timestamp: new Date().toISOString()
         });
 
-        // Persist failure history immediately in case the entire pipeline fails
-        // Persist failure metadata (tests expect Supabase-style `from('documents').update(...)`).
-        // Prefer drizzle update chain when available; otherwise fall back to supabase client if present.
-        // Always persist failure metadata using Supabase client during provider failover.
-        // This keeps unit-test mocking deterministic (tests assert `supabase.from('documents').update(...)`).
         await supabase
           .from('documents')
           .update({
@@ -172,70 +166,77 @@ export const PipelineOrchestrator = {
           })
           .eq('id', documentId);
 
-
-
-
-
         lastError = extractError;
       }
 
+      // Note: extraction may fail if no AI providers configured - document still stored successfully
+      // AI extraction can be triggered later via AI chat interface
       if (!extractionSuccessful) {
-        throw lastError || new Error('Extraction failed across all providers.');
-      }
-
-      // 3. Generate Embedding for Semantic Search (Task 11.3)
-      // Fetch the updated document to get the summary generated during extraction
-      const updatedDoc = await (db?.query?.documents?.findFirst
-        ? db.query.documents.findFirst({
-            where: and(eq(documents.id, documentId), eq(documents.userId, userId)),
+        LogService.warn(`Extraction unavailable - document stored without AI processing`, { documentId, error: lastError?.message });
+        // Mark document as completed so it's still accessible
+        await supabase
+          .from('documents')
+          .update({
+            status: 'completed',
+            metadata: {
+              ...(doc.metadata && typeof doc.metadata === 'object' ? (doc.metadata as Record<string, any>) : {}),
+              extractionError: lastError?.message,
+              extractionAttempted: true,
+            },
           })
-        : Promise.resolve(null as any));
+          .eq('id', documentId);
+      } else {
+        // 3. Generate Embedding for Semantic Search (Task 11.3) - only on successful extraction
+        const updatedDoc = await (db?.query?.documents?.findFirst
+          ? db.query.documents.findFirst({
+              where: and(eq(documents.id, documentId), eq(documents.userId, userId)),
+            })
+          : Promise.resolve(null as any));
 
-      const updatedMetadata: Record<string, any> =
-        updatedDoc?.metadata && typeof updatedDoc.metadata === 'object'
-          ? (updatedDoc.metadata as Record<string, any>)
-          : {};
+        const updatedMetadata: Record<string, any> =
+          updatedDoc?.metadata && typeof updatedDoc.metadata === 'object'
+            ? (updatedDoc.metadata as Record<string, any>)
+            : {};
 
-
-      if ((updatedMetadata as any).summary) {
-        LogService.info(`Generating semantic embedding`, { documentId });
-        const { embedding, error: embedError } = await AIProviderService.embed((updatedMetadata as any).summary as string);
-        
-        if (!embedError && embedding) {
-          const canUseDrizzleUpdate = typeof (db as any).update === 'function' && typeof (db as any).update(documents)?.set === 'function';
-          if (canUseDrizzleUpdate) {
-            await db.update(documents)
-              .set({ 
-                metadata: {
-                  ...updatedMetadata,
-                  embedding
-                },
-                updatedAt: new Date() 
-              })
-              .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
-          } else {
-            await supabase
-              .from('documents')
-              .update({
-                metadata: {
-                  ...updatedMetadata,
-                  embedding
-                },
-              })
-              .eq('id', documentId);
+        if ((updatedMetadata as any).summary) {
+          LogService.info(`Generating semantic embedding`, { documentId });
+          const { embedding, error: embedError } = await AIProviderService.embed((updatedMetadata as any).summary as string);
+          
+          if (!embedError && embedding) {
+            const canUseDrizzleUpdate = typeof (db as any).update === 'function' && typeof (db as any).update(documents)?.set === 'function';
+            if (canUseDrizzleUpdate) {
+              await db.update(documents)
+                .set({ 
+                  metadata: {
+                    ...updatedMetadata,
+                    embedding
+                  },
+                  updatedAt: new Date() 
+                })
+                .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
+            } else {
+              await supabase
+                .from('documents')
+                .update({
+                  metadata: {
+                    ...updatedMetadata,
+                    embedding
+                  },
+                })
+                .eq('id', documentId);
+            }
+          } else if (embedError) {
+            LogService.error(`Embedding generation failed`, embedError, { documentId });
           }
-        } else if (embedError) {
-          LogService.error(`Embedding generation failed`, embedError, { documentId });
         }
 
+        // 4. Validation Phase
+        const extractedData = (updatedMetadata.extractedData && typeof updatedMetadata.extractedData === 'object') ? updatedMetadata.extractedData : {};
+        await ValidateService.validateData(db, documentId, extractedData);
+
+        // 5. Finalization Phase  
+        await FinalizationService.finalizeDocument(db, documentId);
       }
-
-      // 4. Validation Phase
-      const extractedData = (updatedMetadata.extractedData && typeof updatedMetadata.extractedData === 'object') ? updatedMetadata.extractedData : {};
-      await ValidateService.validateData(db, documentId, extractedData);
-
-      // 5. Finalization Phase
-      await FinalizationService.finalizeDocument(db, documentId);
 
       LogService.logPipelineSuccess(documentId, Date.now() - startTime);
       return { success: true, error: null };

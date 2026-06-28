@@ -16,8 +16,8 @@ interface MainDashboardProps {
 }
 
 const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
-  const { user } = useAuth();
-  const userId = user?.id || '';
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.id;
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState({ total: 0, processing: 0, completed: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
@@ -60,11 +60,17 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
   }, [userId]);
 
   useEffect(() => {
-    fetchStats();
-    fetchDocuments();
-  }, [fetchStats, fetchDocuments]);
+    if (!authLoading && userId) {
+      fetchStats();
+      fetchDocuments();
+    }
+  }, [fetchStats, fetchDocuments, authLoading, userId]);
 
   const handleFileUpload = async (file: File) => {
+    if (!userId) {
+      setFetchError('Unable to upload: user not authenticated');
+      return;
+    }
     setUploading(true);
     try {
       const { DocumentUploadService } = await import('../services/documents/upload.service');

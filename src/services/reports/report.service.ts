@@ -70,18 +70,18 @@ export const ReportService = {
 
       const { data, error } = await supabase
         .from('workflows')
-        .select('status, startedAt, completedAt')
+        .select('status, started_at, completed_at')
         .in('document_id', docIds);
 
       if (error) throw error;
 
-      const completed = data.filter((w: any) => w.status === 'completed' && w.completedAt);
+      const completed = data.filter((w: any) => w.status === 'completed' && w.completed_at);
       const activeCount = data.filter((w: any) => w.status === 'active').length;
 
       let avgProcessingTimeMinutes = null;
       if (completed.length > 0) {
         const totalDuration = completed.reduce((sum: number, w: any) => {
-          const duration = new Date(w.completedAt).getTime() - new Date(w.startedAt).getTime();
+          const duration = new Date(w.completed_at).getTime() - new Date(w.started_at).getTime();
           return sum + duration;
         }, 0);
         avgProcessingTimeMinutes = Math.round((totalDuration / completed.length) / (1000 * 60));

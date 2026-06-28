@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import type { Page } from '../../types/page';
@@ -19,10 +19,12 @@ const AppShell: React.FC<AppShellProps> = ({
   usagePercent = 0,
   children,
 }) => {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   return (
-    <div className="app-shell">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-slate-900 focus:shadow-lg">
+        Skip to main content
+      </a>
+
       <Sidebar
         currentPage={currentPage}
         onNavigate={onNavigate}
@@ -30,7 +32,7 @@ const AppShell: React.FC<AppShellProps> = ({
         usagePercent={usagePercent}
       />
 
-      <div className="app-shell__main">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Header
           title={
             currentPage === 'dashboard'
@@ -50,7 +52,7 @@ const AppShell: React.FC<AppShellProps> = ({
           userEmail={userEmail}
           onUploadClick={() => onNavigate('upload')}
         />
-        <main className="app-shell__content">
+        <main id="main-content" className="flex-1 overflow-auto">
           <PageContainer variant="default">
             {children}
           </PageContainer>

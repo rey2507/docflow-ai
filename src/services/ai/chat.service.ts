@@ -23,11 +23,9 @@ export const ChatService = {
     query: string
   ): Promise<{ answer: string; sources: string[]; error: Error | null }> {
     try {
-      // 1. Generate embedding for the query
       const { embedding: queryEmbedding, error: embedError } = await AIProviderService.embed(query);
       if (embedError || !queryEmbedding) throw embedError || new Error('Failed to embed query');
 
-      // 2. Fetch documents with embeddings and extractions for this user
       const { data: docs, error: docsError } = await supabase
         .from('documents')
         .select(`
@@ -61,7 +59,6 @@ export const ChatService = {
         };
       }
 
-      // 3. Construct context and prompt
       const context = scored
         .map((d: any) => `Document: ${d.name}\nSummary: ${d.summary || 'No summary available.'}`)
         .join('\n\n');
@@ -76,7 +73,6 @@ export const ChatService = {
         Question: ${query}
       `;
 
-      // 4. Generate answer
       const { data: aiResult, error: chatError } = await AIProviderService.analyze(prompt);
       if (chatError) throw chatError;
 
@@ -89,5 +85,14 @@ export const ChatService = {
       LogService.error('Library chat failed', error, { userId });
       return { answer: '', sources: [], error };
     }
+  },
+
+  async extractDocument(
+    _db: any,
+    documentId: string,
+    userId: string
+  ): Promise<{ data: Record<string, any> | null; error: Error | null }> {
+    const { ExtractService } = await import('@/services/documents/extract.service');
+    return ExtractService.processDocument(null, documentId, userId);
   },
 };

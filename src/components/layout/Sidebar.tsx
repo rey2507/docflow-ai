@@ -72,10 +72,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
       </Button>
 
       {mobileOpen && (
-        <div className="sidebar__mobile-backdrop" onClick={() => setMobileOpen(false)}>
-          <aside className="sidebar__mobile-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sidebar__mobile-header">
-              <span className="sidebar__brand">DocFlow AI</span>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setMobileOpen(false)}>
+          <aside className="flex w-72 h-full flex-col bg-white shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200">
+              <span className="text-lg font-bold text-slate-800">DocFlow AI</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -87,12 +87,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="sidebar__nav">{navContent}</div>
-            <div className="sidebar__footer">
-              <div className="sidebar__user-card">
+            <div className="flex-1 overflow-y-auto p-4">{navContent}</div>
+            <div className="p-4 border-t border-slate-200">
+              <div className="flex items-center gap-2 rounded-md bg-slate-50 p-2">
+                <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                  {displayEmail.charAt(0).toUpperCase()}
+                </div>
                 <div>
-                  <p className="sidebar__user-name">{displayEmail}</p>
-                  <p className="sidebar__user-plan">Beta</p>
+                  <p className="text-xs font-medium text-slate-900 truncate">{displayEmail}</p>
+                  <p className="text-[0.6875rem] text-slate-500">Beta</p>
                 </div>
               </div>
             </div>
@@ -100,52 +103,49 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         </div>
       )}
 
-      <aside className="sidebar">
-        <div className="sidebar__header">
-          <span className="sidebar__brand">DocFlow AI</span>
+      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white h-full">
+        <div className="p-4 border-b border-slate-200">
+          <span className="text-lg font-bold text-slate-800 tracking-tight">DocFlow AI</span>
         </div>
 
-        <div className="sidebar__nav">
+        <div className="flex-1 overflow-y-auto p-4 space-y-0.5">
           {navContent}
 
-          <div className="sidebar__divider" />
+          <div className="border-t border-slate-200 my-2" />
           <Button
             type="button"
             variant="ghost"
-            className="sidebar__workspace-toggle"
+            className="w-full justify-between"
             onClick={() => setWorkspaceOpen(!workspaceOpen)}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Workspace
             </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
           </Button>
           {workspaceOpen && (
-            <div className="sidebar__workspace-details">
-              <p style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayEmail}</p>
+            <div className="mt-2 truncate text-xs text-slate-500">
+              {displayEmail}
             </div>
           )}
         </div>
 
-        <div className="sidebar__footer">
-          <div className="sidebar__usage-label">
+        <div className="p-4 border-t border-slate-200">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
             <span>Usage</span>
             <span>{usagePercent}%</span>
           </div>
-          <div className="sidebar__usage-track">
-            <div
-              className="sidebar__usage-fill"
-              style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
-            />
+          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full rounded-full bg-slate-800 transition-all duration-150" style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }} />
           </div>
-          <div className="sidebar__user-card" style={{ marginTop: '0.75rem' }}>
-            <div className="sidebar__user-avatar">
+          <div className="mt-3 flex items-center gap-2 rounded-md bg-slate-50 p-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
               {displayEmail.charAt(0).toUpperCase()}
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <p className="sidebar__user-name">{displayEmail}</p>
-              <p className="sidebar__user-plan">Beta</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-slate-900">{displayEmail}</p>
+              <p className="text-[0.6875rem] text-slate-500">Beta</p>
             </div>
           </div>
         </div>

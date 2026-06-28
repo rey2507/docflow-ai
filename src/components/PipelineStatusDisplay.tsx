@@ -2,17 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase/client';
 import type { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
 import type { Document } from '../types/document';
+import { ErrorState } from './ui/empty-state';
 
 interface PipelineStatusDisplayProps {
   documentId: string;
 }
 
-/**
- * PipelineStatusDisplay Component
- * 
- * Displays the current status of the document pipeline and 
- * details regarding extraction results or failure messages.
- */
 const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentId }) => {
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,7 +27,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
       setError(null);
     } catch (err: any) {
       setDocument(null);
-      setError(err.message || 'Unable to fetch pipeline status.');
+      setError('Unable to fetch pipeline status.');
     } finally {
       setLoading(false);
     }
@@ -41,8 +36,6 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
   useEffect(() => {
     fetchDocument();
 
-    // Subscribe to real-time updates for this specific document
-    // This allows the UI to update automatically as the Orchestrator works in the background
     const channel = supabase
       .channel(`document-updates-${documentId}`)
       .on(
@@ -55,7 +48,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.error(`[PipelineStatusDisplay] Realtime subscription ${status}:`, err);
-          setError(`Realtime connection error: ${status}. Live updates may be paused.`);
+          setError('Realtime connection error: Live updates may be paused.');
         }
       });
 
@@ -77,6 +70,12 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
 
   const displayStatus = loading ? 'loading' : document?.status || (error ? 'error' : 'unknown');
 
+  const handleReport = () => {
+    const subject = encodeURIComponent(`DocFlow AI Error Report - Document ${documentId}`);
+    const body = encodeURIComponent(`An error occurred while processing your document.\n\nDocument ID: ${documentId}\nError: ${document?.metadata?.pipelineError || error || 'Unknown error'}\nTime: ${new Date().toISOString()}\n\nPlease investigate this issue.`);
+    window.open(`mailto:reyahmen25@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
@@ -94,16 +93,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
         )}
 
         {error && !loading && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-            <p className="text-sm font-semibold text-rose-800">Status unavailable</p>
-            <p className="mt-1 text-sm text-rose-700">{error}</p>
-            <button
-              onClick={fetchDocument}
-              className="mt-3 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-sm font-medium text-rose-700 transition hover:bg-rose-100"
-            >
-              Retry status fetch
-            </button>
-          </div>
+          <ErrorState message="Unable to fetch pipeline status. Please try again." onReport={handleReport} />
         )}
 
         {!loading && !error && !document && (
@@ -112,33 +102,23 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
           </div>
         )}
 
-        {document && (
+        {document && document.status === 'failed' && (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <p className="text-sm font-semibold text-rose-800">Processing failed</p>
+              <p className="mt-1 text-sm text-rose-700">
+                An unexpected error occurred during processing.
+              </p>
+            </div>
+            <ErrorState onReport={handleReport} />
+          </div>
+        )}
+
+        {document && document.status !== 'failed' && (
           <>
             {!document.status && (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                 Workflow not started yet.
-              </div>
-            )}
-
-            {document.status === 'failed' && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <p className="text-sm font-semibold text-rose-800">Processing failed</p>
-                <p className="mt-1 text-sm text-rose-700">
-                  {document.metadata?.pipelineError || 'An unexpected error occurred during processing.'}
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-rose-700">
-                  {document.metadata?.failedAt && (
-                    <span>Failed at {new Date(document.metadata.failedAt).toLocaleString()}</span>
-                  )}
-                  {document.metadata?.duplicateOf && (
-                    <a
-                      href={`/documents/${document.metadata.duplicateOf}`}
-                      className="font-semibold underline decoration-rose-300 underline-offset-2"
-                    >
-                      View original document
-                    </a>
-                  )}
-                </div>
               </div>
             )}
 
@@ -154,16 +134,19 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
             </div>
           </>
         )}
+
         {displayStatus === 'processing' || displayStatus === 'validating' ? (
           <div className="h-1.5 overflow-hidden rounded-full bg-blue-100">
             <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500" />
           </div>
         ) : null}
+
         {document && document.status === 'completed' && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             Extraction completed. Review the extracted fields below.
           </div>
         )}
+
         {document && document.status !== 'failed' && document.metadata?.duplicateOf && (
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
             Possible duplicate found:{' '}
@@ -172,6 +155,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
             </a>
           </div>
         )}
+
         {document && (
           <div className="text-xs text-slate-500">
             Provider metadata updates in realtime as processing progresses.
