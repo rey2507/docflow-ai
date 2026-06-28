@@ -412,4 +412,4 @@
 ## CURRENT PRIORITY
 
 1. **Document upload & listing** — Core system complete. Documents stored successfully; AI extraction failures no longer block uploads.
-2. **AI chat integration** — All AI processing (extraction, analysis, Q&A) happens via `/chat` endpoint.
+2. **Error handling** — User-friendly messages shown; raw code errors hidden. "Send report" button emails reyahmen25@gmail.com.
