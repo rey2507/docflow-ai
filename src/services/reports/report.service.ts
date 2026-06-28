@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase/client';
+import { LogService } from '@/services/logging/log.service';
 
 /**
  * ReportService
@@ -34,7 +35,7 @@ export const ReportService = {
         error: null 
       };
     } catch (error: any) {
-      console.error('[ReportService] getUserDocumentStats Error:', error.message);
+      LogService.error('getUserDocumentStats failed', error, { userId });
       return { data: null, error };
     }
   },
@@ -54,16 +55,23 @@ export const ReportService = {
     error: Error | null 
   }> {
     try {
-      // Filter workflows by document ownership via inner join
+      // Get user's document IDs first, then fetch their workflows
+      const { data: userDocs, error: docsError } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (docsError) throw docsError;
+
+      const docIds = (userDocs || []).map((d: any) => d.id);
+      if (docIds.length === 0) {
+        return { data: { activeCount: 0, completedCount: 0, avgProcessingTimeMinutes: null }, error: null };
+      }
+
       const { data, error } = await supabase
         .from('workflows')
-        .select(`
-          status,
-          startedAt,
-          completedAt,
-          documents!inner(user_id)
-        `)
-        .eq('user_id', userId);
+        .select('status, startedAt, completedAt')
+        .in('document_id', docIds);
 
       if (error) throw error;
 
@@ -88,7 +96,7 @@ export const ReportService = {
         error: null
       };
     } catch (error: any) {
-      console.error('[ReportService] getWorkflowEfficiency Error:', error.message);
+      LogService.error('getWorkflowEfficiency failed', error, { userId });
       return { data: null, error };
     }
   }

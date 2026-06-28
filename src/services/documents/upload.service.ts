@@ -1,11 +1,26 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import type { Document, DocumentType } from '@/types/document';
+import type { Document, DocumentType, DocumentMetadata } from '@/types/document';
 import { LogService } from '@/services/logging/log.service';
+
+function mapSupabaseToDocument(row: Record<string, any>): Document {
+  const metadata: DocumentMetadata = (row.metadata && typeof row.metadata === 'object') ? row.metadata : {};
+  return {
+    id: row.id,
+    userId: row.user_id || row.userId || '',
+    name: row.name,
+    type: row.type,
+    status: row.status,
+    storagePath: row.storage_path || row.storagePath || '',
+    metadata,
+    createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+    updatedAt: row.updated_at ? new Date(row.updated_at) : new Date(),
+  };
+}
 
 export const DocumentUploadService = {
   async uploadDocument(
-    supabase: SupabaseClient,
+    _supabase: any,
     file: File,
     userId: string
   ): Promise<{ data: Document | null; error: Error | null }> {
@@ -163,7 +178,7 @@ export const DocumentUploadService = {
         LogService.error('Failed to start background pipeline', err as Error, { documentId: document.id });
       }
 
-      return { data: document as unknown as Document, error: null };
+      return { data: mapSupabaseToDocument(document), error: null };
     } catch (error: any) {
       if (filePath) {
         await supabase.storage.from('documents').remove([filePath]);

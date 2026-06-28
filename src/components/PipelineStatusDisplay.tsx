@@ -36,7 +36,7 @@ const PipelineStatusDisplay: React.FC<PipelineStatusDisplayProps> = ({ documentI
     } finally {
       setLoading(false);
     }
-  }, [documentId]);
+  }, [documentId, supabase]);
 
   useEffect(() => {
     fetchDocument();

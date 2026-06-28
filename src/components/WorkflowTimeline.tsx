@@ -44,7 +44,7 @@ const WorkflowTimeline: React.FC<WorkflowTimelineProps> = ({ documentId }) => {
       .channel(`workflow-updates-${documentId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'workflows', filter: `documentId=eq.${documentId}` },
+        { event: 'UPDATE', schema: 'public', table: 'workflows', filter: `document_id=eq.${documentId}` },
         (payload: RealtimePostgresUpdatePayload<Workflow>) => {
           setWorkflow(payload.new as Workflow);
         }

@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase/client';
+import { LogService } from '@/services/logging/log.service';
 
 /**
  * DocumentStorageService
@@ -24,7 +25,7 @@ export const DocumentStorageService = {
       
       return { url: data.signedUrl, error: null };
     } catch (error: any) {
-      console.error('[DocumentStorageService] getDownloadUrl Error:', error.message);
+      LogService.error('[DocumentStorageService] getDownloadUrl Error:', error);
       return { url: null, error };
     }
   },
@@ -44,7 +45,7 @@ export const DocumentStorageService = {
       
       return { error: null };
     } catch (error: any) {
-      console.error('[DocumentStorageService] deleteFile Error:', error.message);
+      LogService.error('[DocumentStorageService] deleteFile Error:', error);
       return { error };
     }
   }

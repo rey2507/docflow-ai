@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { AuthService } from '../services/auth/auth.service';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -15,28 +15,37 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     AuthService.getSession().then(({ session: initialSession, error }) => {
       if (error) console.error('Session error:', error);
-      if (!mounted) return;
+      if (!mountedRef.current) return;
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       setLoading(false);
     });
 
     const { data: { subscription } } = AuthService.onAuthStateChange((_event, newSession) => {
+      if (!mountedRef.current) return;
       setSession(newSession);
       setUser(newSession?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
     await AuthService.signOut();
+    if (mountedRef.current) {
+      setUser(null);
+      setSession(null);
+    }
   };
 
   return (

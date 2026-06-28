@@ -40,15 +40,24 @@ const DocumentIcon = () => (
 const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, fileType, fileName }) => {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadUrl() {
       setLoading(true);
-      const { url, error } = await DocumentStorageService.getDownloadUrl(storagePath);
-      if (!error && url) {
-        setUrl(url);
+      setLoadError(null);
+      try {
+        const { url, error } = await DocumentStorageService.getDownloadUrl(storagePath);
+        if (!error && url) {
+          setUrl(url);
+        } else if (error) {
+          setLoadError(error.message || 'Unable to load preview');
+        }
+      } catch (err: any) {
+        setLoadError(err.message || 'Unable to load preview');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadUrl();
   }, [storagePath]);
@@ -58,6 +67,15 @@ const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, fileType, fileNa
       <div className="flex flex-col items-center space-y-3">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
         <p className="text-sm text-slate-500">Loading preview…</p>
+      </div>
+    </div>
+  );
+  if (loadError) return (
+    <div className="w-full min-h-[300px] md:min-h-[500px] flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+      <div className="flex flex-col items-center space-y-3 text-center">
+        <WarningIcon />
+        <p className="text-sm font-medium text-slate-700">Preview not available</p>
+        <p className="text-xs text-slate-500">{loadError}</p>
       </div>
     </div>
   );

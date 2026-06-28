@@ -377,10 +377,45 @@
 
 ---
 
+---
+
+## PHASE 19 — LOGIC BUG FIXES (Critical - Found during end-to-end audit)
+
+### Phase 19.1 — Critical Auth & Data Fixes
+- [ ] Fix AuthContext signOut: clear local user/session state after Supabase sign-out (contexts/AuthContext.tsx:38)
+- [ ] Fix WorkflowTimeline realtime filter: `documentId=eq.X` → `document_id=eq.X` (WorkflowTimeline.tsx:47)
+- [ ] Fix ReportService.getWorkflowEfficiency: remove `.eq('user_id', userId)` from workflows table — workflows has no user_id column, join via documents instead (report.service.ts:66)
+
+### Phase 19.2 — High Severity Fixes
+- [x] Fix orchestrator empty catch block: don't silently allow all requests when subscription check fails (orchestrator.service.ts:97)
+- [ ] Fix ProviderService.embed(): implement for Gemini/Anthropic or return explicit error instead of "not yet implemented" — DEFERRED to tomorrow, AI is secondary (provider.service.ts:65)
+- [ ] Fix ProviderService.analyze(): don't return mock data with `error: null` for unimplemented providers — DEFERRED to tomorrow (provider.service.ts:192)
+- [x] Fix FilePreview.loadUrl: add error handling and fallback UI for storage access failures (FilePreview.tsx:44)
+- [x] Fix orchestrator Supabase updates: replace silent optional chaining `?.update?.()` with explicit error handling (orchestrator.service.ts:60,79,190,261,264)
+- [x] Fix orchestrator failedProvider update: add `.eq('id', documentId)` WHERE clause to prevent updating ALL documents (orchestrator.service.ts:139)
+- [x] Fix orchestrator unguarded `db.query.documents.findFirst` and `db.query.workflows.findFirst` — now checks capability before calling, falls back to supabase (orchestrator.service.ts:22,50)
+
+### Phase 19.3 — Medium Severity Fixes
+- [ ] Fix PipelineStatusDisplay: add `supabase` to useCallback dependency array (PipelineStatusDisplay.tsx:22)
+- [ ] Fix MainDashboard race condition: don't run queries with empty userId before auth settles (MainDashboard.tsx:19)
+- [ ] Fix DocumentList delete error UX: on failure, call `setConfirmingDeleteId(null)` not `setConfirmingDeleteId(id)` (DocumentList.tsx:114)
+- [ ] Fix RateLimitService fallback: consider returning `{ allowed: false }` with user-friendly message instead of bypassing all limits (rate-limit.service.ts:67)
+- [ ] Fix AuthContext mounted check: add `mounted` ref to prevent state updates after unmount (AuthContext.tsx:30)
+- [ ] Fix ReportService logging: use `LogService.error` instead of `console.error` for consistency (report.service.ts:37,91)
+
+### Phase 19.4 — Low Severity Fixes
+- [ ] Fix ProviderService JSON parse: handle parse errors explicitly instead of silent ignore (provider.service.ts:116,169)
+- [ ] Fix storage.service.ts: use `LogService.error` instead of `console.error` (storage.service.ts:27,47)
+- [ ] Fix upload.service.ts type cast: replace `as unknown as Document` with proper type mapping (upload.service.ts:166)
+- [ ] Fix orchestrator excessive `as any`: reduce type casts where test stubs can be properly typed (orchestrator.service.ts)
+
+---
+
 ## CURRENT PRIORITY
 
-1. **E2E testing** — Upload flow, auth flow, workspace isolation/RLS verification
-2. **Settings subpages** — Implement tabbed navigation (Account / Workspace / Billing / AI / Integrations / Security / Danger Zone)
-3. **AuthPage inline styles** — Convert to `PageContainer` + `SectionContainer` + `Card` primitives
-4. **Header/Sidebar inline styles** — Replace remaining `style=` props with Tailwind utilities
-5. **Accessibility** — Standardize focus states, verify keyboard navigation, add skip link
+1. **E2E upload verification** — Upload a real file, confirm pipeline runs (extract → validate → finalize), document appears in list with correct status
+2. **AI/embedding tasks** — Fix ProviderService.embed() for Gemini/Anthropic, remove mock data fallback in analyze(), fix JSON parse logging — deferred to next session, AI is secondary
+3. **Settings subpages** — Implement tabbed navigation (Account / Workspace / Billing / AI / Integrations / Security / Danger Zone)
+4. **AuthPage inline styles** — Convert to `PageContainer` + `SectionContainer` + `Card` primitives
+5. **Header/Sidebar inline styles** — Replace remaining `style=` props with Tailwind utilities
+6. **Accessibility** — Standardize focus states, verify keyboard navigation, add skip link

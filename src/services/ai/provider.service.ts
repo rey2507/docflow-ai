@@ -4,13 +4,6 @@ import { withRetry } from '@/lib/utils/retry';
 import { getEnv } from 'docs/env';
 import { LogService } from '@/services/logging/log.service';
 
-/**
- * AIProviderService
- * 
- * Abstraction layer for AI models. This allows the system to switch between
- * providers (OpenAI, Gemini, Anthropic) without changing the core business logic.
- */
-
 const openai = new OpenAI({
   apiKey: getEnv('OPENAI_API_KEY'),
   dangerouslyAllowBrowser: true,
@@ -35,6 +28,27 @@ export interface AIAnalysisResponse {
   };
   model: string;
   provider: AIProvider;
+}
+
+function parseAIResponse(rawResponse: string, provider: AIProvider): {
+  structuredData: Record<string, any> | null;
+  suggestions: string[];
+  summary: string | null;
+  keyPoints: string[];
+} {
+  try {
+    const parsed = JSON.parse(rawResponse);
+    const { validation_suggestions, summary: parsedSummary, key_points, ...data } = parsed;
+    return {
+      structuredData: data,
+      suggestions: Array.isArray(validation_suggestions) ? validation_suggestions : [],
+      summary: typeof parsedSummary === 'string' ? parsedSummary : null,
+      keyPoints: Array.isArray(key_points) ? key_points : [],
+    };
+  } catch (error: any) {
+    LogService.warn(`Failed to parse ${provider} JSON response`, { error: error.message });
+    return { structuredData: null, suggestions: [], summary: null, keyPoints: [] };
+  }
 }
 
 export const AIProviderService = {
@@ -62,7 +76,7 @@ export const AIProviderService = {
         };
       }
 
-      throw new Error(`Embedding not yet implemented for ${provider}`);
+      return { embedding: null, error: new Error(`Embedding not yet implemented for ${provider}`) };
     } catch (error: any) {
       console.error(`[AIProviderService] Embedding error:`, error.message);
       return { embedding: null, error };
@@ -101,21 +115,7 @@ export const AIProviderService = {
         }));
 
         const rawResponse = response.choices[0].message.content || '';
-        let structuredData = null;
-        let suggestions: string[] = [];
-        let summary: string | null = null;
-        let keyPoints: string[] = [];
-        
-        try {
-          const parsed = JSON.parse(rawResponse);
-          const { validation_suggestions, summary: parsedSummary, key_points, ...data } = parsed;
-          summary = typeof parsedSummary === 'string' ? parsedSummary : null;
-          keyPoints = Array.isArray(key_points) ? key_points : [];
-          structuredData = data;
-          suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
-        } catch (e) {
-          LogService.warn('Failed to parse AI JSON response', { provider, docId: 'unknown' });
-        }
+        const { structuredData, suggestions, summary, keyPoints } = parseAIResponse(rawResponse, 'openai');
 
         return {
           data: {
@@ -154,21 +154,7 @@ export const AIProviderService = {
         );
         const response = await result.response;
         const rawResponse = response.text();
-        
-        let structuredData = null;
-        let suggestions: string[] = [];
-        let summary: string | null = null;
-        let keyPoints: string[] = [];
-        try {
-          const parsed = JSON.parse(rawResponse);
-          const { validation_suggestions, summary: parsedSummary, key_points, ...data } = parsed;
-          summary = typeof parsedSummary === 'string' ? parsedSummary : null;
-          keyPoints = Array.isArray(key_points) ? key_points : [];
-          structuredData = data;
-          suggestions = Array.isArray(validation_suggestions) ? validation_suggestions : [];
-        } catch (e) {
-          LogService.warn('Failed to parse Gemini JSON response', { provider });
-        }
+        const { structuredData, suggestions, summary, keyPoints } = parseAIResponse(rawResponse, 'gemini');
 
         return {
           data: {
@@ -177,9 +163,9 @@ export const AIProviderService = {
             suggestions,
             summary,
             keyPoints,
-            usage: { // Extract usage from Gemini's response metadata
+            usage: {
               promptTokens: response.usageMetadata?.promptTokenCount || 0,
-              completionTokens: response.usageMetadata?.candidatesTokenCount || 0, // Candidates are completions
+              completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
               totalTokens: response.usageMetadata?.totalTokenCount || 0,
             },
             model,
@@ -189,19 +175,9 @@ export const AIProviderService = {
         };
       }
 
-      // Fallback for other providers while integration is pending
       return { 
-        data: {
-          rawResponse: `Mock response for ${provider}. Integration pending.`,
-          structuredData: null,
-          suggestions: null,
-          summary: null,
-          keyPoints: null,
-          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-          model,
-          provider
-        }, 
-        error: null 
+        data: null, 
+        error: new Error(`AI provider "${provider}" is not yet implemented. Use openai or gemini.`) 
       };
       
     } catch (error: any) {

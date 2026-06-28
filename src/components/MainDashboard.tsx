@@ -26,6 +26,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
   const [uploading, setUploading] = useState(false);
 
   const fetchStats = useCallback(async () => {
+    if (!userId) return;
     const { data, error } = await ReportService.getUserDocumentStats(userId);
     if (error || !data) return;
     const breakdown = data.breakdown;
@@ -38,6 +39,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
   }, [userId]);
 
   const fetchDocuments = useCallback(async () => {
+    if (!userId) return;
     setLoading(true);
     setFetchError('');
     try {

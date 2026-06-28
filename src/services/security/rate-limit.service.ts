@@ -65,10 +65,11 @@ export const RateLimitService = {
 
       return { allowed: true };
     } catch (error: any) {
-
       LogService.error('Rate limit check failed', error, { userId, endpoint });
-      // Fallback to allowing the request in case of database errors to avoid blocking users
-      return { allowed: true };
+      return { 
+        allowed: false, 
+        reason: 'Unable to verify rate limit. Please try again later.' 
+      };
     }
   },
 };

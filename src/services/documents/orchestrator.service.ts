@@ -19,9 +19,22 @@ export const PipelineOrchestrator = {
     const startTime = Date.now();
     try {
       LogService.logPipelineStart(documentId, userId);
-      const doc = await db.query.documents.findFirst({
-        where: and(eq(documents.id, documentId), eq(documents.userId, userId))
-      });
+      
+      let doc: any = null;
+      if (typeof (db as any).query?.documents?.findFirst === 'function') {
+        doc = await db.query.documents.findFirst({
+          where: and(eq(documents.id, documentId), eq(documents.userId, userId))
+        });
+      } else {
+        const { data, error: docError } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('id', documentId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (docError) throw docError;
+        doc = data;
+      }
 
       if (!doc) throw new Error('Document not found.');
 
@@ -34,9 +47,19 @@ export const PipelineOrchestrator = {
       // If document is failed, it's a retry attempt. Reset its state.
       if (doc.status === 'failed') {
         // Fetch workflow to reset it
-        const workflow = await db.query.workflows.findFirst({
-          where: eq(workflows.documentId, documentId),
-        });
+        let workflow: any = null;
+        if (typeof (db as any).query?.workflows?.findFirst === 'function') {
+          workflow = await db.query.workflows.findFirst({
+            where: eq(workflows.documentId, documentId),
+          });
+        } else {
+          const { data: wfData } = await supabase
+            .from('workflows')
+            .select('*')
+            .eq('document_id', documentId)
+            .maybeSingle();
+          workflow = wfData;
+        }
         if (workflow) {
           await WorkflowService.resetWorkflow(db, workflow.id);
         }
@@ -48,7 +71,7 @@ export const PipelineOrchestrator = {
           await db.update(documents)
             .set({
               status: 'processing',
-              metadata: { 
+              metadata: {
                 ...(typeof doc.metadata === 'object' && doc.metadata ? (doc.metadata as Record<string, any>) : {}),
                 pipelineError: undefined,
                 failedAt: undefined,
@@ -57,9 +80,10 @@ export const PipelineOrchestrator = {
             })
             .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         } else {
-          await (db as any).query?.documents?.update?.({
-            status: 'processing',
-          });
+          await supabase
+            .from('documents')
+            .update({ status: 'processing' })
+            .eq('id', documentId);
         }
 
         // Update 'doc' object to reflect new status for subsequent checks
@@ -76,9 +100,10 @@ export const PipelineOrchestrator = {
             .set({ status: 'processing', updatedAt: new Date() })
             .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         } else {
-          await (db as any).query?.documents?.update?.({
-            status: 'processing',
-          });
+          await supabase
+            .from('documents')
+            .update({ status: 'processing' })
+            .eq('id', documentId);
         }
 
         doc.status = 'processing'; // Update local doc object
@@ -94,7 +119,8 @@ export const PipelineOrchestrator = {
           const limitCheck = await SubscriptionService.canProcessDocument(db, doc.userId);
           allowed = limitCheck.allowed;
           planReason = limitCheck.reason;
-        } catch {
+        } catch (err) {
+          LogService.error('Subscription check failed, allowing upload', err as Error, { documentId });
           allowed = true;
         }
       }
@@ -143,7 +169,8 @@ export const PipelineOrchestrator = {
               ...(doc.metadata && typeof doc.metadata === 'object' ? (doc.metadata as Record<string, any>) : {}),
               failedProvider: provider,
             },
-          });
+          })
+          .eq('id', documentId);
 
 
 
@@ -187,12 +214,15 @@ export const PipelineOrchestrator = {
               })
               .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
           } else {
-            await (db as any).query?.documents?.update?.({
-              metadata: {
-                ...updatedMetadata,
-                embedding
-              },
-            });
+            await supabase
+              .from('documents')
+              .update({
+                metadata: {
+                  ...updatedMetadata,
+                  embedding
+                },
+              })
+              .eq('id', documentId);
           }
         } else if (embedError) {
           LogService.error(`Embedding generation failed`, embedError, { documentId });
@@ -258,12 +288,22 @@ export const PipelineOrchestrator = {
           .set({ status: 'failed' })
           .where(eq(workflows.documentId, documentId));
       } else {
-        await (db as any).query?.documents?.update?.({
-          status: 'failed',
-        });
-        await (db as any).query?.workflows?.update?.({
-          status: 'failed',
-        });
+        await supabase
+          .from('documents')
+          .update({ 
+            status: 'failed', 
+            metadata: { 
+              ...(currentDoc?.metadata || {}), 
+              pipelineError: error.message,
+              failedAt: new Date().toISOString()
+            },
+          })
+          .eq('id', documentId);
+
+        await supabase
+          .from('workflows')
+          .update({ status: 'failed' })
+          .eq('document_id', documentId);
       }
 
 

@@ -111,7 +111,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
     if (error) {
       setActionFeedback({ type: 'error', message: `Could not delete "${name}": ${error.message}` });
-      setConfirmingDeleteId(id);
+      setConfirmingDeleteId(null);
     } else {
       setActionFeedback({ type: 'success', message: `Deleted "${name}".` });
       setConfirmingDeleteId(null);
