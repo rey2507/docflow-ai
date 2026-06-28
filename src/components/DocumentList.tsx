@@ -345,16 +345,13 @@ const DocumentList: React.FC<DocumentListProps> = ({
                       <td className="px-4 py-3 text-sm text-slate-500 align-top">
                         {formatCreatedDate(doc.createdAt)}
                       </td>
-                      <td className="px-4 py-3 text-right align-top">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" onClick={() => onViewDetails(doc.id)} aria-label="View details" className="h-8 w-8">
-                            <FileText className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" aria-label="More" className="h-8 w-8">
-                            <ArrowUpDown className="h-3.5 w-3.5" />
+<td className="px-4 py-3 text-right align-top">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)}>
+                            View
                           </Button>
                         </div>
-                      </td>
+                     </td>
                     </tr>
                   ))}
                 </tbody>
