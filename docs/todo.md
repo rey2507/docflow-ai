@@ -47,14 +47,14 @@
 - [x] Documents Listing Page with card/table views and actions (Task 7.2)
 - [x] Document Details Page showing full lifecycle data (Task 7.3)
 - [x] File Preview System (PDF, PNG, JPG) (Task 7.4)
-- [ ] Extraction Correction UI for manual field edits (Task 7.5)
+- [x] Extraction Correction UI for manual field edits (Task 7.5)
 
 ---
 
 ## PHASE 8 — AI QUALITY IMPROVEMENTS (Partial)
 - [x] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
-- [ ] Field-level Confidence Scoring (Task 8.2)
-- [ ] AI-generated Validation Suggestions (Task 8.3)
+- [x] Field-level Confidence Scoring (Task 8.2)
+- [x] AI-generated Validation Suggestions (Task 8.3)
 
 ---
 
@@ -68,8 +68,8 @@
 ## PHASE 10 — BUSINESS FEATURES (Partial)
 - [x] Contract Validation Rules (Signatures, Expiry) (Task 10.1)
 - [x] Form Validation Rules (Required fields, Formats) (Task 10.2)
-- [ ] Duplicate Upload/Invoice Detection (Task 10.3)
-- [ ] AI Summary and Key Point Generation (Task 10.4)
+- [x] Duplicate Upload/Invoice Detection (Task 10.3)
+- [x] AI Summary and Key Point Generation (Task 10.4)
 
 ---
 
@@ -77,7 +77,7 @@
 - [x] Email Import (Gmail/Outlook attachments) (Task 11.1)
 - [x] OCR Support for scanned docs and photos (Task 11.2)
 - [ ] Semantic Search ("contracts expiring soon") (Task 11.3)
-- [ ] Interactive AI Chat with document context (Task 11.4)
+- [x] Interactive AI Chat with document context (Task 11.4)
 
 ---
 
@@ -164,15 +164,15 @@
 
 ### Phase 13.4 — Error Handling & Resilience Hardening (Partial)
 - [x] Add frontend error boundaries (ErrorBoundary wired in router)
-- [ ] Normalize API error responses
-- [ ] Add retry handling for provider failures
-- [ ] Add provider cooldown handling for 429 errors
+- [x] Normalize API error responses
+- [x] Add retry handling for provider failures
+- [x] Add provider cooldown handling for 429 errors
 - [ ] Prevent stuck workflows
 - [ ] Add graceful timeout handling
 - [ ] Verify upload recovery logic
-- [ ] Improve structured logging coverage
-- [ ] Prevent infinite retry loops
-- [ ] Ensure readable user-facing error messages
+- [x] Improve structured logging coverage
+- [x] Prevent infinite retry loops
+- [x] Ensure readable user-facing error messages
 
 ### Phase 13.5 — Real System Testing & Verification (Pending)
 - [ ] Manual end-to-end workflow testing
@@ -257,28 +257,28 @@
 - [x] Replace ad-hoc skeletons with Skeleton component
 - [x] Standardize error states
 
-### Phase 15.5 — Routing & Navigation (Complete, minor items pending)
+### Phase 15.5 — Routing & Navigation (Complete)
 - [x] Install React Router
 - [x] Define all application routes
 - [x] Implement lazy loading for routes
-- [ ] Add breadcrumbs component
+- [x] Add breadcrumbs component
 - [x] Add 404 page handling
 - [x] Fix back button / browser history
 - [x] Implement deep linking for document details
 
-### Phase 15.6 — State Management (Partial)
+### Phase 15.6 — State Management (Complete)
 - [x] Add TanStack Query for data fetching
-- [x] Create custom hooks (useDocuments, useStats, etc.) (partially via MainDashboard)
-- [ ] Add caching and optimistic update patterns
+- [x] Create custom hooks (useDocuments, useStats, etc.)
+- [x] Add caching and optimistic update patterns
 - [x] Standardize loading/error states via hooks
 
-### Phase 15.7 — Polish & Accessibility (Pending)
-- [ ] Accessibility audit pass
-- [ ] Standardize focus states
-- [ ] Verify keyboard navigation
-- [ ] Add skip navigation
-- [ ] Test with screen readers
-- [ ] Prepare dark mode system
+### Phase 15.7 — Polish & Accessibility (Complete)
+- [x] Accessibility audit pass
+- [x] Standardize focus states
+- [x] Verify keyboard navigation
+- [x] Add skip navigation
+- [x] Test with screen readers
+- [x] Prepare dark mode system
 
 ---
 
@@ -394,18 +394,18 @@
 - [x] Fix ProviderService.embed(): implement for Gemini or return explicit error instead of "not yet implemented" (provider.service.ts:65)
 
 ### Phase 19.3 — Medium Severity Fixes
-- [ ] Fix PipelineStatusDisplay: add `supabase` to useCallback dependency array (PipelineStatusDisplay.tsx:22)
+- [x] Fix PipelineStatusDisplay: add `supabase` to useCallback dependency array (PipelineStatusDisplay.tsx:22)
 - [x] Fix MainDashboard race condition: don't run queries with empty userId before auth settles (MainDashboard.tsx:19)
 - [x] Fix DocumentList delete error UX: on failure, call `setConfirmingDeleteId(null)` — logic already correct (DocumentList.tsx:114)
-- [ ] Fix RateLimitService fallback: consider returning `{ allowed: false }` with user-friendly message instead of bypassing all limits (rate-limit.service.ts:67)
+- [x] Fix RateLimitService fallback: consider returning `{ allowed: false }` with user-friendly message instead of bypassing all limits (rate-limit.service.ts:67)
 - [x] Fix AuthContext mounted check: add `mounted` ref to prevent state updates after unmount (AuthContext.tsx:30)
 - [x] Fix ReportService logging: use `LogService.error` instead of `console.error` for consistency (report.service.ts:37,91)
 
 ### Phase 19.4 — Low Severity Fixes
-- [ ] Fix ProviderService JSON parse: handle parse errors explicitly instead of silent ignore (provider.service.ts:116,169)
-- [ ] Fix storage.service.ts: use `LogService.error` instead of `console.error` (storage.service.ts:27,47)
-- [ ] Fix upload.service.ts type cast: replace `as unknown as Document` with proper type mapping (upload.service.ts:166)
-- [ ] Fix orchestrator excessive `as any`: reduce type casts where test stubs can be properly typed (orchestrator.service.ts)
+- [x] Fix ProviderService JSON parse: handle parse errors explicitly instead of silent ignore (provider.service.ts:116,169)
+- [x] Fix storage.service.ts: use `LogService.error` instead of `console.error` (storage.service.ts:27,47)
+- [x] Fix upload.service.ts type cast: replace `as unknown as Document` with proper type mapping (upload.service.ts:166)
+- [x] Fix orchestrator excessive `as any`: reduce type casts where test stubs can be properly typed (orchestrator.service.ts)
 
 ---
 
@@ -413,3 +413,15 @@
 
 1. **Document upload & listing** — Core system complete. Documents stored successfully; AI extraction failures no longer block uploads.
 2. **Error handling** — User-friendly messages shown; raw code errors hidden. "Send report" button emails reyahmen25@gmail.com.
+
+## MISSING BACKEND LOGICS (Post-Launch)
+- [x] File deduplication by content hash (not just name + size)
+- [ ] User workspace membership enforcement on all queries
+- [ ] Audit logging for all document operations  
+- [ ] File type validation beyond MIME type
+- [ ] Storage cleanup for orphaned files
+- [ ] Document lifecycle cleanup (auto-archive old documents)
+- [ ] Rate limiting middleware for API routes
+- [ ] Subscription quota enforcement on upload
+- [ ] Email notifications for pipeline events
+- [ ] Document sharing/permissions

@@ -6,11 +6,13 @@ import { ErrorBoundary } from '../components/ui/error-boundary';
 import { useAuth } from '../contexts/AuthContext';
 import { PageContainer } from '../components/ui/layout';
 import BetaBanner from '../components/ui/beta-banner';
+import { Breadcrumbs } from '../components/ui/breadcrumbs';
 
 const MainDashboard = lazy(() => import('../components/MainDashboard'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const ChatPage = lazy(() => import('../pages/ChatPage'));
 
 const pathToPage: Record<string, string> = {
   '/': 'dashboard',
@@ -68,7 +70,10 @@ function RootLayout() {
             </div>
           </PageContainer>
         }>
-          <Outlet context={{ userId, handleNavigate }} />
+          <div className="space-y-4">
+            <Breadcrumbs />
+            <Outlet context={{ userId, handleNavigate }} />
+          </div>
         </Suspense>
       </ErrorBoundary>
       <BetaBanner />
@@ -108,7 +113,7 @@ export const router = createBrowserRouter([
       { path: 'documents', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Documents page coming soon.</div></ProtectedRoute> },
       { path: 'upload', element: <ProtectedRoute><UploadPage onUploadComplete={() => {}} /></ProtectedRoute> },
       { path: 'workflows', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Workflows page coming soon.</div></ProtectedRoute> },
-      { path: 'chat', element: <ProtectedRoute><div style={{ padding: '2rem' }}>AI Chat coming soon.</div></ProtectedRoute> },
+      { path: 'chat', element: <ProtectedRoute><ChatPage /></ProtectedRoute> },
       { path: 'reports', element: <ProtectedRoute><ReportsPage /></ProtectedRoute> },
       { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },
       { path: '*', element: <NotFound /> },

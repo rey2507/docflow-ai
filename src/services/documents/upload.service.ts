@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import type { Document, DocumentType, DocumentMetadata } from '@/types/document';
 import { LogService } from '@/services/logging/log.service';
+import { computeFileHash } from '@/lib/utils';
 
 function mapSupabaseToDocument(row: Record<string, any>): Document {
   const metadata: DocumentMetadata = (row.metadata && typeof row.metadata === 'object') ? row.metadata : {};
@@ -110,17 +111,35 @@ export const DocumentUploadService = {
         }
       }
 
-      // 5. Check for duplicate by name + size in metadata
-      const { data: existingDocs } = await supabase
+      // 5. Check for duplicates
+      const contentHash = await computeFileHash(file);
+      
+      // 5a. Check by content hash (exact content match)
+      const { data: hashMatches } = await supabase
+        .from('documents')
+        .select('id, name, metadata')
+        .eq('user_id', userId)
+        .limit(1);
+
+      const exactDuplicate = hashMatches?.find((d: any) => (d.metadata?.contentHash || '') === contentHash);
+      if (exactDuplicate) {
+        return { 
+          data: null, 
+          error: new Error(`This file is a duplicate of "${exactDuplicate.name}" uploaded earlier.`) 
+        };
+      }
+
+      // 5b. Check by name + size (fast pre-insert heuristic)
+      const { data: nameSizeMatches } = await supabase
         .from('documents')
         .select('id, metadata')
         .eq('user_id', userId)
         .eq('name', file.name)
         .limit(1);
 
-      const existingDoc = existingDocs?.[0];
-      if (existingDoc) {
-        const meta = (existingDoc.metadata as Record<string, any>) || {};
+      const nameSizeDuplicate = nameSizeMatches?.[0];
+      if (nameSizeDuplicate) {
+        const meta = (nameSizeDuplicate.metadata as Record<string, any>) || {};
         if (meta.fileSize === file.size) {
           return { data: null, error: new Error('A document with the same name and size already exists.') };
         }
@@ -139,6 +158,7 @@ export const DocumentUploadService = {
           metadata: {
             fileSize: file.size,
             mimeType: file.type,
+            contentHash,
           },
         })
         .select()

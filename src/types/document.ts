@@ -19,6 +19,8 @@ export interface DocumentMetadata {
   failedProvider?: string;
   manuallyCorrected?: boolean;
   correctedAt?: string;
+  extractionAttempted?: boolean; // Set when AI extraction was attempted but failed
+  contentHash?: string; // SHA-256 hash of file content for deduplication
 }
 
 export interface Document {

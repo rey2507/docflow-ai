@@ -19,16 +19,17 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick }) => {
       <h1 className="text-sm font-semibold text-slate-800">{title}</h1>
 
       <div className="flex items-center gap-2">
-        <div className={`hidden items-center gap-2 rounded-md border px-2 py-1 text-sm transition lg:inline-flex ${searchFocused ? 'border-slate-400 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+        <div className={`hidden items-center gap-2 rounded-md border bg-white px-2 py-1 text-sm transition lg:inline-flex ${searchFocused ? 'border-slate-900 ring-1 ring-slate-900' : 'border-slate-200'}`}>
           <Search className="h-3.5 w-3.5 text-slate-500" />
           <input
             type="text"
             placeholder="Search..."
-            className="bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500 w-40"
+            aria-label="Search documents"
+            className="bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-500 w-40 focus:outline-none"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
-          <kbd className="hidden items-center gap-1 rounded-sm border border-slate-200 bg-white px-1.5 text-xs font-medium text-slate-500 lg:inline-flex">
+          <kbd className="hidden items-center gap-1 rounded-sm border border-slate-200 bg-slate-50 px-1.5 text-xs font-medium text-slate-500 lg:inline-flex">
             <Command className="h-3 w-3" />
             K
           </kbd>

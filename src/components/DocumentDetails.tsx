@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import FilePreview from './FilePreview';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
 import { ErrorState } from './ui/empty-state';
+import { FileText, ListChecks } from 'lucide-react';
 
 interface DocumentDetailsProps {
   documentId: string;
@@ -328,6 +329,40 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
               <p className="text-gray-400 text-sm italic py-4">No data extracted yet or extraction failed.</p>
             )}
           </section>
+
+          {/* AI Summary Section */}
+          {(document.metadata?.summary || document.metadata?.keyPoints?.length) && (
+            <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="border-b border-slate-200 pb-2 text-lg font-semibold text-slate-900">AI Summary</h3>
+              
+              {document.metadata.summary && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Summary</p>
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-800">{document.metadata.summary}</p>
+                </div>
+              )}
+
+              {document.metadata.keyPoints && document.metadata.keyPoints.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4 text-emerald-600" />
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Key Points</p>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {document.metadata.keyPoints.map((point: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-slate-800">
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500" />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Metadata & Details */}
           <section className="bg-white p-6 rounded-xl border shadow-sm space-y-4">

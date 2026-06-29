@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { ArrowUpDown, Search, FileText } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { ArrowUpDown, Search, FileText, MoreVertical, Trash2 } from 'lucide-react';
 import type { Document } from '../types/document';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
 import { DocumentService } from '../services/documents/document.service';
@@ -20,6 +20,7 @@ interface DocumentListProps {
   isLoading?: boolean;
   defaultViewMode?: ViewMode;
   onUpload?: (file: File) => void;
+  onDelete?: (id: string) => Promise<void>;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -29,6 +30,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   isLoading = false,
   defaultViewMode = 'grid',
   onUpload,
+  onDelete,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
@@ -107,15 +109,24 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const handleDelete = async (id: string, name: string) => {
     setDeletingId(id);
     setActionFeedback(null);
-    const { error } = await DocumentService.deleteDocument(null, id);
-
-    if (error) {
-      setActionFeedback({ type: 'error', message: `Could not delete "${name}": ${error.message}` });
-      setConfirmingDeleteId(null);
-    } else {
+    try {
+      if (onDelete) {
+        await onDelete(id);
+      } else {
+        const { error } = await DocumentService.deleteDocument(null, id);
+        if (error) {
+          setActionFeedback({ type: 'error', message: `Could not delete "${name}": ${error.message}` });
+          setConfirmingDeleteId(id);
+          setDeletingId(null);
+          return;
+        }
+      }
       setActionFeedback({ type: 'success', message: `Deleted "${name}".` });
       setConfirmingDeleteId(null);
       onRefresh();
+    } catch (err: any) {
+      setActionFeedback({ type: 'error', message: `Could not delete "${name}": ${err.message}` });
+      setConfirmingDeleteId(id);
     }
     setDeletingId(null);
   };
@@ -322,65 +333,122 @@ const DocumentList: React.FC<DocumentListProps> = ({
                     <th className="px-4 py-2.5 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {pageData.map((doc) => (
-                    <tr key={doc.id} className="transition-colors hover:bg-slate-50/80 group">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4 text-slate-500" />
+<tbody className="divide-y divide-slate-100">
+                   {pageData.map((doc) => (
+                     <tr key={doc.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
+                       <td className="px-4 py-3 align-top">
+                         <div className="flex items-center gap-3">
+                           <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                             <FileText className="h-4 w-4 text-slate-500" />
+                           </div>
+                           <div className="min-w-0">
+                             <p className="font-medium text-slate-900 truncate" title={doc.name}>{doc.name}</p>
+                             <p className="text-xs text-slate-400 mt-0.5">ID: {doc.id.slice(0, 8)}</p>
+                           </div>
+                         </div>
+                       </td>
+                       <td className="px-4 py-3 align-top">
+                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${
+                           doc.status === 'completed' 
+                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                             : doc.status === 'failed'
+                             ? 'bg-rose-50 text-rose-700 border-rose-200'
+                             : doc.status === 'processing' || doc.status === 'validating'
+                             ? 'bg-blue-50 text-blue-700 border-blue-200'
+                             : 'bg-slate-100 text-slate-700 border-slate-200'
+                         }`}>
+                           {doc.type}
+                         </span>
+                       </td>
+<td className="px-4 py-3 align-top">
+                          <div className="min-w-[200px]">
+                            {doc.metadata?.extractionAttempted && !doc.metadata?.lastExtractionError ? (
+                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 border-emerald-200">
+                                completed
+                              </span>
+                            ) : doc.status === 'completed' ? (
+                              <div className="space-y-1">
+                                <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 border-amber-200">
+                                  stored
+                                </span>
+                                <p className="text-xs text-slate-500">Ready for AI processing</p>
+                              </div>
+                            ) : doc.status === 'failed' ? (
+                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-rose-50 text-rose-700 border-rose-200">
+                                failed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
+                                {doc.status}
+                              </span>
+                            )}
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-slate-900 truncate max-w-xs" title={doc.name}>{doc.name}</p>
-                            <p className="text-xs text-slate-500">ID: {doc.id.slice(0, 8)}</p>
+                        </td>
+<td className="px-4 py-3 text-sm text-slate-500 align-top">
+                          {doc.createdAt ? formatCreatedDate(doc.createdAt) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)}>
+                              View
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => requestDelete(doc.id)}
+                              title="Delete document"
+                              disabled={getDeleteLockReason(doc.status) !== null}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <Badge variant="default">{doc.type}</Badge>
-                      </td>
-                      <td className="px-4 py-3 min-w-[320px] align-top">
-                        <PipelineStatusDisplay documentId={doc.id} />
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 align-top">
-                        {formatCreatedDate(doc.createdAt)}
-                      </td>
-<td className="px-4 py-3 text-right align-top">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)}>
-                            View
-                          </Button>
-                        </div>
-                     </td>
-                    </tr>
-                  ))}
-                </tbody>
+                        </td>
+                     </tr>
+                   ))}
+                 </tbody>
               </table>
             </div>
           ) : (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {pageData.map((doc) => (
-                <Card key={doc.id}>
-                  <CardHeader>
+                <Card key={doc.id} className="flex flex-col h-full">
+                  <CardHeader className="pb-3">
                     <div className="space-y-2">
                       <h4 className="max-w-[220px] truncate text-sm font-semibold text-slate-900" title={doc.name}>
                         {doc.name}
                       </h4>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Badge variant={
-                          doc.status === 'completed' ? 'success' : doc.status === 'failed' ? 'error' :
-                          doc.status === 'processing' || doc.status === 'validating' || doc.status === 'pending' ? 'info' : 'default'
-                        }>
-                          {doc.type}
-                        </Badge>
-                        <span>{formatCreatedDate(doc.createdAt)}</span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${
+                          doc.status === 'completed' 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                            : doc.status === 'failed'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                        }`}>
+                          {doc.status}
+                        </span>
+                        <span className="text-slate-500">{doc.createdAt ? formatCreatedDate(doc.createdAt) : '—'}</span>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardBody>
-                    <PipelineStatusDisplay documentId={doc.id} />
-                    {renderActions(doc, true)}
+<CardBody className="flex-1 pt-0 pb-3">
+                    {doc.metadata?.extractionAttempted && !doc.metadata?.lastExtractionError ? (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-slate-500">Type: {doc.type}</p>
+                      </div>
+                    ) : doc.status === 'completed' ? (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-slate-500">Type: {doc.type}</p>
+                        <p className="text-xs text-amber-600">AI: Pending</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-medium text-slate-500">Type: {doc.type}</p>
+                    )}
                   </CardBody>
+                  <div className="px-4 pb-4">
+                    {renderActions(doc, true)}
+                  </div>
                 </Card>
               ))}
             </div>

@@ -3,6 +3,7 @@ import type { DbClient } from 'docs/client';
 import { documents, workflows } from 'docs/schema';
 import { ExtractService } from './extract.service';
 import { AIProviderService, type AIProvider } from '../ai/provider.service';
+import { providerCooldown } from '../ai/provider-cooldown.service';
 import { ValidateService } from './validate.service';
 import { FinalizationService } from './finalization.service';
 import { SubscriptionService } from '../../subscription/subscription.service';
@@ -20,12 +21,16 @@ export const PipelineOrchestrator = {
     try {
       LogService.logPipelineStart(documentId, userId);
       
-      let doc: any = null;
-      if (typeof (db as any).query?.documents?.findFirst === 'function') {
-        doc = await db.query.documents.findFirst({
-          where: and(eq(documents.id, documentId), eq(documents.userId, userId))
-        });
-      } else {
+      const docQuery = typeof (db as unknown as { query?: { documents?: { findFirst: Function } } }).query?.documents?.findFirst === 'function';
+      const doc = docQuery
+        ? await db.query.documents.findFirst({
+            where: and(eq(documents.id, documentId), eq(documents.userId, userId))
+          })
+        : null;
+
+      // Re-fetch from Supabase if drizzle returned nothing or capability is absent
+      let resolvedDoc = doc;
+      if (!resolvedDoc) {
         const { data, error: docError } = await supabase
           .from('documents')
           .select('*')
@@ -33,46 +38,40 @@ export const PipelineOrchestrator = {
           .eq('user_id', userId)
           .maybeSingle();
         if (docError) throw docError;
-        doc = data;
+        resolvedDoc = data;
       }
 
-      if (!doc) throw new Error('Document not found.');
+      if (!resolvedDoc) throw new Error('Document not found.');
 
       // If document is already completed, skip.
-      if (doc.status === 'completed') {
+      if (resolvedDoc.status === 'completed') {
         LogService.info(`Document already completed. Skipping pipeline.`, { documentId });
         return { success: true, error: null };
       }
 
       // If document is failed, it's a retry attempt. Reset its state.
-      if (doc.status === 'failed') {
-        // Fetch workflow to reset it
-        let workflow: any = null;
-        if (typeof (db as any).query?.workflows?.findFirst === 'function') {
-          workflow = await db.query.workflows.findFirst({
-            where: eq(workflows.documentId, documentId),
-          });
-        } else {
-          const { data: wfData } = await supabase
-            .from('workflows')
-            .select('*')
-            .eq('document_id', documentId)
-            .maybeSingle();
-          workflow = wfData;
-        }
+      if (resolvedDoc.status === 'failed') {
+        const wfQuery = typeof (db as unknown as { query?: { workflows?: { findFirst: Function } } }).query?.workflows?.findFirst === 'function';
+        const workflow = wfQuery
+          ? await db.query.workflows.findFirst({
+              where: eq(workflows.documentId, documentId),
+            })
+          : null;
+
         if (workflow) {
           await WorkflowService.resetWorkflow(db, workflow.id);
         }
 
 
         // Clear error metadata and set status to processing
-        // NOTE: tests provide a lightweight DbClient stub; fall back to supabase-based update if drizzle-style `db.update` isn't present.
-        if (typeof (db as any).update === 'function') {
-          await db.update(documents)
+        const canUpdate = typeof (db as unknown as { update: Function }).update === 'function';
+        if (canUpdate) {
+          await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
+            .update(documents)
             .set({
               status: 'processing',
               metadata: {
-                ...(typeof doc.metadata === 'object' && doc.metadata ? (doc.metadata as Record<string, any>) : {}),
+                ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
                 pipelineError: undefined,
                 failedAt: undefined,
               },
@@ -87,16 +86,17 @@ export const PipelineOrchestrator = {
         }
 
         // Update 'doc' object to reflect new status for subsequent checks
-        doc.status = 'processing';
-        const docMetadataObj = (doc.metadata && typeof doc.metadata === 'object') ? (doc.metadata as Record<string, any>) : {};
-        doc.metadata = { ...docMetadataObj, pipelineError: undefined, failedAt: undefined };
+        resolvedDoc.status = 'processing';
+        const docMetadataObj = (resolvedDoc.metadata && typeof resolvedDoc.metadata === 'object') ? (resolvedDoc.metadata as Record<string, unknown>) : {};
+        resolvedDoc.metadata = { ...docMetadataObj, pipelineError: undefined, failedAt: undefined };
       }
       // If doc.status is 'pending' or 'validating', ensure it's 'processing' for the pipeline start.
-      else if (doc.status !== 'processing') {
-        // Use drizzle update chain only if it supports `.set(...)`
-        const canUseDrizzleUpdate = typeof (db as any).update === 'function' && typeof (db as any).update(documents)?.set === 'function';
+      else if (resolvedDoc.status !== 'processing') {
+        const canUseDrizzleUpdate = typeof (db as unknown as { update: Function }).update === 'function' 
+          && typeof (db as unknown as { update: (table: unknown) => { set: (values: unknown) => unknown } }).update(documents)?.set === 'function';
         if (canUseDrizzleUpdate) {
-          await db.update(documents)
+          await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
+            .update(documents)
             .set({ status: 'processing', updatedAt: new Date() })
             .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         } else {
@@ -106,7 +106,7 @@ export const PipelineOrchestrator = {
             .eq('id', documentId);
         }
 
-        doc.status = 'processing'; // Update local doc object
+        resolvedDoc.status = 'processing'; // Update local doc object
       }
 
 
@@ -116,7 +116,7 @@ export const PipelineOrchestrator = {
       let planReason: string | undefined;
       if (typeof db?.query?.subscriptions?.findFirst === 'function') {
         try {
-          const limitCheck = await SubscriptionService.canProcessDocument(db, doc.userId);
+          const limitCheck = await SubscriptionService.canProcessDocument(db, resolvedDoc.userId);
           allowed = limitCheck.allowed;
           planReason = limitCheck.reason;
         } catch (err) {
@@ -140,11 +140,17 @@ export const PipelineOrchestrator = {
       }[] = [];
 
       for (const provider of providerChain) {
+        if (!providerCooldown.isCooledDown(provider)) {
+          LogService.info(`Skipping provider due to cooldown`, { documentId, provider });
+          continue;
+        }
+
         LogService.info(`Attempting extraction`, { documentId, provider });
         const { error: extractError } = await ExtractService.processDocument(db, documentId, userId, provider);
         
         if (!extractError) {
           extractionSuccessful = true;
+          providerCooldown.clearCooldown(provider);
           break;
         }
         
@@ -156,11 +162,19 @@ export const PipelineOrchestrator = {
           timestamp: new Date().toISOString()
         });
 
+        const isRateLimit = extractError.message?.toLowerCase().includes('429') || extractError.message?.toLowerCase().includes('rate limit');
+        if (isRateLimit) {
+          const retryAfterMatch = extractError.message.match(/retry after (\d+)/i);
+          const retryAfterMs = retryAfterMatch ? parseInt(retryAfterMatch[1], 10) * 1000 : undefined;
+          providerCooldown.setCooldown(provider, retryAfterMs);
+          LogService.warn(`Provider ${provider} rate-limited. Setting cooldown.`, { documentId, retryAfterMs });
+        }
+
         await supabase
           .from('documents')
           .update({
             metadata: {
-              ...(doc.metadata && typeof doc.metadata === 'object' ? (doc.metadata as Record<string, any>) : {}),
+              ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
               failedProvider: provider,
             },
           })
@@ -179,41 +193,44 @@ export const PipelineOrchestrator = {
           .update({
             status: 'completed',
             metadata: {
-              ...(doc.metadata && typeof doc.metadata === 'object' ? (doc.metadata as Record<string, any>) : {}),
-              extractionError: lastError?.message,
+          ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+               extractionError: lastError?.message,
               extractionAttempted: true,
             },
           })
           .eq('id', documentId);
       } else {
         // 3. Generate Embedding for Semantic Search (Task 11.3) - only on successful extraction
-        const updatedDoc = await (db?.query?.documents?.findFirst
-          ? db.query.documents.findFirst({
+        const embCapability = typeof (db as unknown as { query?: { documents?: { findFirst: Function } } }).query?.documents?.findFirst === 'function';
+        const updatedDoc = embCapability
+          ? await db.query.documents.findFirst({
               where: and(eq(documents.id, documentId), eq(documents.userId, userId)),
             })
-          : Promise.resolve(null as any));
+          : null;
 
-        const updatedMetadata: Record<string, any> =
-          updatedDoc?.metadata && typeof updatedDoc.metadata === 'object'
-            ? (updatedDoc.metadata as Record<string, any>)
+        const updatedMetadata: Record<string, unknown> =
+          typeof updatedDoc?.metadata === 'object' && updatedDoc.metadata
+            ? (updatedDoc.metadata as Record<string, unknown>)
             : {};
 
-        if ((updatedMetadata as any).summary) {
+        if (typeof updatedMetadata.summary === 'string') {
           LogService.info(`Generating semantic embedding`, { documentId });
-          const { embedding, error: embedError } = await AIProviderService.embed((updatedMetadata as any).summary as string);
+          const { embedding, error: embedError } = await AIProviderService.embed(updatedMetadata.summary);
           
-          if (!embedError && embedding) {
-            const canUseDrizzleUpdate = typeof (db as any).update === 'function' && typeof (db as any).update(documents)?.set === 'function';
-            if (canUseDrizzleUpdate) {
-              await db.update(documents)
-                .set({ 
-                  metadata: {
-                    ...updatedMetadata,
-                    embedding
-                  },
-                  updatedAt: new Date() 
-                })
-                .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
+           if (!embedError && embedding) {
+             const canUseDrizzleUpdate = typeof (db as unknown as { update: Function }).update === 'function' 
+               && typeof (db as unknown as { update: (table: unknown) => { set: (values: unknown) => unknown } }).update(documents)?.set === 'function';
+             if (canUseDrizzleUpdate) {
+               await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
+                 .update(documents)
+                 .set({ 
+                   metadata: {
+                     ...updatedMetadata,
+                     embedding
+                   },
+                   updatedAt: new Date() 
+                 })
+                 .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
             } else {
               await supabase
                 .from('documents')
@@ -244,16 +261,15 @@ export const PipelineOrchestrator = {
       LogService.error(`Pipeline failed`, error, { documentId });
 
       // 1. Mark the active workflow step as failed for better debugging visibility
-      // Vitest stubs may not provide `db.query.workflows`.
-      const workflow = db?.query?.workflows?.findFirst
+      const wfCapability = typeof (db as unknown as { query?: { workflows?: { findFirst: Function } } }).query?.workflows?.findFirst === 'function';
+      const workflow = wfCapability
         ? await db.query.workflows.findFirst({
             where: eq(workflows.documentId, documentId),
           })
         : null;
 
-
       if (workflow) {
-        const steps = workflow.steps as any as WorkflowStep[];
+        const steps = workflow.steps as unknown as WorkflowStep[];
         const activeStep = steps.find(s => s.id === workflow.currentStepId);
         if (activeStep) {
           await WorkflowService.updateStepStatus(db, workflow.id, activeStep.name, 'failed');
@@ -261,19 +277,20 @@ export const PipelineOrchestrator = {
       }
 
       // 2. Re-fetch current doc to ensure we don't overwrite existing metadata
-      const currentDoc = await (db?.query?.documents?.findFirst
-        ? db.query.documents.findFirst({
+      const docCapability = typeof (db as unknown as { query?: { documents?: { findFirst: Function } } }).query?.documents?.findFirst === 'function';
+      const currentDoc = docCapability
+        ? await db.query.documents.findFirst({
             where: eq(documents.id, documentId)
           })
-        : Promise.resolve(null as any));
+        : null;
 
 
-      // Drizzle-style update chain: db.update(table).set(...).where(...)
-      // Test stubs may only implement `db.query.*` and/or provide a non-chainable `db.update`.
-      const canUseDrizzleUpdate = typeof (db as any).update === 'function' && typeof (db as any).update(documents)?.set === 'function';
+      const canUseDrizzleUpdate = typeof (db as unknown as { update: Function }).update === 'function'
+        && typeof (db as unknown as { update: (table: unknown) => { set: (values: unknown) => unknown } }).update(documents)?.set === 'function';
 
       if (canUseDrizzleUpdate) {
-        await db.update(documents)
+        await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
+          .update(documents)
           .set({ 
             status: 'failed', 
             metadata: { 
@@ -285,7 +302,8 @@ export const PipelineOrchestrator = {
           })
           .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
 
-        await db.update(workflows)
+        await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
+          .update(workflows)
           .set({ status: 'failed' })
           .where(eq(workflows.documentId, documentId));
       } else {
