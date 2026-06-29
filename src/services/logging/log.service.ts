@@ -1,33 +1,53 @@
 export type LogMeta = Record<string, any>;
 
-/**
- * Minimal logging utility.
- *
- * This project currently references LogService from multiple locations.
- * Keep this API stable and dependency-free.
- */
+let currentTraceId: string | null = null;
+
+export function setTraceId(traceId: string | null) {
+  currentTraceId = traceId;
+}
+
+export function getTraceId(): string | null {
+  return currentTraceId;
+}
+
+export function generateTraceId(): string {
+  return `trace_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export const LogService = {
+  withTrace<T>(traceId: string, fn: () => T): T {
+    const previous = currentTraceId;
+    currentTraceId = traceId;
+    try {
+      return fn();
+    } finally {
+      currentTraceId = previous;
+    }
+  },
+
   info(message: string, meta?: LogMeta) {
-    // eslint-disable-next-line no-console
-    console.info(`[INFO] ${message}`, meta ?? '');
+    const enriched = { ...meta, traceId: currentTraceId };
+    console.info(`[INFO] ${message}`, enriched ?? '');
   },
 
   warn(message: string, meta?: LogMeta) {
-    // eslint-disable-next-line no-console
-    console.warn(`[WARN] ${message}`, meta ?? '');
+    const enriched = { ...meta, traceId: currentTraceId };
+    console.warn(`[WARN] ${message}`, enriched ?? '');
   },
 
   error(message: string, error?: any, meta?: LogMeta) {
-    // eslint-disable-next-line no-console
+    const enriched = { ...meta, traceId: currentTraceId };
     if (error !== undefined) {
-      console.error(`[ERROR] ${message}`, error, meta ?? '');
+      console.error(`[ERROR] ${message}`, error, enriched ?? '');
     } else {
-      console.error(`[ERROR] ${message}`, meta ?? '');
+      console.error(`[ERROR] ${message}`, enriched ?? '');
     }
   },
 
   logPipelineStart(docId: string, userId: string) {
-    this.info(`Pipeline Started`, { docId, userId });
+    const traceId = generateTraceId();
+    setTraceId(traceId);
+    this.info(`Pipeline Started`, { traceId, docId, userId });
   },
 
   logProviderFailure(docId: string, provider: string, error: any) {
@@ -35,6 +55,8 @@ export const LogService = {
   },
 
   logPipelineSuccess(docId: string, durationMs: number) {
-    this.info(`Pipeline Completed Successfully`, { docId, durationMs });
+    const traceId = currentTraceId;
+    this.info(`Pipeline Completed Successfully`, { traceId, docId, durationMs });
+    setTraceId(null);
   }
 };
