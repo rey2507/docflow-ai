@@ -49,6 +49,28 @@ export const PipelineOrchestrator = {
         return { success: true, error: null };
       }
 
+      // Stuck workflow prevention: if processing for > 30 min, mark as failed
+      const MAX_PIPELINE_DURATION_MS = 30 * 60 * 1000;
+      const pipelineStartedAt = (resolvedDoc.metadata as Record<string, unknown>)?.pipelineStartedAt as string | undefined;
+      if (resolvedDoc.status === 'processing' && pipelineStartedAt) {
+        const elapsed = Date.now() - new Date(pipelineStartedAt).getTime();
+        if (elapsed > MAX_PIPELINE_DURATION_MS) {
+          LogService.warn(`Pipeline timed out after ${Math.round(elapsed / 60000)}min`, { documentId });
+          await supabase
+            .from('documents')
+            .update({
+              status: 'failed',
+              metadata: {
+                ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+                pipelineError: 'Pipeline timed out. Please retry.',
+                failedAt: new Date().toISOString(),
+              },
+            })
+            .eq('id', documentId);
+          return { success: false, error: new Error('Pipeline timed out.') };
+        }
+      }
+
       // If document is failed, it's a retry attempt. Reset its state.
       if (resolvedDoc.status === 'failed') {
         const wfQuery = typeof (db as unknown as { query?: { workflows?: { findFirst: Function } } }).query?.workflows?.findFirst === 'function';
@@ -74,6 +96,7 @@ export const PipelineOrchestrator = {
                 ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
                 pipelineError: undefined,
                 failedAt: undefined,
+                pipelineStartedAt: new Date().toISOString(),
               },
               updatedAt: new Date()
             })
@@ -81,7 +104,13 @@ export const PipelineOrchestrator = {
         } else {
           await supabase
             .from('documents')
-            .update({ status: 'processing' })
+            .update({ 
+              status: 'processing',
+              metadata: {
+                ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+                pipelineStartedAt: new Date().toISOString(),
+              },
+            })
             .eq('id', documentId);
         }
 
@@ -97,12 +126,25 @@ export const PipelineOrchestrator = {
         if (canUseDrizzleUpdate) {
           await (db as unknown as { update: (table: unknown) => { set: (values: unknown) => { where: (cond: unknown) => Promise<unknown> } } })
             .update(documents)
-            .set({ status: 'processing', updatedAt: new Date() })
+            .set({ 
+              status: 'processing', 
+              updatedAt: new Date(),
+              metadata: {
+                ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+                pipelineStartedAt: new Date().toISOString(),
+              }
+            })
             .where(and(eq(documents.id, documentId), eq(documents.userId, userId)));
         } else {
           await supabase
             .from('documents')
-            .update({ status: 'processing' })
+            .update({ 
+              status: 'processing',
+              metadata: {
+                ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+                pipelineStartedAt: new Date().toISOString(),
+              },
+            })
             .eq('id', documentId);
         }
 

@@ -20,6 +20,7 @@ export interface DocumentMetadata {
   manuallyCorrected?: boolean;
   correctedAt?: string;
   extractionAttempted?: boolean; // Set when AI extraction was attempted but failed
+  pipelineStartedAt?: string; // ISO timestamp when pipeline began — used for timeout detection
   contentHash?: string; // SHA-256 hash of file content for deduplication
 }
 

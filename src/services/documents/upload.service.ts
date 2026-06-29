@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Document, DocumentType, DocumentMetadata } from '@/types/document';
 import { LogService } from '@/services/logging/log.service';
 import { computeFileHash } from '@/lib/utils';
+import { detectFileType, validateFileSize } from './file-validation.service';
 
 function mapSupabaseToDocument(row: Record<string, any>): Document {
   const metadata: DocumentMetadata = (row.metadata && typeof row.metadata === 'object') ? row.metadata : {};
@@ -27,8 +28,19 @@ export const DocumentUploadService = {
   ): Promise<{ data: Document | null; error: Error | null }> {
     let filePath: string | null = null;
     try {
-      // 1. Determine document type based on MIME
-      const type = this.mapMimeToType(file.type);
+      // 1. Validate file type and size before upload
+      const detectedType = detectFileType(file);
+      if (detectedType.type === 'unsupported') {
+        return { data: null, error: new Error(`Unsupported file type. Allowed: PDF, PNG, JPG, DOC, DOCX.`) };
+      }
+
+      const sizeCheck = validateFileSize(file);
+      if (!sizeCheck.valid) {
+        return { data: null, error: new Error(sizeCheck.error) };
+      }
+
+      // 2. Determine document type based on MIME
+      const type = detectedType.type === 'doc' ? 'other' : this.mapMimeToType(file.type);
 
       // 2. Generate unique storage path: userId/timestamp_filename
       const sanitizedName = file.name.replace(/[^\x00-\x7F]/g, '').replace(/\s+/g, '_');
