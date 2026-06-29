@@ -83,10 +83,10 @@
 
 ### 4.1 — Provider failover is truly operational
 - **CRITICAL**: Verify failover chain behavior under real outages (OpenAI → Gemini → Anthropic) includes bounded retries and correct stage transitions.
-- [x] **HIGH**: Ensure provider-specific error normalization prevents raw provider errors from reaching users.
+- **HIGH**: Ensure provider-specific error normalization prevents raw provider errors from reaching users.
 
 ### 4.2 — Quota exhaustion and model selection safety
-- [x] **HIGH**: Ensure quota/rate-limit exhaustion is handled without cascading failures (bounded retries + safe failure state + clear UX).
+- **HIGH**: Ensure quota/rate-limit exhaustion is handled without cascading failures (bounded retries + safe failure state + clear UX).
 - **HIGH**: Confirm usage tracking stays accurate across providers for both extraction and chat.
 
 ### 4.3 — Extraction output quality controls
@@ -122,7 +122,7 @@
 - **HIGH**: Ensure API keys are never exposed to the browser and are only used in server/worker contexts.
 
 ### 6.3 — Content and upload validation safety
-- [x] **HIGH**: Validate file type/content beyond MIME type to prevent unsafe or unsupported uploads.
+- **HIGH**: Validate file type/content beyond MIME type to prevent unsafe or unsupported uploads.
 - [x] **HIGH**: Establish file size limits and ensure errors are user-safe.
 
 ---
@@ -215,13 +215,11 @@
 - **2.2** — Bounded retry with exponential backoff, provider cooldown service for 429 errors
 - **2.3** — Retry button in DocumentList for failed documents, UI shows valid recovery actions only
 - **2.4** — SHA-256 content hash duplicate detection (`computeFileHash` + `file-validation.service.ts`)
-- **4.1** — Provider error normalization prevents raw errors reaching users
-- **4.2** — Rate-limit exhaustion handling with cooldown + user-friendly fallback messages
 - **4.3** — Field-level confidence scoring in extract service and UI
-- **6.3** — File type validation beyond MIME (signature-based), file size limits (25MB), user-safe errors
+- **6.3** — File size limits (25MB) with user-safe errors (extension validation only; magic-byte validation not yet wired)
 - **7.1** — Dead retry button removed from PipelineStatusDisplay, functional retry added to DocumentList
 - **7.4** — Accessibility improvements (aria-labels, focus rings, keyboard navigation, skip nav)
-- **8.1** — Structured logging coverage replacing all console.* calls
+- **8.1** — Structured logging coverage replacing all console.* calls in services
 - **8.3** — Correlation/trace IDs in LogService for workflow tracing
 - **11.3** — Document export (JSON download) and share (clipboard link) in DocumentList
 
@@ -229,9 +227,12 @@
 - **1.2** — Full workspace membership enforcement on all queries
 - **3.1** — Verify upload atomicity with E2E testing
 - **3.3** — Orphaned file cleanup and document lifecycle/auto-archive
+- **4.1** — Wire `normalizeAIProviderError` into provider error paths (function exists but is unused; raw errors still surface)
+- **4.2** — Wire `RateLimitService` into API route middleware (service exists but is never imported or used)
 - **5.1** — End-to-end quota enforcement verification (backend middleware)
 - **5.3** — Stripe billing integration
 - **6.1** — Rate limiting middleware for API routes (frontend exists, backend incomplete)
+- **6.3** — Magic-byte / signature-based file type validation (FILE_SIGNATURES defined but never called)
 - **7.2** — Real notification backend data (not client-only seeded)
 - **8.2** — Operational monitoring dashboards/alerts
 - **9.1-9.3** — Real E2E testing, Playwright, regression suite
