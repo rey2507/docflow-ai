@@ -35,6 +35,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [search, setSearch] = useState('');
@@ -106,6 +107,21 @@ const DocumentList: React.FC<DocumentListProps> = ({
     setConfirmingDeleteId(null);
   };
 
+  const handleRetry = async (doc: Document) => {
+    setRetryingId(doc.id);
+    setActionFeedback(null);
+    try {
+      const { PipelineOrchestrator } = await import('../services/documents/orchestrator.service');
+      await PipelineOrchestrator.runPipeline({} as any, doc.id, doc.userId);
+      setActionFeedback({ type: 'success', message: 'Retrying processing…' });
+      onRefresh();
+    } catch (err: any) {
+      setActionFeedback({ type: 'error', message: `Retry failed: ${err.message}` });
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
   const handleDelete = async (id: string, name: string) => {
     setDeletingId(id);
     setActionFeedback(null);
@@ -143,8 +159,10 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const renderActions = (doc: Document, mobile = false) => {
     const isConfirming = confirmingDeleteId === doc.id;
     const isDeleting = deletingId === doc.id;
+    const isRetrying = retryingId === doc.id;
     const deleteLockReason = getDeleteLockReason(doc.status);
     const deleteLocked = Boolean(deleteLockReason);
+    const canRetry = doc.status === 'failed';
 
     return (
       <div className={`space-y-2 ${mobile ? 'w-full' : 'min-w-[280px]'}`}>
@@ -157,11 +175,21 @@ const DocumentList: React.FC<DocumentListProps> = ({
             Deleting document...
           </p>
         )}
+        {isRetrying && (
+          <p className="text-xs font-medium text-blue-600" aria-live="polite">
+            Retrying...
+          </p>
+        )}
 
         <div className={`flex flex-wrap items-center ${mobile ? 'justify-end' : 'justify-end'} gap-2`}>
-          <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)} disabled={isDeleting}>
+          <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)} disabled={isDeleting || isRetrying}>
             View
           </Button>
+          {canRetry && !isConfirming && (
+            <Button size="sm" variant="ghost" onClick={() => handleRetry(doc)} disabled={isDeleting || isRetrying} className="text-blue-700 hover:text-blue-800 hover:bg-blue-50">
+              Retry
+            </Button>
+          )}
           {isConfirming ? (
             <>
               <Button size="sm" variant="danger" onClick={() => handleDelete(doc.id, doc.name)} disabled={isDeleting || deleteLocked}>

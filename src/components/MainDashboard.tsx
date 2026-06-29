@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import DocumentDetails from './DocumentDetails';
 import DashboardOverview from './DashboardOverview';
@@ -7,7 +7,8 @@ import WorkflowActivity from './WorkflowActivity';
 import AIInsights from './AIInsights';
 import { UploadZone, QuickActions } from './QuickActions';
 import { PageContainer, SectionContainer } from './ui/layout';
-import { useDocuments, useDeleteDocument, useStats, useUploadDocument } from '../hooks/useDocuments';
+import { useDocuments, useDeleteDocument, useUploadDocument } from '../hooks/useDocuments';
+import { useStats } from '../hooks/useStats';
 
 interface MainDashboardProps {
   onNavigate: (page: string) => void;
