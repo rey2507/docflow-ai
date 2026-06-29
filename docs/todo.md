@@ -162,13 +162,13 @@
 - [x] Verify responsive breakpoints: 320px / 768px / 1280px
 - [x] Run build and visual regression check
 
-### Phase 13.4 — Error Handling & Resilience Hardening (Partial)
+### Phase 13.4 — Error Handling & Resilience Hardening (Mostly Completed)
 - [x] Add frontend error boundaries (ErrorBoundary wired in router)
 - [x] Normalize API error responses
 - [x] Add retry handling for provider failures
 - [x] Add provider cooldown handling for 429 errors
-- [ ] Prevent stuck workflows
-- [ ] Add graceful timeout handling
+- [x] Prevent stuck workflows
+- [x] Add graceful timeout handling
 - [ ] Verify upload recovery logic
 - [x] Improve structured logging coverage
 - [x] Prevent infinite retry loops
