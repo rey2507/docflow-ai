@@ -51,7 +51,7 @@
 
 ---
 
-## PHASE 8 — AI QUALITY IMPROVEMENTS (Partial)
+## PHASE 8 — AI QUALITY IMPROVEMENTS (Completed)
 - [x] Real AI Provider integration (OpenAI & Gemini) (Task 8.1)
 - [x] Field-level Confidence Scoring (Task 8.2)
 - [x] AI-generated Validation Suggestions (Task 8.3)
@@ -65,7 +65,7 @@
 
 ---
 
-## PHASE 10 — BUSINESS FEATURES (Partial)
+## PHASE 10 — BUSINESS FEATURES (Completed)
 - [x] Contract Validation Rules (Signatures, Expiry) (Task 10.1)
 - [x] Form Validation Rules (Required fields, Formats) (Task 10.2)
 - [x] Duplicate Upload/Invoice Detection (Task 10.3)
@@ -73,10 +73,10 @@
 
 ---
 
-## PHASE 11 — GROWTH FEATURES (Partial)
+## PHASE 11 — GROWTH FEATURES (Mostly Completed)
 - [x] Email Import (Gmail/Outlook attachments) (Task 11.1)
 - [x] OCR Support for scanned docs and photos (Task 11.2)
-- [ ] Semantic Search ("contracts expiring soon") (Task 11.3)
+- [x] Semantic Search ("contracts expiring soon") (Task 11.3)
 - [x] Interactive AI Chat with document context (Task 11.4)
 
 ---
