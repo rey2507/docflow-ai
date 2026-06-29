@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ArrowUpDown, Search, FileText, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Search, FileText, MoreVertical, Trash2, Share2, Download } from 'lucide-react';
 import type { Document } from '../types/document';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
 import { DocumentService } from '../services/documents/document.service';
@@ -190,6 +190,36 @@ const DocumentList: React.FC<DocumentListProps> = ({
               Retry
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/documents/${doc.id}`);
+              setActionFeedback({ type: 'success', message: 'Link copied to clipboard.' });
+            }}
+            disabled={isDeleting || isRetrying}
+            title="Copy document link"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const data = { name: doc.name, type: doc.type, metadata: doc.metadata, createdAt: doc.createdAt };
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${doc.name.replace(/\.[^.]+$/, '')}_data.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            disabled={isDeleting || isRetrying}
+            title="Export extracted data"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </Button>
           {isConfirming ? (
             <>
               <Button size="sm" variant="danger" onClick={() => handleDelete(doc.id, doc.name)} disabled={isDeleting || deleteLocked}>
