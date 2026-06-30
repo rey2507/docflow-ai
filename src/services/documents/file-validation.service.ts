@@ -25,6 +25,37 @@ export function detectFileType(file: File): { type: string; confidence: 'high' |
   return { type: ext === 'jpeg' ? 'jpg' : ext, confidence: 'medium' };
 }
 
+export async function validateFileSignature(file: File): Promise<{ valid: boolean; detectedType?: string; error?: string }> {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  const buffer = await file.slice(0, 16).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  for (const [type, signatures] of Object.entries(FILE_SIGNATURES)) {
+    for (const signature of signatures) {
+      if (bytes.length >= signature.length) {
+        let matches = true;
+        for (let i = 0; i < signature.length; i++) {
+          if (bytes[i] !== signature[i]) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) {
+          return { valid: true, detectedType: type };
+        }
+      }
+    }
+  }
+
+  // If file is empty or too small to check, allow it (could be a valid text file)
+  if (bytes.length === 0) {
+    return { valid: false, error: 'File is empty or unreadable.' };
+  }
+
+  // No signature match found
+  return { valid: false, error: 'File type does not match its extension. Upload rejected for security.' };
+}
+
 export function validateFileSize(file: File, maxSizeBytes: number = 25 * 1024 * 1024): { valid: boolean; error?: string } {
   if (file.size === 0) {
     return { valid: false, error: 'File is empty.' };

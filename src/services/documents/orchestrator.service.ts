@@ -11,6 +11,7 @@ import { WorkflowService } from '../workflow/workflow.service';
 import { LogService } from '../logging/log.service';
 import type { WorkflowStep } from '../../types/workflow';
 import { supabase } from '../../lib/supabase/client';
+import { normalizeAIProviderError } from '../../lib/utils/error-normalization';
 
 /**
  * PipelineOrchestrator
@@ -198,9 +199,10 @@ export const PipelineOrchestrator = {
         
         LogService.logProviderFailure(documentId, provider, extractError);
         
+        const normalizedError = normalizeAIProviderError(extractError, provider);
         failoverAttempts.push({
           provider,
-          error: extractError.message,
+          error: normalizedError.message,
           timestamp: new Date().toISOString()
         });
 
@@ -225,10 +227,12 @@ export const PipelineOrchestrator = {
         lastError = extractError;
       }
 
+      const normalizedLastError = lastError ? normalizeAIProviderError(lastError) : null;
+
       // Note: extraction may fail if no AI providers configured - document still stored successfully
       // AI extraction can be triggered later via AI chat interface
       if (!extractionSuccessful) {
-        LogService.warn(`Extraction unavailable - document stored without AI processing`, { documentId, error: lastError?.message });
+        LogService.warn(`Extraction unavailable - document stored without AI processing`, { documentId, error: normalizedLastError?.message });
         // Mark document as completed so it's still accessible
         await supabase
           .from('documents')
@@ -236,7 +240,7 @@ export const PipelineOrchestrator = {
             status: 'completed',
             metadata: {
           ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
-               extractionError: lastError?.message,
+               extractionError: normalizedLastError?.message || lastError?.message,
               extractionAttempted: true,
             },
           })

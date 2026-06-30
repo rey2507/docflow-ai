@@ -3,7 +3,21 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Document, DocumentType, DocumentMetadata } from '@/types/document';
 import { LogService } from '@/services/logging/log.service';
 import { computeFileHash } from '@/lib/utils';
-import { detectFileType, validateFileSize } from './file-validation.service';
+import { detectFileType, validateFileSize, validateFileSignature } from './file-validation.service';
+
+const uploadTimestamps = new Map<string, number[]>();
+function checkClientRateLimit(key: string, maxAttempts: number, windowMs: number): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const timestamps = uploadTimestamps.get(key) || [];
+  const recent = timestamps.filter(t => now - t < windowMs);
+  if (recent.length >= maxAttempts) {
+    const oldestAllowed = recent[recent.length - maxAttempts];
+    const retryAfter = Math.ceil((oldestAllowed + windowMs - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  uploadTimestamps.set(key, [...recent, now]);
+  return { allowed: true };
+}
 
 function mapSupabaseToDocument(row: Record<string, any>): Document {
   const metadata: DocumentMetadata = (row.metadata && typeof row.metadata === 'object') ? row.metadata : {};
@@ -37,6 +51,17 @@ export const DocumentUploadService = {
       const sizeCheck = validateFileSize(file);
       if (!sizeCheck.valid) {
         return { data: null, error: new Error(sizeCheck.error) };
+      }
+
+      const signatureCheck = await validateFileSignature(file);
+      if (!signatureCheck.valid) {
+        return { data: null, error: new Error(signatureCheck.error || 'File validation failed.') };
+      }
+
+      const rateLimitKey = `upload:${userId}`;
+      const rateLimit = checkClientRateLimit(rateLimitKey, 10, 60_000);
+      if (!rateLimit.allowed) {
+        return { data: null, error: new Error(`Too many uploads. Please wait ${Math.max(1, rateLimit.retryAfter || 60)} seconds before trying again.`) };
       }
 
       // 2. Determine document type based on MIME

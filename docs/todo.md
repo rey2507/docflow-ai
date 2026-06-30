@@ -188,8 +188,50 @@
 ### 10.3 — Security headers and transport safety
 - **HIGH**: Ensure HTTPS and security headers are correctly configured.
 
+<<<<<<< HEAD
 ### 10.4 — Final launch gate
 - **CRITICAL**: Create a go/no-go checklist that blocks launch if any critical workflow safety criteria fail.
+=======
+### Phase 13.4 — Error Handling & Resilience Hardening (Mostly Completed)
+- [x] Add frontend error boundaries (ErrorBoundary wired in router)
+- [x] Normalize API error responses
+- [x] Add retry handling for provider failures
+- [x] Add provider cooldown handling for 429 errors
+- [x] Prevent stuck workflows
+- [x] Add graceful timeout handling
+- [ ] Verify upload recovery logic
+- [x] Improve structured logging coverage
+- [x] Prevent infinite retry loops
+- [x] Ensure readable user-facing error messages
+
+### Phase 13.5 — Real System Testing & Verification (Pending)
+- [ ] Manual end-to-end workflow testing
+- [ ] Authentication testing
+- [ ] Upload testing
+- [ ] AI extraction testing
+- [ ] Provider failover testing
+- [ ] Workspace isolation/RLS verification
+- [ ] Semantic search verification
+- [ ] AI chat verification
+- [ ] Realtime update verification
+- [ ] OCR/image extraction verification
+- [ ] Playwright installation and setup
+- [ ] Playwright browser workflow testing
+- [ ] Keep Vitest limited to utility/service tests only
+
+### Phase 13.6 — Deployment & Production Launch Preparation (Partial)
+- [ ] Finalize production environment variables
+- [x] Configure Cloudflare Workers deployment
+- [ ] Configure Supabase production settings
+- [ ] Verify production migrations
+- [ ] Configure storage buckets/policies
+- [ ] Configure monitoring/logging
+- [ ] Configure production rate limits
+- [ ] Verify production failover handling
+- [ ] Configure custom domain
+- [ ] Verify HTTPS/security headers
+- [ ] Perform final production readiness audit
+>>>>>>> 4f97c5a77741c97e8b5d886773d13c5004c955ba
 
 ---
 
