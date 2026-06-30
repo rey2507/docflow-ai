@@ -100,4 +100,86 @@ export const ReportService = {
       return { data: null, error };
     }
   }
+  ,
+
+  /**
+   * Aggregates AI usage and quality metrics for the user's workspace.
+   *
+   * - usage: counts usage log rows from the last 30 days
+   * - success rate: completed extractions divided by completed + failed documents
+   * - avg confidence: average confidence score from completed extractions
+   * - failed count: failed document count in the user's documents
+   */
+  async getAIInsights(userId: string): Promise<{
+    data: {
+      usage: { used: number; limit: number };
+      successRate: number;
+      avgConfidence: number;
+      failedCount: number;
+    } | null;
+    error: Error | null;
+  }> {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: userDocs, error: docsError } = await supabase
+        .from('documents')
+        .select('id, status, workspace_id')
+        .eq('user_id', userId);
+
+      if (docsError) throw docsError;
+
+      const documentIds = (userDocs || []).map((doc: any) => doc.id);
+      const workspaceId = userDocs?.[0]?.workspace_id || null;
+
+      const [usageResult, extractionsResult] = await Promise.all([
+        workspaceId
+          ? supabase
+              .from('usage_logs')
+              .select('id', { count: 'exact', head: true })
+              .eq('workspace_id', workspaceId)
+              .gte('created_at', thirtyDaysAgo.toISOString())
+          : Promise.resolve({ count: 0, error: null }),
+        documentIds.length > 0
+          ? supabase
+              .from('document_extractions')
+              .select('confidence_score, document_id')
+              .in('document_id', documentIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (usageResult.error) throw usageResult.error;
+      if (extractionsResult.error) throw extractionsResult.error;
+
+      const usageCount = usageResult.count || 0;
+      const extractionRows = extractionsResult.data || [];
+
+      const confidenceValues = extractionRows
+        .map((row: any) => Number(row.confidence_score))
+        .filter((value: number) => Number.isFinite(value));
+
+      const avgConfidence = confidenceValues.length > 0
+        ? confidenceValues.reduce((sum: number, value: number) => sum + value, 0) / confidenceValues.length
+        : 0;
+
+      const completedCount = (userDocs || []).filter((doc: any) => doc.status === 'completed').length;
+      const failedCount = (userDocs || []).filter((doc: any) => doc.status === 'failed').length;
+      const totalCompletedOrFailed = completedCount + failedCount;
+      const successRate = totalCompletedOrFailed > 0 ? Math.round((completedCount / totalCompletedOrFailed) * 100) : 0;
+
+      return {
+        data: {
+          usage: { used: usageCount, limit: 2000 },
+          successRate,
+          avgConfidence: Number(avgConfidence.toFixed(2)),
+          failedCount,
+        },
+        error: null,
+      };
+    } catch (error: any) {
+      LogService.error('getAIInsights failed', error, { userId });
+      return { data: null, error };
+    }
+  },
 };

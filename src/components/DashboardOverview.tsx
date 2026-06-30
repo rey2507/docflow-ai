@@ -43,7 +43,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   stats,
 }) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 sm:gap-3">
       <StatsCard
         title="Total Documents"
         value={stats.total}

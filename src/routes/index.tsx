@@ -9,10 +9,12 @@ import BetaBanner from '../components/ui/beta-banner';
 import { Breadcrumbs } from '../components/ui/breadcrumbs';
 
 const MainDashboard = lazy(() => import('../components/MainDashboard'));
+const AIInsightsPage = lazy(() => import('../pages/AIInsightsPage'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
+const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 
 const pathToPage: Record<string, string> = {
   '/': 'dashboard',
@@ -20,8 +22,10 @@ const pathToPage: Record<string, string> = {
   '/upload': 'upload',
   '/workflows': 'workflows',
   '/chat': 'chat',
+  '/ai-insights': 'ai-insights',
   '/reports': 'reports',
   '/settings': 'settings',
+  '/notifications': 'notifications',
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -29,7 +33,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <PageContainer>
-        <div className="flex items-center justify-center" style={{ minHeight: '50vh' }}>
+        <div className="flex min-h-[50vh] items-center justify-center">
           <p className="text-sm text-slate-500">Loading workspace…</p>
         </div>
       </PageContainer>
@@ -65,7 +69,7 @@ function RootLayout() {
       <ErrorBoundary>
         <Suspense fallback={
           <PageContainer>
-            <div className="flex items-center justify-center" style={{ minHeight: '50vh' }}>
+            <div className="flex min-h-[50vh] items-center justify-center">
               <p className="text-sm text-slate-500">Loading…</p>
             </div>
           </PageContainer>
@@ -85,7 +89,7 @@ function NotFound() {
   const navigate = useNavigate();
   return (
     <PageContainer>
-      <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+      <div className="py-16 text-center">
         <h1 className="text-4xl font-bold text-slate-900">404</h1>
         <p className="mt-2 text-sm text-slate-600">Page not found</p>
         <button
@@ -110,12 +114,14 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <ProtectedRoute><MainDashboard onNavigate={() => {}} /></ProtectedRoute> },
-      { path: 'documents', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Documents page coming soon.</div></ProtectedRoute> },
+      { path: 'ai-insights', element: <ProtectedRoute><AIInsightsPage /></ProtectedRoute> },
+      { path: 'documents', element: <ProtectedRoute><div className="p-8">Documents page coming soon.</div></ProtectedRoute> },
       { path: 'upload', element: <ProtectedRoute><UploadPage onUploadComplete={() => {}} /></ProtectedRoute> },
-      { path: 'workflows', element: <ProtectedRoute><div style={{ padding: '2rem' }}>Workflows page coming soon.</div></ProtectedRoute> },
+      { path: 'workflows', element: <ProtectedRoute><div className="p-8">Workflows page coming soon.</div></ProtectedRoute> },
       { path: 'chat', element: <ProtectedRoute><ChatPage /></ProtectedRoute> },
       { path: 'reports', element: <ProtectedRoute><ReportsPage /></ProtectedRoute> },
       { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },
+      { path: 'notifications', element: <ProtectedRoute><NotificationsPage /></ProtectedRoute> },
       { path: '*', element: <NotFound /> },
     ],
   },

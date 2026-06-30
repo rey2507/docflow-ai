@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { useEffect, useRef } from 'react';
-=======
 import React, { useState, useEffect } from 'react';
->>>>>>> 4f97c5a77741c97e8b5d886773d13c5004c955ba
 import type { Page } from '../../types/page';
 import {
   LayoutDashboard,
@@ -14,6 +9,8 @@ import {
   BarChart3,
   Settings,
   Users,
+  Sparkles,
+  Bell,
   ChevronDown,
   X,
   Menu,
@@ -27,6 +24,8 @@ interface SidebarProps {
   onNavigate: (page: Page) => void;
   userEmail?: string;
   usagePercent?: number;
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
 }
 
 const NAV_ITEMS: { id: Page; label: string; icon: React.ReactNode }[] = [
@@ -35,48 +34,22 @@ const NAV_ITEMS: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'upload', label: 'Uploads', icon: <Upload className="h-4 w-4" /> },
   { id: 'workflows', label: 'Workflows', icon: <GitBranch className="h-4 w-4" /> },
   { id: 'chat', label: 'AI Chat', icon: <MessageSquare className="h-4 w-4" /> },
+  { id: 'ai-insights', label: 'AI Insights', icon: <Sparkles className="h-4 w-4" /> },
   { id: 'reports', label: 'Reports', icon: <BarChart3 className="h-4 w-4" /> },
+  { id: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, usagePercent = 0 }) => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, usagePercent = 0, mobileOpen: controlledMobileOpen, onMobileOpenChange }) => {
+  const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   const displayEmail = userEmail || 'User';
+  const mobileOpen = controlledMobileOpen ?? uncontrolledMobileOpen;
+  const setMobileOpen = onMobileOpenChange ?? setUncontrolledMobileOpen;
 
-<<<<<<< HEAD
-  const UsageProgress: React.FC<{ percent: number }> = ({ percent }) => {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      if (ref.current) {
-        ref.current.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-      }
-    }, [percent]);
-
-    return (
-      <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-        <div ref={ref} className="h-full rounded-full bg-slate-800 transition-all duration-150" />
-      </div>
-    );
-  };
-
-  return (
-    <>
-      <Button
-        type="button"
-        variant="primary"
-        size="icon"
-        className="md:hidden fixed bottom-4 right-4 z-50 rounded-full shadow-lg"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open menu"
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
-=======
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 767px)');
     const handler = (e: MediaQueryListEvent | MediaQueryList) => {
@@ -91,7 +64,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
   }, []);
->>>>>>> 4f97c5a77741c97e8b5d886773d13c5004c955ba
 
   const handleNav = (page: Page) => {
     onNavigate(page);
@@ -100,39 +72,20 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
 
   const sidebarWidth = collapsed ? 'w-16' : 'w-64';
 
-  // ============ MOBILE: overlay drawer ============
   if (isMobile) {
     return (
       <>
-        {/* Hamburger — top-left */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="fixed top-3 left-3 z-50"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Overlay */}
         {mobileOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setMobileOpen(false)}
-          />
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setMobileOpen(false)} />
         )}
 
-        {/* Drawer */}
         <aside
-          className={`fixed top-0 left-0 h-full z-50 bg-white border-r border-slate-200 shadow-xl transition-transform duration-200 ${
+          className={`fixed top-0 left-0 z-50 h-full w-[86vw] max-w-sm bg-white border-r border-slate-200 shadow-xl transition-transform duration-200 ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
-          style={{ width: '16rem' }}
         >
-          <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200">
-            <span className="text-lg font-bold text-slate-800 tracking-tight">DocFlow AI</span>
+          <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
+            <span className="text-lg font-bold tracking-tight text-slate-800">DocFlow AI</span>
             <Button
               type="button"
               variant="ghost"
@@ -145,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
             </Button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          <nav className="flex-1 overflow-y-auto space-y-0.5 p-3">
             {NAV_ITEMS.map((item) => (
               <Button
                 key={item.id}
@@ -160,13 +113,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
             ))}
           </nav>
 
-          <div className="p-3 border-t border-slate-200">
+          <div className="border-t border-slate-200 p-3">
             <div className="flex items-center gap-2 rounded-md bg-slate-50 p-2">
-              <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
                 {displayEmail.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-900 truncate">{displayEmail}</p>
+                <p className="truncate text-xs font-medium text-slate-900">{displayEmail}</p>
                 <p className="text-[0.6875rem] text-slate-500">Beta</p>
               </div>
             </div>
@@ -176,15 +129,11 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
     );
   }
 
-  // ============ TABLET + DESKTOP: collapsible inline sidebar ============
   return (
-    <aside
-      className={`hidden md:flex flex-col h-screen sticky top-0 border-r border-slate-200 bg-white transition-all duration-200 ${sidebarWidth}`}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between h-14 px-3 border-b border-slate-200">
+    <aside className={`hidden md:flex h-screen flex-col sticky top-0 border-r border-slate-200 bg-white transition-all duration-200 ${sidebarWidth}`}>
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-3">
         {!collapsed && (
-          <span className="text-base font-bold text-slate-800 tracking-tight whitespace-nowrap">DocFlow AI</span>
+          <span className="text-base font-bold tracking-tight whitespace-nowrap text-slate-800">DocFlow AI</span>
         )}
         <Button
           type="button"
@@ -198,14 +147,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         </Button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto space-y-0.5 p-2">
         {NAV_ITEMS.map((item) => (
           <Button
             key={item.id}
             type="button"
             variant={currentPage === item.id ? 'primary' : 'ghost'}
-            className={`w-full justify-start ${collapsed ? 'px-2 justify-center' : ''}`}
+            className={`w-full justify-start ${collapsed ? 'justify-center px-2' : ''}`}
             onClick={() => handleNav(item.id)}
             title={collapsed ? item.label : undefined}
           >
@@ -215,8 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         ))}
       </nav>
 
-      {/* Workspace */}
-      <div className="p-2 border-t border-slate-200">
+      <div className="border-t border-slate-200 p-2">
         {!collapsed ? (
           <>
             <Button
@@ -231,11 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
               </span>
               <ChevronDown className={`h-4 w-4 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
             </Button>
-            {workspaceOpen && (
-              <div className="mt-2 truncate text-xs text-slate-500 px-2">
-                {displayEmail}
-              </div>
-            )}
+            {workspaceOpen && <div className="mt-2 truncate px-2 text-xs text-slate-500">{displayEmail}</div>}
           </>
         ) : (
           <Button
@@ -250,32 +193,20 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         )}
       </div>
 
-<<<<<<< HEAD
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>Usage</span>
-            <span>{usagePercent}%</span>
-          </div>
-            <UsageProgress percent={usagePercent} />
-          <div className="mt-3 flex items-center gap-2 rounded-md bg-slate-50 p-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
-=======
-      {/* Usage + profile */}
-      <div className="p-3 border-t border-slate-200">
+      <div className="border-t border-slate-200 p-3">
         {!collapsed ? (
           <>
-            <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
+            <div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500">
               <span>Usage</span>
               <span>{usagePercent}%</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-slate-800 transition-all duration-150"
-                style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
-              />
-            </div>
+            <progress
+              className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-200 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-slate-800 [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-slate-800"
+              max={100}
+              value={Math.min(100, Math.max(0, usagePercent))}
+            />
             <div className="mt-3 flex items-center gap-2 rounded-md bg-slate-50 p-2">
-              <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
                 {displayEmail.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -286,15 +217,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
           </>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
->>>>>>> 4f97c5a77741c97e8b5d886773d13c5004c955ba
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
               {displayEmail.charAt(0).toUpperCase()}
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-slate-800 transition-all duration-150"
-                style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }}
-              />
             </div>
           </div>
         )}

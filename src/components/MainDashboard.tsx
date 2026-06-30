@@ -4,7 +4,6 @@ import DocumentDetails from './DocumentDetails';
 import DashboardOverview from './DashboardOverview';
 import DocumentList from './DocumentList';
 import WorkflowActivity from './WorkflowActivity';
-import AIInsights from './AIInsights';
 import { UploadZone, QuickActions } from './QuickActions';
 import { PageContainer, SectionContainer } from './ui/layout';
 import { useDocuments, useDeleteDocument, useUploadDocument } from '../hooks/useDocuments';
@@ -84,7 +83,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
           <div className="space-y-6">
             <SectionContainer spacing="md">
               <WorkflowActivity loading={documentsLoading} />
-              <AIInsights />
             </SectionContainer>
           </div>
         </div>

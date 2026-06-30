@@ -272,9 +272,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
   );
 
   const filterBar = (
-    <div className="px-4 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex-1 flex items-center gap-2">
-        <div className="flex-1 max-w-xs">
+    <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-1 sm:flex-row sm:items-center">
+        <div className="w-full sm:max-w-xs sm:flex-1">
           <Input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -287,7 +287,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             aria-label="Filter documents by status"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none"
+            className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-700 outline-none sm:w-auto sm:py-1.5"
           >
             <option value="">All statuses</option>
             <option value="processing">Processing</option>
@@ -298,14 +298,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
           </select>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={onRefresh}>
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+        <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={onRefresh}>
           Refresh
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
+          className="w-full sm:w-auto"
           onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
         >
           {viewMode === 'grid' ? 'Table' : 'Grid'}
@@ -319,6 +320,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
       <input
         ref={fileInputRef}
         type="file"
+        aria-label="Upload document"
+        title="Upload document"
         className="hidden"
         accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
         onChange={handleFileChange}
@@ -513,12 +516,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
           )}
 
           {totalPages > 1 && (
-            <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-xs text-slate-500">
+            <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-slate-500 text-center sm:text-left">
                 Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
               </p>
-              <div className="flex items-center gap-1">
-                <Button type="button" size="sm" variant="secondary" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+              <div className="flex items-center justify-center gap-1 sm:justify-end">
+                <Button type="button" size="sm" variant="secondary" className="px-3" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
                   Previous
                 </Button>
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
@@ -526,12 +529,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
                   if (totalPages > 5 && page > 3) pageNum = page - 2 + i;
                   if (pageNum > totalPages) return null;
                   return (
-                    <Button key={pageNum} type="button" size="sm" variant={page === pageNum ? 'primary' : 'secondary'} onClick={() => setPage(pageNum)}>
+                    <Button key={pageNum} type="button" size="sm" variant={page === pageNum ? 'primary' : 'secondary'} className="px-3" onClick={() => setPage(pageNum)}>
                       {pageNum}
                     </Button>
                   );
                 })}
-                <Button type="button" size="sm" variant="secondary" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+                <Button type="button" size="sm" variant="secondary" className="px-3" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
                   Next
                 </Button>
               </div>
