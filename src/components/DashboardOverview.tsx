@@ -16,14 +16,14 @@ interface StatsCardProps {
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, subtitle, icon, iconBg }) => (
-  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-    <div className="flex items-start justify-between gap-3">
+  <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex items-start justify-between gap-2 sm:gap-3">
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-slate-500 mb-1">{title}</p>
-        <p className="text-2xl font-bold text-slate-900 tracking-tight">{value}</p>
-        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+        <p className="text-[0.6875rem] sm:text-xs font-medium text-slate-500 mb-0.5 sm:mb-1">{title}</p>
+        <p className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">{value}</p>
+        {subtitle && <p className="text-[0.625rem] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 leading-tight">{subtitle}</p>}
       </div>
-      <div className={`rounded-lg p-2.5 shrink-0 ${iconBg} transition-transform group-hover:scale-105`}>
+      <div className={`rounded-lg p-2 sm:p-2.5 shrink-0 ${iconBg} transition-transform group-hover:scale-105`}>
         {icon}
       </div>
     </div>
@@ -43,7 +43,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   stats,
 }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
       <StatsCard
         title="Total Documents"
         value={stats.total}

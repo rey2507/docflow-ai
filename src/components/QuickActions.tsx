@@ -39,16 +39,16 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploa
       <div className="px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-900">Quick Actions</h3>
       </div>
-      <div className="p-3 grid grid-cols-2 gap-2">
+      <div className="p-2 sm:p-3 grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
         {actions.map((action) => (
           <button
             key={action.id}
             type="button"
             onClick={action.onClick}
-            className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="flex flex-col items-center justify-center gap-1.5 sm:flex-row sm:justify-start rounded-lg border border-slate-200 bg-white px-2 py-3 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
           >
             <span className="text-slate-500">{action.icon}</span>
-            {action.label}
+            <span className="leading-tight text-center sm:text-left">{action.label}</span>
           </button>
         ))}
       </div>
@@ -105,7 +105,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onUpload, uploading = false }) 
       <p className="text-sm font-medium text-slate-900">
         {uploading ? 'Uploading...' : 'Drop files here or click to upload'}
       </p>
-          <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG, CSV, DOC up to 10MB</p>
+          <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG, CSV, DOC up to 25MB</p>
         <label className="mt-3 inline-flex">
           <input
             type="file"
