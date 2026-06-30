@@ -25,7 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-3 py-2 border border-slate-300 rounded-lg outline-none transition-colors',
+            'w-full rounded-xl border border-slate-300 px-3 py-2.5 outline-none transition-colors',
             'focus:border-slate-900 focus:ring-4 focus:ring-slate-100',
             'disabled:bg-slate-50 disabled:text-slate-500 placeholder:text-slate-400',
             error && 'border-rose-600 focus:border-rose-600',
@@ -56,7 +56,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div className="relative">
         <svg
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400"
+          className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

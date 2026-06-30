@@ -4,13 +4,49 @@ import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { EmptyState } from '../components/ui/empty-state';
-import { BriefcaseBusiness, CreditCard, Sparkles, Plug, Shield } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
+import { BriefcaseBusiness, CreditCard, Sparkles, Plug, Shield, Trash2, TriangleAlert } from 'lucide-react';
+import { Input } from '../components/ui/input';
 
 type SettingsTab = 'account' | 'workspace' | 'billing' | 'ai' | 'integrations' | 'security' | 'danger';
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [deletionStep, setDeletionStep] = useState<'review' | 'confirm' | 'processing'>('review');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteMessage, setDeleteMessage] = useState('');
+
+  const resetDeletionFlow = () => {
+    setDeletionStep('review');
+    setDeleteConfirmation('');
+    setDeleteError('');
+    setDeleteMessage('');
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    setDeleteMessage('');
+
+    if (deleteConfirmation.trim() !== 'DELETE MY ACCOUNT') {
+      setDeleteError('Type DELETE MY ACCOUNT exactly to continue.');
+      return;
+    }
+
+    setDeletionStep('processing');
+    try {
+      localStorage.removeItem('docflow.notifications.v1');
+      await signOut();
+      setDeleteMessage('You have been signed out. Full account deletion should be completed by a server-side deletion endpoint.');
+      resetDeletionFlow();
+    } catch (error: any) {
+      setDeleteError(error?.message || 'Unable to complete the account deletion flow.');
+      setDeletionStep('confirm');
+    }
+  };
+
+  const phraseConfirmed = deleteConfirmation.trim() === 'DELETE MY ACCOUNT';
 
   const tabs: { id: SettingsTab; label: string }[] = [
     { id: 'account', label: 'Account' },
@@ -55,18 +91,40 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'account' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Account</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Account</h3>
+                    <p className="mt-1 text-sm text-slate-500">Identity and session details for this workspace.</p>
+                  </div>
+                  <Badge variant="info">Active session</Badge>
+                </div>
               </CardHeader>
               <CardBody>
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Email</p>
-                    <p className="mt-1 text-sm font-medium text-slate-900">{user?.email || 'Not available'}</p>
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm sm:p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
+                        {(user?.email || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
+                        <p className="mt-1 truncate text-base font-semibold text-slate-900">{user?.email || 'Not available'}</p>
+                          <p className="mt-1 text-sm text-slate-500">This account is currently connected to the active workspace session.</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">User ID</p>
-                    <p className="mt-1 text-sm font-mono text-slate-700">{user?.id || '—'}</p>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Email</p>
+                      <p className="mt-2 break-all text-sm font-medium text-slate-900">{user?.email || 'Not available'}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">User ID</p>
+                      <p className="mt-2 break-all font-mono text-sm text-slate-700">{user?.id || '—'}</p>
+                    </div>
                   </div>
+
                 </div>
               </CardBody>
             </Card>
@@ -107,15 +165,49 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'ai' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">AI Settings</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">AI Settings</h3>
+                  <p className="mt-1 text-sm text-slate-500">Control how DocFlow AI summarizes, extracts, and responds.</p>
+                </div>
               </CardHeader>
               <CardBody>
-                <EmptyState
-                  icon={<Sparkles className="h-6 w-6" />}
-                  title="AI provider controls are pending"
-                  description="Model selection, prompts, and safety settings will be managed here."
-                  className="border-slate-200 bg-slate-50"
-                />
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-2xl bg-slate-900 p-2 text-white shadow-sm">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">Current AI experience</p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          Document extraction, summaries, and workflow guidance are powered by the active workspace configuration.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Response style</p>
+                      <p className="mt-2 text-sm font-medium text-slate-900">Concise and workspace-focused</p>
+                      <p className="mt-1 text-sm text-slate-500">Best for document summaries, task prompts, and workflow feedback.</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Safety</p>
+                      <p className="mt-2 text-sm font-medium text-slate-900">Guardrails enabled</p>
+                      <p className="mt-1 text-sm text-slate-500">Keep AI actions scoped to the current user and workspace.</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Coming next</p>
+                    <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                      <li>• Choose an AI provider or model preset.</li>
+                      <li>• Adjust summary length and tone.</li>
+                      <li>• Add per-workspace prompt rules.</li>
+                    </ul>
+                  </div>
+                </div>
               </CardBody>
             </Card>
           )}
@@ -139,15 +231,49 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'security' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Security</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Security</h3>
+                  <p className="mt-1 text-sm text-slate-500">Session policies, access rules, and workspace protections.</p>
+                </div>
               </CardHeader>
               <CardBody>
-                <EmptyState
-                  icon={<Shield className="h-6 w-6" />}
-                  title="Security controls are queued"
-                  description="Session policies, access rules, and workspace protections will live here."
-                  className="border-slate-200 bg-slate-50"
-                />
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-2xl bg-slate-900 p-2 text-white shadow-sm">
+                        <Shield className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">Current protection posture</p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          Access is currently governed by workspace authentication and row-level policies.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Session protection</p>
+                      <p className="mt-2 text-sm font-medium text-slate-900">Active sign-in session</p>
+                      <p className="mt-1 text-sm text-slate-500">The app uses the current sign-in session to identify the user.</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access control</p>
+                      <p className="mt-2 text-sm font-medium text-slate-900">Workspace-scoped</p>
+                      <p className="mt-1 text-sm text-slate-500">Policies should keep documents, reports, and activity isolated by user.</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Planned controls</p>
+                    <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                      <li>• Session timeout and re-authentication for critical actions.</li>
+                      <li>• Device/session management for signed-in users.</li>
+                      <li>• Audit logging for destructive or sensitive changes.</li>
+                    </ul>
+                  </div>
+                </div>
               </CardBody>
             </Card>
           )}
@@ -155,19 +281,105 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'danger' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-rose-900">Danger zone</h3>
+                <div className="flex items-center gap-2">
+                  <TriangleAlert className="h-5 w-5 text-rose-700" />
+                  <h3 className="text-lg font-semibold text-rose-900">Danger zone</h3>
+                </div>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  Sign out of your current session.
-                </p>
-                <Button
-                  variant="danger"
-                  onClick={signOut}
-                  className="mt-4"
-                >
-                  Sign out
-                </Button>
+                <div className="space-y-5">
+                  <div className="rounded-2xl border border-rose-200 bg-gradient-to-b from-rose-50 to-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-full bg-rose-100 p-2 text-rose-700">
+                        <Trash2 className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-rose-900">Delete account</p>
+                        <p className="mt-1 text-sm text-rose-700">
+                          This permanently removes the user account and should be backed by a server-side deletion endpoint. The UI below is designed to prevent accidental deletion.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Step 1 of 2: review</p>
+                      <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                        <li>• Export documents or reports you want to keep.</li>
+                        <li>• Confirm this is the correct workspace identity.</li>
+                        <li>• Continue only if you are ready for the final confirmation step.</li>
+                      </ul>
+                    </div>
+
+                    {deletionStep === 'review' ? (
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Button
+                          variant="danger"
+                          onClick={() => setDeletionStep('confirm')}
+                          className="w-full sm:w-auto"
+                        >
+                          Continue to delete
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={signOut}
+                          className="w-full sm:w-auto"
+                        >
+                          Sign out instead
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                          Step 2 of 2: type <span className="font-semibold">DELETE MY ACCOUNT</span> to enable deletion.
+                        </div>
+
+                        <Input
+                          label="Confirmation phrase"
+                          value={deleteConfirmation}
+                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                          placeholder="DELETE MY ACCOUNT"
+                          autoComplete="off"
+                          spellCheck={false}
+                          disabled={deletionStep === 'processing'}
+                          error={deleteError || undefined}
+                          helperText={phraseConfirmed ? 'Phrase matched. Final delete is ready.' : 'Exact match required.'}
+                        />
+
+                        {deleteMessage && (
+                          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                            {deleteMessage}
+                          </p>
+                        )}
+
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button
+                            variant="danger"
+                            onClick={handleDeleteAccount}
+                            disabled={deletionStep === 'processing' || !phraseConfirmed}
+                            loading={deletionStep === 'processing'}
+                            className="w-full sm:w-auto"
+                          >
+                            Delete account permanently
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={resetDeletionFlow}
+                            disabled={deletionStep === 'processing'}
+                            className="w-full sm:w-auto"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+
+                        <p className="text-xs text-slate-500">
+                          Proper account deletion should be implemented with a server-side endpoint or Supabase admin function. This UI protects against accidental deletion while keeping the destructive path explicit.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
               </CardBody>
             </Card>
           )}

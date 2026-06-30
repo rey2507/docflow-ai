@@ -75,7 +75,7 @@ function RootLayout() {
             </div>
           </PageContainer>
         }>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Breadcrumbs />
             <Outlet context={{ userId, handleNavigate }} />
           </div>

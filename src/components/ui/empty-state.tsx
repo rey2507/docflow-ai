@@ -19,26 +19,26 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-2xl border-dashed border-slate-300 bg-slate-50 p-8 text-center',
+          'rounded-2xl border border-dashed border-slate-200 bg-gradient-to-b from-slate-50 to-white p-6 text-center shadow-sm sm:p-8',
           className
         )}
         {...props}
       >
         {icon && (
-          <div className="mx-auto mb-4 h-12 w-12 text-slate-400">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 shadow-inner">
             {icon}
           </div>
         )}
-        <p className="text-sm font-medium text-slate-900">{title}</p>
+        <p className="text-base font-semibold tracking-tight text-slate-900">{title}</p>
         {description && (
-          <p className="text-xs text-slate-500 mt-1">{description}</p>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
         )}
         {action && (
           <Button
             variant={action.variant || 'secondary'}
             size="sm"
             onClick={action.onClick}
-            className="mt-4"
+            className="mt-5"
           >
             {action.label}
           </Button>
@@ -61,7 +61,7 @@ const ErrorState = React.forwardRef<HTMLDivElement, ErrorStateProps>(
     return (
       <div
         ref={ref}
-        className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"
+        className="rounded-2xl border border-rose-200 bg-rose-50/80 p-6 text-center shadow-sm"
       >
         <p className="text-sm font-semibold text-rose-800">{title}</p>
         <p className="mt-1 text-xs text-rose-700">{message}</p>

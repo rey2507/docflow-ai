@@ -19,6 +19,15 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
+const navButtonClass = (active: boolean, compact = false) =>
+  [
+    'w-full justify-start gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all',
+    active
+      ? 'border-slate-900/10 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm hover:from-slate-900 hover:to-slate-700'
+      : 'border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50',
+    compact ? 'justify-center px-2' : '',
+  ].join(' ');
+
 interface SidebarProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
@@ -80,31 +89,43 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         )}
 
         <aside
-          className={`fixed top-0 left-0 z-50 h-full w-[86vw] max-w-sm bg-white border-r border-slate-200 shadow-xl transition-transform duration-200 ${
+          className={`fixed top-0 left-0 z-50 flex h-full w-[86vw] max-w-sm flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-200 ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
-            <span className="text-lg font-bold tracking-tight text-slate-800">DocFlow AI</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Close menu"
-              className="h-8 w-8"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+          <div className="border-b border-slate-200 bg-gradient-to-r from-slate-950 to-slate-900 px-4 py-4 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">DocFlow AI</p>
+                <span className="block text-base font-semibold tracking-tight text-white">Workspace</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="h-9 w-9 rounded-full text-white hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Signed in as</p>
+              <p className="truncate text-sm font-medium text-white">{displayEmail}</p>
+            </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto space-y-0.5 p-3">
+          <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <div className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Navigation
+            </div>
             {NAV_ITEMS.map((item) => (
               <Button
                 key={item.id}
                 type="button"
                 variant={currentPage === item.id ? 'primary' : 'ghost'}
-                className="w-full justify-start"
+                className={navButtonClass(currentPage === item.id)}
                 onClick={() => handleNav(item.id)}
               >
                 {item.icon}
@@ -113,14 +134,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
             ))}
           </nav>
 
-          <div className="border-t border-slate-200 p-3">
-            <div className="flex items-center gap-2 rounded-md bg-slate-50 p-2">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+          <div className="border-t border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                 {displayEmail.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-slate-900">{displayEmail}</p>
-                <p className="text-[0.6875rem] text-slate-500">Beta</p>
+                <p className="truncate text-sm font-medium text-slate-900">{displayEmail}</p>
+                <p className="text-xs text-slate-500">Beta workspace</p>
               </div>
             </div>
           </div>
@@ -130,10 +151,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
   }
 
   return (
-    <aside className={`hidden md:flex h-screen flex-col sticky top-0 border-r border-slate-200 bg-white transition-all duration-200 ${sidebarWidth}`}>
-      <div className="flex h-14 items-center justify-between border-b border-slate-200 px-3">
+    <aside className={`hidden md:flex h-screen flex-col sticky top-0 border-r border-slate-200 bg-white/95 backdrop-blur-sm transition-all duration-200 ${sidebarWidth}`}>
+      <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-gradient-to-r from-slate-950 to-slate-900 px-3 text-white">
         {!collapsed && (
-          <span className="text-base font-bold tracking-tight whitespace-nowrap text-slate-800">DocFlow AI</span>
+          <span className="text-base font-semibold tracking-tight whitespace-nowrap text-white">DocFlow AI</span>
         )}
         <Button
           type="button"
@@ -141,19 +162,24 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`h-8 w-8 ${collapsed ? 'mx-auto' : ''}`}
+          className={`h-8 w-8 rounded-full text-white hover:bg-white/10 ${collapsed ? 'mx-auto' : ''}`}
         >
           {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
         </Button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto space-y-0.5 p-2">
+      <nav className="flex-1 overflow-y-auto px-2 py-4">
+        {!collapsed && (
+          <div className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Navigation
+          </div>
+        )}
         {NAV_ITEMS.map((item) => (
           <Button
             key={item.id}
             type="button"
             variant={currentPage === item.id ? 'primary' : 'ghost'}
-            className={`w-full justify-start ${collapsed ? 'justify-center px-2' : ''}`}
+            className={navButtonClass(currentPage === item.id, collapsed)}
             onClick={() => handleNav(item.id)}
             title={collapsed ? item.label : undefined}
           >
@@ -163,13 +189,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         ))}
       </nav>
 
-      <div className="border-t border-slate-200 p-2">
+      <div className="border-t border-slate-200 bg-slate-50 p-2">
         {!collapsed ? (
           <>
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-between"
+              className="w-full justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm hover:bg-slate-50"
               onClick={() => setWorkspaceOpen(!workspaceOpen)}
             >
               <span className="flex items-center gap-2">
@@ -184,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
           <Button
             type="button"
             variant="ghost"
-            className="w-full justify-center"
+            className="w-full justify-center rounded-xl border border-slate-200 bg-white py-2.5 shadow-sm hover:bg-slate-50"
             onClick={() => setWorkspaceOpen(!workspaceOpen)}
             title="Workspace"
           >
@@ -193,7 +219,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
         )}
       </div>
 
-      <div className="border-t border-slate-200 p-3">
+      <div className="border-t border-slate-200 bg-white p-3">
         {!collapsed ? (
           <>
             <div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500">

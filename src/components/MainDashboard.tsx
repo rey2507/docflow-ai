@@ -5,7 +5,7 @@ import DashboardOverview from './DashboardOverview';
 import DocumentList from './DocumentList';
 import WorkflowActivity from './WorkflowActivity';
 import { UploadZone, QuickActions } from './QuickActions';
-import { PageContainer, SectionContainer } from './ui/layout';
+import { SectionContainer } from './ui/layout';
 import { useDocuments, useDeleteDocument, useUploadDocument } from '../hooks/useDocuments';
 import { useStats } from '../hooks/useStats';
 
@@ -52,16 +52,16 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
   };
 
   return (
-    <PageContainer>
-      <div className="space-y-6">
-        <SectionContainer spacing="md">
-          <DashboardOverview stats={stats} />
-        </SectionContainer>
+    <div className="space-y-6 sm:space-y-8">
+      <SectionContainer spacing="md">
+        <DashboardOverview stats={stats} />
+      </SectionContainer>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="lg:col-span-2">
+          <div className="rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur-sm sm:p-6 lg:p-7">
             <SectionContainer spacing="md">
-               <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <UploadZone onUpload={handleFileUpload} uploading={uploading} />
                 <QuickActions onUpload={handleFileUpload} onNavigate={onNavigate} uploading={uploading} />
               </div>
@@ -79,15 +79,17 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
               </div>
             </SectionContainer>
           </div>
+        </div>
 
-          <div className="space-y-6">
+        <div className="space-y-6">
+          <div className="rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur-sm sm:p-6 lg:p-7">
             <SectionContainer spacing="md">
               <WorkflowActivity loading={documentsLoading} />
             </SectionContainer>
           </div>
         </div>
       </div>
-    </PageContainer>
+    </div>
   );
 };
 

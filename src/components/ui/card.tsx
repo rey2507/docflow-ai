@@ -11,8 +11,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl border shadow-sm',
-          variant === 'default' ? 'border-slate-200 bg-white' : 'border-transparent bg-transparent',
+          'rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md',
+          variant === 'default'
+            ? 'border-slate-200/80 bg-white/95 backdrop-blur-sm'
+            : 'border-transparent bg-transparent shadow-none hover:shadow-none',
           className
         )}
         {...props}
@@ -31,7 +33,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={cn('px-4 py-3 border-b border-slate-100', className)}
+        className={cn('border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4', className)}
         {...props}
       >
         {children}
@@ -46,7 +48,7 @@ interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 const CardBody = React.forwardRef<HTMLDivElement, CardBodyProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn('p-4', className)} {...props}>
+      <div ref={ref} className={cn('p-4 sm:p-5 lg:p-6', className)} {...props}>
         {children}
       </div>
     );
@@ -61,7 +63,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
     return (
       <div
         ref={ref}
-        className={cn('px-4 py-3 border-t border-slate-100', className)}
+        className={cn('border-t border-slate-100 px-4 py-3 sm:px-5 sm:py-4', className)}
         {...props}
       >
         {children}
