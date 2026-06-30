@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Page } from '../../types/page';
 import {
   LayoutDashboard,
@@ -57,6 +58,22 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
   );
 
   const displayEmail = userEmail || 'User';
+
+  const UsageProgress: React.FC<{ percent: number }> = ({ percent }) => {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      if (ref.current) {
+        ref.current.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+      }
+    }, [percent]);
+
+    return (
+      <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+        <div ref={ref} className="h-full rounded-full bg-slate-800 transition-all duration-150" />
+      </div>
+    );
+  };
 
   return (
     <>
@@ -136,9 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, userEmail, u
             <span>Usage</span>
             <span>{usagePercent}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-            <div className="h-full rounded-full bg-slate-800 transition-all duration-150" style={{ width: `${Math.min(100, Math.max(0, usagePercent))}%` }} />
-          </div>
+            <UsageProgress percent={usagePercent} />
           <div className="mt-3 flex items-center gap-2 rounded-md bg-slate-50 p-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
               {displayEmail.charAt(0).toUpperCase()}
