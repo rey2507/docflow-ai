@@ -5,8 +5,9 @@ import AuthPage from '../pages/AuthPage';
 import { ErrorBoundary } from '../components/ui/error-boundary';
 import { useAuth } from '../contexts/AuthContext';
 import { PageContainer } from '../components/ui/layout';
-import BetaBanner from '../components/ui/beta-banner';
 import { Breadcrumbs } from '../components/ui/breadcrumbs';
+import { EmptyState } from '../components/ui/empty-state';
+import { FileText, GitBranch } from 'lucide-react';
 
 const MainDashboard = lazy(() => import('../components/MainDashboard'));
 const AIInsightsPage = lazy(() => import('../pages/AIInsightsPage'));
@@ -80,7 +81,6 @@ function RootLayout() {
           </div>
         </Suspense>
       </ErrorBoundary>
-      <BetaBanner />
     </AppShell>
   );
 }
@@ -115,9 +115,37 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <ProtectedRoute><MainDashboard onNavigate={() => {}} /></ProtectedRoute> },
       { path: 'ai-insights', element: <ProtectedRoute><AIInsightsPage /></ProtectedRoute> },
-      { path: 'documents', element: <ProtectedRoute><div className="p-8">Documents page coming soon.</div></ProtectedRoute> },
+      {
+        path: 'documents',
+        element: (
+          <ProtectedRoute>
+            <PageContainer variant="medium">
+              <EmptyState
+                icon={<FileText className="h-6 w-6" />}
+                title="Documents workspace is being built"
+                description="Document browsing, filters, and bulk actions will land here next."
+                className="bg-white"
+              />
+            </PageContainer>
+          </ProtectedRoute>
+        ),
+      },
       { path: 'upload', element: <ProtectedRoute><UploadPage onUploadComplete={() => {}} /></ProtectedRoute> },
-      { path: 'workflows', element: <ProtectedRoute><div className="p-8">Workflows page coming soon.</div></ProtectedRoute> },
+      {
+        path: 'workflows',
+        element: (
+          <ProtectedRoute>
+            <PageContainer variant="medium">
+              <EmptyState
+                icon={<GitBranch className="h-6 w-6" />}
+                title="Workflow automation is next"
+                description="This area will hold orchestration, routing, and approvals once the flow engine is ready."
+                className="bg-white"
+              />
+            </PageContainer>
+          </ProtectedRoute>
+        ),
+      },
       { path: 'chat', element: <ProtectedRoute><ChatPage /></ProtectedRoute> },
       { path: 'reports', element: <ProtectedRoute><ReportsPage /></ProtectedRoute> },
       { path: 'settings', element: <ProtectedRoute><SettingsPage /></ProtectedRoute> },

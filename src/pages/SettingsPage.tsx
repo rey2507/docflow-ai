@@ -3,7 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import type { Page } from '../types/page';
+import { EmptyState } from '../components/ui/empty-state';
+import { BriefcaseBusiness, CreditCard, Sparkles, Plug, Shield } from 'lucide-react';
 
 type SettingsTab = 'account' | 'workspace' | 'billing' | 'ai' | 'integrations' | 'security' | 'danger';
 
@@ -77,9 +78,12 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Workspace</h3>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  Workspace settings and team management are coming soon.
-                </p>
+                <EmptyState
+                  icon={<BriefcaseBusiness className="h-6 w-6" />}
+                  title="Workspace controls are being prepared"
+                  description="Team roles, members, and workspace preferences will appear here."
+                  className="border-slate-200 bg-slate-50"
+                />
               </CardBody>
             </Card>
           )}
@@ -90,9 +94,12 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Billing</h3>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  Billing and subscription management are coming soon.
-                </p>
+                <EmptyState
+                  icon={<CreditCard className="h-6 w-6" />}
+                  title="Billing center is not live yet"
+                  description="Plans, invoices, and subscription controls will connect here once billing is enabled."
+                  className="border-slate-200 bg-slate-50"
+                />
               </CardBody>
             </Card>
           )}
@@ -103,9 +110,12 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">AI Settings</h3>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  AI provider preferences and configuration are coming soon.
-                </p>
+                <EmptyState
+                  icon={<Sparkles className="h-6 w-6" />}
+                  title="AI provider controls are pending"
+                  description="Model selection, prompts, and safety settings will be managed here."
+                  className="border-slate-200 bg-slate-50"
+                />
               </CardBody>
             </Card>
           )}
@@ -116,9 +126,12 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Integrations</h3>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  Integration settings are coming soon.
-                </p>
+                <EmptyState
+                  icon={<Plug className="h-6 w-6" />}
+                  title="Integrations will connect here"
+                  description="External tools, webhooks, and workspace connectors will be configured on this screen."
+                  className="border-slate-200 bg-slate-50"
+                />
               </CardBody>
             </Card>
           )}
@@ -129,9 +142,12 @@ const SettingsPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Security</h3>
               </CardHeader>
               <CardBody>
-                <p className="mt-2 text-sm text-slate-600">
-                  Security settings are coming soon.
-                </p>
+                <EmptyState
+                  icon={<Shield className="h-6 w-6" />}
+                  title="Security controls are queued"
+                  description="Session policies, access rules, and workspace protections will live here."
+                  className="border-slate-200 bg-slate-50"
+                />
               </CardBody>
             </Card>
           )}

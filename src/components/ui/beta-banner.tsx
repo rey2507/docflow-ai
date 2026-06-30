@@ -14,8 +14,8 @@ const BetaBanner: React.FC<BetaBannerProps> = ({
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 px-4">
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-900 px-4 py-3 text-sm text-white shadow-lg">
+    <div className="w-full max-w-4xl">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm text-white shadow-lg sm:px-5">
         <span className="flex-1">{message}</span>
         <Button
           type="button"

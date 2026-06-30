@@ -39,16 +39,18 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploa
       <div className="border-b border-slate-100 px-4 py-3">
         <h3 className="text-sm font-semibold text-slate-900">Quick Actions</h3>
       </div>
-      <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4 sm:gap-2 sm:p-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2 p-3 sm:grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))] sm:p-3 lg:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
         {actions.map((action) => (
           <button
             key={action.id}
             type="button"
             onClick={action.onClick}
-            className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-4 text-xs font-medium text-slate-700 transition active:scale-[0.98] hover:border-slate-300 hover:bg-slate-50 sm:min-h-0 sm:flex-row sm:justify-start sm:px-3 sm:py-2.5 sm:text-sm"
+            className="flex min-h-16 min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-700 transition active:scale-[0.98] hover:border-slate-300 hover:bg-slate-50 sm:min-h-0 sm:px-3 sm:py-2.5"
           >
-            <span className="text-slate-500">{action.icon}</span>
-            <span className="leading-tight text-center sm:text-left">{action.label}</span>
+            <span className="shrink-0 text-slate-500">{action.icon}</span>
+            <span className="min-w-0 flex-1 leading-tight text-left text-sm whitespace-normal break-words">
+              {action.label}
+            </span>
           </button>
         ))}
       </div>
