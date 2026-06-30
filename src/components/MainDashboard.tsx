@@ -8,6 +8,7 @@ import { UploadZone, QuickActions } from './QuickActions';
 import { SectionContainer } from './ui/layout';
 import { useDocuments, useDeleteDocument, useUploadDocument } from '../hooks/useDocuments';
 import { useStats } from '../hooks/useStats';
+import { loadSettings } from '../lib/settings';
 
 interface MainDashboardProps {
   onNavigate: (page: string) => void;
@@ -33,6 +34,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
     : { total: 0, processing: 0, completed: 0, failed: 0 };
 
   const uploadDocument = useUploadDocument();
+  const defaultDocumentView = loadSettings().defaultDocumentView;
 
   const handleFileUpload = async (file: File) => {
     if (!userId) return;
@@ -74,7 +76,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
                   onRefresh={() => { refetchDocuments(); refetchStats(); }}
                   onUpload={handleFileUpload}
                   onDelete={handleDelete}
-                  defaultViewMode="grid"
+                  defaultViewMode={defaultDocumentView}
                 />
               </div>
             </SectionContainer>

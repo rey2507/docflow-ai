@@ -1,22 +1,95 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PageContainer, SectionContainer } from '../components/ui/layout';
 import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { EmptyState } from '../components/ui/empty-state';
 import { Badge } from '../components/ui/badge';
 import { BriefcaseBusiness, CreditCard, Sparkles, Plug, Shield, Trash2, TriangleAlert } from 'lucide-react';
 import { Input } from '../components/ui/input';
+import { loadSettings, saveSettings, type AppSettings } from '../lib/settings';
 
 type SettingsTab = 'account' | 'workspace' | 'billing' | 'ai' | 'integrations' | 'security' | 'danger';
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+interface ControlSelectProps {
+  label: string;
+  description: string;
+  value: string;
+  options: SelectOption[];
+  onChange: (value: string) => void;
+}
+
+interface ControlToggleProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+const fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-slate-900 focus:ring-4 focus:ring-slate-100';
+
+const ControlSelect: React.FC<ControlSelectProps> = ({ label, description, value, options, onChange }) => {
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-3">
+        <label htmlFor={id} className="text-sm font-semibold text-slate-900">
+          {label}
+        </label>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className={fieldClass}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+const ControlToggle: React.FC<ControlToggleProps> = ({ label, description, checked, onChange }) => {
+  return (
+    <label className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-slate-900">{label}</p>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+      />
+    </label>
+  );
+};
 
 const SettingsPage: React.FC = () => {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const [deletionStep, setDeletionStep] = useState<'review' | 'confirm' | 'processing'>('review');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
+
+  useEffect(() => {
+    saveSettings(settings);
+  }, [settings]);
+
+  const updateSettings = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
 
   const resetDeletionFlow = () => {
     setDeletionStep('review');
@@ -37,6 +110,7 @@ const SettingsPage: React.FC = () => {
     setDeletionStep('processing');
     try {
       localStorage.removeItem('docflow.notifications.v1');
+      localStorage.removeItem('docflow.settings.v1');
       await signOut();
       setDeleteMessage('You have been signed out. Full account deletion should be completed by a server-side deletion endpoint.');
       resetDeletionFlow();
@@ -64,8 +138,16 @@ const SettingsPage: React.FC = () => {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-slate-900">Settings</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Manage your workspace, account preferences, and integrations.
+            Personalize how DocFlow AI behaves for your workspace.
           </p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Preferences</p>
+            <p className="text-sm text-slate-500">Changes are applied automatically as you adjust them.</p>
+          </div>
+          <Badge variant="success">Auto-saved</Badge>
         </div>
 
         <div className="border-b border-slate-200 mb-6">
@@ -94,9 +176,9 @@ const SettingsPage: React.FC = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">Account</h3>
-                    <p className="mt-1 text-sm text-slate-500">Identity and session details for this workspace.</p>
+                    <p className="mt-1 text-sm text-slate-500">Profile details and launch behavior for this user.</p>
                   </div>
-                  <Badge variant="info">Active session</Badge>
+                  <Badge variant="info">Auto-saved</Badge>
                 </div>
               </CardHeader>
               <CardBody>
@@ -104,15 +186,52 @@ const SettingsPage: React.FC = () => {
                   <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm sm:p-5">
                     <div className="flex items-start gap-4">
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white shadow-sm">
-                        {(user?.email || 'U').charAt(0).toUpperCase()}
+                        {(settings.displayName || user?.email || 'U').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
                         <p className="mt-1 truncate text-base font-semibold text-slate-900">{user?.email || 'Not available'}</p>
-                          <p className="mt-1 text-sm text-slate-500">This account is currently connected to the active workspace session.</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {settings.displayName ? `Display name: ${settings.displayName}` : 'Add a display name to personalize the workspace.'}
+                        </p>
                       </div>
                     </div>
                   </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <Input
+                      label="Display name"
+                      value={settings.displayName}
+                      onChange={(event) => updateSettings('displayName', event.target.value)}
+                      placeholder="How the app should address you"
+                      helperText="Used in account labels and welcome states."
+                    />
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <label htmlFor="home-screen-after-sign-in" className="block text-sm font-medium text-slate-700">
+                        Home screen after sign-in
+                      </label>
+                      <select
+                        id="home-screen-after-sign-in"
+                        value={settings.homePage}
+                        onChange={(event) => updateSettings('homePage', event.target.value as AppSettings['homePage'])}
+                        className={`${fieldClass} mt-2`}
+                      >
+                        <option value="dashboard">Dashboard</option>
+                        <option value="upload">Uploads</option>
+                        <option value="reports">Reports</option>
+                        <option value="ai-insights">AI Insights</option>
+                      </select>
+                      <p className="mt-2 text-xs text-slate-500">Choose where the workspace opens after a fresh login.</p>
+                    </div>
+                  </div>
+
+                  <ControlToggle
+                    label="Compact interface"
+                    description="Use tighter spacing for a denser desktop-friendly layout."
+                    checked={settings.compactMode}
+                    onChange={(checked) => updateSettings('compactMode', checked)}
+                  />
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -124,7 +243,6 @@ const SettingsPage: React.FC = () => {
                       <p className="mt-2 break-all font-mono text-sm text-slate-700">{user?.id || '—'}</p>
                     </div>
                   </div>
-
                 </div>
               </CardBody>
             </Card>
@@ -133,15 +251,50 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'workspace' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Workspace</h3>
+                <div className="flex items-center gap-2">
+                  <BriefcaseBusiness className="h-5 w-5 text-slate-700" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Workspace</h3>
+                    <p className="mt-1 text-sm text-slate-500">Document layout and workspace behavior.</p>
+                  </div>
+                </div>
               </CardHeader>
               <CardBody>
-                <EmptyState
-                  icon={<BriefcaseBusiness className="h-6 w-6" />}
-                  title="Workspace controls are being prepared"
-                  description="Team roles, members, and workspace preferences will appear here."
-                  className="border-slate-200 bg-slate-50"
-                />
+                <div className="space-y-4">
+                  <Input
+                    label="Workspace name"
+                    value={settings.workspaceName}
+                    onChange={(event) => updateSettings('workspaceName', event.target.value)}
+                    placeholder="DocFlow Workspace"
+                    helperText="Shown in the shell and future workspace branding."
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ControlSelect
+                      label="Default document view"
+                      description="Choose how document lists open by default."
+                      value={settings.defaultDocumentView}
+                      onChange={(value) => updateSettings('defaultDocumentView', value as AppSettings['defaultDocumentView'])}
+                      options={[
+                        { label: 'Grid', value: 'grid' },
+                        { label: 'Table', value: 'table' },
+                      ]}
+                    />
+                    <ControlToggle
+                      label="Open uploads automatically"
+                      description="Jump to the uploaded document once processing starts."
+                      checked={settings.autoOpenUploadedDocument}
+                      onChange={(checked) => updateSettings('autoOpenUploadedDocument', checked)}
+                    />
+                  </div>
+
+                  <ControlToggle
+                    label="Show activity timestamps"
+                    description="Display exact times in the recent activity feed."
+                    checked={settings.showActivityTimestamps}
+                    onChange={(checked) => updateSettings('showActivityTimestamps', checked)}
+                  />
+                </div>
               </CardBody>
             </Card>
           )}
@@ -149,15 +302,52 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'billing' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Billing</h3>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-slate-700" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Billing</h3>
+                    <p className="mt-1 text-sm text-slate-500">Usage alerts and report preferences.</p>
+                  </div>
+                </div>
               </CardHeader>
               <CardBody>
-                <EmptyState
-                  icon={<CreditCard className="h-6 w-6" />}
-                  title="Billing center is not live yet"
-                  description="Plans, invoices, and subscription controls will connect here once billing is enabled."
-                  className="border-slate-200 bg-slate-50"
-                />
+                <div className="space-y-4">
+                  <ControlToggle
+                    label="Usage alerts"
+                    description="Warn me before the workspace reaches the selected usage threshold."
+                    checked={settings.usageAlerts}
+                    onChange={(checked) => updateSettings('usageAlerts', checked)}
+                  />
+
+                  <ControlSelect
+                    label="Usage alert threshold"
+                    description="Choose when usage warnings should appear."
+                    value={String(settings.usageAlertThreshold)}
+                    onChange={(value) => updateSettings('usageAlertThreshold', Number(value))}
+                    options={[
+                      { label: '50%', value: '50' },
+                      { label: '70%', value: '70' },
+                      { label: '80%', value: '80' },
+                      { label: '90%', value: '90' },
+                      { label: '100%', value: '100' },
+                    ]}
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ControlToggle
+                      label="Monthly usage report"
+                      description="Send a monthly summary of document and AI activity."
+                      checked={settings.monthlyUsageReport}
+                      onChange={(checked) => updateSettings('monthlyUsageReport', checked)}
+                    />
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                      <p className="text-sm font-semibold text-slate-900">Plan visibility</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Plan and invoice controls can be connected later without changing this settings layout.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardBody>
             </Card>
           )}
@@ -167,7 +357,7 @@ const SettingsPage: React.FC = () => {
               <CardHeader>
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">AI Settings</h3>
-                  <p className="mt-1 text-sm text-slate-500">Control how DocFlow AI summarizes, extracts, and responds.</p>
+                  <p className="mt-1 text-sm text-slate-500">Tune summaries, tone, and extraction behavior.</p>
                 </div>
               </CardHeader>
               <CardBody>
@@ -178,35 +368,50 @@ const SettingsPage: React.FC = () => {
                         <Sparkles className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">Current AI experience</p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          Document extraction, summaries, and workflow guidance are powered by the active workspace configuration.
-                        </p>
+                        <p className="text-sm font-semibold text-slate-900">Current AI behavior</p>
+                        <p className="mt-1 text-sm text-slate-600">These preferences shape the summaries and guidance users see in the app.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Response style</p>
-                      <p className="mt-2 text-sm font-medium text-slate-900">Concise and workspace-focused</p>
-                      <p className="mt-1 text-sm text-slate-500">Best for document summaries, task prompts, and workflow feedback.</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Safety</p>
-                      <p className="mt-2 text-sm font-medium text-slate-900">Guardrails enabled</p>
-                      <p className="mt-1 text-sm text-slate-500">Keep AI actions scoped to the current user and workspace.</p>
-                    </div>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <ControlSelect
+                      label="Summary length"
+                      description="Set how much detail AI should include in document summaries."
+                      value={settings.summaryLength}
+                      onChange={(value) => updateSettings('summaryLength', value as AppSettings['summaryLength'])}
+                      options={[
+                        { label: 'Short', value: 'short' },
+                        { label: 'Medium', value: 'medium' },
+                        { label: 'Long', value: 'long' },
+                      ]}
+                    />
+                    <ControlSelect
+                      label="Response tone"
+                      description="Choose the style AI should use when answering users."
+                      value={settings.responseTone}
+                      onChange={(value) => updateSettings('responseTone', value as AppSettings['responseTone'])}
+                      options={[
+                        { label: 'Concise', value: 'concise' },
+                        { label: 'Balanced', value: 'balanced' },
+                        { label: 'Detailed', value: 'detailed' },
+                      ]}
+                    />
                   </div>
 
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-900">Coming next</p>
-                    <ul className="mt-2 space-y-2 text-sm text-slate-600">
-                      <li>• Choose an AI provider or model preset.</li>
-                      <li>• Adjust summary length and tone.</li>
-                      <li>• Add per-workspace prompt rules.</li>
-                    </ul>
-                  </div>
+                  <ControlToggle
+                    label="Auto-suggest follow-up actions"
+                    description="Show next-step suggestions after summaries and uploads."
+                    checked={settings.autoSuggestActions}
+                    onChange={(checked) => updateSettings('autoSuggestActions', checked)}
+                  />
+
+                  <ControlToggle
+                    label="Strict extraction mode"
+                    description="Prefer precise extraction and validation over relaxed parsing."
+                    checked={settings.strictExtraction}
+                    onChange={(checked) => updateSettings('strictExtraction', checked)}
+                  />
                 </div>
               </CardBody>
             </Card>
@@ -215,15 +420,48 @@ const SettingsPage: React.FC = () => {
           {activeTab === 'integrations' && (
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Integrations</h3>
+                <div className="flex items-center gap-2">
+                  <Plug className="h-5 w-5 text-slate-700" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Integrations</h3>
+                    <p className="mt-1 text-sm text-slate-500">Notification and delivery preferences.</p>
+                  </div>
+                </div>
               </CardHeader>
               <CardBody>
-                <EmptyState
-                  icon={<Plug className="h-6 w-6" />}
-                  title="Integrations will connect here"
-                  description="External tools, webhooks, and workspace connectors will be configured on this screen."
-                  className="border-slate-200 bg-slate-50"
-                />
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ControlToggle
+                      label="Email notifications"
+                      description="Send emails for important workspace events."
+                      checked={settings.emailNotifications}
+                      onChange={(checked) => updateSettings('emailNotifications', checked)}
+                    />
+                    <ControlToggle
+                      label="Desktop notifications"
+                      description="Show browser notifications for updates when the app is open."
+                      checked={settings.desktopNotifications}
+                      onChange={(checked) => updateSettings('desktopNotifications', checked)}
+                    />
+                  </div>
+
+                  <ControlSelect
+                    label="Notification digest"
+                    description="Choose how often you want notification summaries."
+                    value={settings.digestFrequency}
+                    onChange={(value) => updateSettings('digestFrequency', value as AppSettings['digestFrequency'])}
+                    options={[
+                      { label: 'Instant', value: 'instant' },
+                      { label: 'Daily', value: 'daily' },
+                      { label: 'Weekly', value: 'weekly' },
+                    ]}
+                  />
+
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Future integrations</p>
+                    <p className="mt-1 text-sm text-slate-500">External connectors can be added later without changing the structure of this settings page.</p>
+                  </div>
+                </div>
               </CardBody>
             </Card>
           )}
@@ -233,7 +471,7 @@ const SettingsPage: React.FC = () => {
               <CardHeader>
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">Security</h3>
-                  <p className="mt-1 text-sm text-slate-500">Session policies, access rules, and workspace protections.</p>
+                  <p className="mt-1 text-sm text-slate-500">Session and safety preferences for sensitive actions.</p>
                 </div>
               </CardHeader>
               <CardBody>
@@ -245,32 +483,53 @@ const SettingsPage: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900">Current protection posture</p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          Access is currently governed by workspace authentication and row-level policies.
-                        </p>
+                        <p className="mt-1 text-sm text-slate-600">Keep the workspace locked down while preserving a smooth sign-in experience.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Session protection</p>
-                      <p className="mt-2 text-sm font-medium text-slate-900">Active sign-in session</p>
-                      <p className="mt-1 text-sm text-slate-500">The app uses the current sign-in session to identify the user.</p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access control</p>
-                      <p className="mt-2 text-sm font-medium text-slate-900">Workspace-scoped</p>
-                      <p className="mt-1 text-sm text-slate-500">Policies should keep documents, reports, and activity isolated by user.</p>
-                    </div>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <ControlSelect
+                      label="Session timeout"
+                      description="Set how long a session can stay active before re-authentication."
+                      value={settings.sessionTimeout}
+                      onChange={(value) => updateSettings('sessionTimeout', value as AppSettings['sessionTimeout'])}
+                      options={[
+                        { label: '30 minutes', value: '30m' },
+                        { label: '2 hours', value: '2h' },
+                        { label: '8 hours', value: '8h' },
+                        { label: 'Never', value: 'never' },
+                      ]}
+                    />
+                    <ControlToggle
+                      label="Require re-authentication for delete actions"
+                      description="Ask for confirmation before destructive account changes."
+                      checked={settings.requireReauthForDanger}
+                      onChange={(checked) => updateSettings('requireReauthForDanger', checked)}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <ControlToggle
+                      label="Hide sensitive previews"
+                      description="Reduce preview exposure for document snippets and secure content."
+                      checked={settings.hideSensitivePreviews}
+                      onChange={(checked) => updateSettings('hideSensitivePreviews', checked)}
+                    />
+                    <ControlToggle
+                      label="Keep me signed in"
+                      description="Extend the session between app visits on this device."
+                      checked={settings.keepSignedIn}
+                      onChange={(checked) => updateSettings('keepSignedIn', checked)}
+                    />
                   </div>
 
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-semibold text-slate-900">Planned controls</p>
                     <ul className="mt-2 space-y-2 text-sm text-slate-600">
-                      <li>• Session timeout and re-authentication for critical actions.</li>
-                      <li>• Device/session management for signed-in users.</li>
+                      <li>• Device and session management for signed-in users.</li>
                       <li>• Audit logging for destructive or sensitive changes.</li>
+                      <li>• Workspace-level access review tools.</li>
                     </ul>
                   </div>
                 </div>
