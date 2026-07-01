@@ -245,19 +245,26 @@ export const PipelineOrchestrator = {
       // Note: extraction may fail if no AI providers configured - document still stored successfully
       // AI extraction can be triggered later via AI chat interface
       if (!extractionSuccessful) {
-        LogService.warn(`Extraction unavailable - document stored without AI processing`, { documentId, error: normalizedLastError?.message });
-        // Mark document as completed so it's still accessible
+        LogService.warn(`Extraction unavailable - marking document failed`, { documentId, error: normalizedLastError?.message });
+        // Mark document as failed so it can be retried explicitly and errors are visible
+        const newMetadata = {
+          ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+          extractionError: normalizedLastError?.message || lastError?.message,
+          extractionAttempted: true,
+          failedProvider: (failoverAttempts.length && failoverAttempts[failoverAttempts.length - 1].provider) || (resolvedDoc.metadata as Record<string, unknown>)?.failedProvider,
+          failoverAttempts,
+          retryCount: ((resolvedDoc.metadata as Record<string, unknown>)?.retryCount as number || 0) + 1,
+        };
+
         await supabase
           .from('documents')
           .update({
-            status: 'completed',
-            metadata: {
-          ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
-               extractionError: normalizedLastError?.message || lastError?.message,
-              extractionAttempted: true,
-            },
+            status: 'failed',
+            metadata: newMetadata,
+            updated_at: new Date().toISOString(),
           })
           .eq('id', documentId);
+        return { success: false, error: normalizedLastError ? new Error(normalizedLastError.message) : lastError };
       } else {
         // 3. Generate Embedding for Semantic Search (Task 11.3) - only on successful extraction
         const embCapability = typeof (db as unknown as { query?: { documents?: { findFirst: Function } } }).query?.documents?.findFirst === 'function';

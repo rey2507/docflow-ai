@@ -122,6 +122,26 @@ export const ExtractService = {
       return { data: aiResult.structuredData, error: null };
     } catch (error: any) {
       LogService.error('Extraction phase failed', error, { documentId });
+      // Persist extraction error to document metadata for debugging and admin actions
+      try {
+        const { data: doc } = await supabase.from('documents').select('metadata').eq('id', documentId).maybeSingle();
+        const existingMetadata = (doc?.metadata as Record<string, any>) || {};
+        await supabase
+          .from('documents')
+          .update({
+            metadata: {
+              ...existingMetadata,
+              extractionError: error?.message || String(error),
+              extractionErrorStack: error?.stack || undefined,
+              extractionAttemptedAt: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', documentId);
+      } catch (metaErr) {
+        LogService.warn('Failed to persist extraction error metadata', metaErr, { documentId });
+      }
+
       return { data: null, error };
     }
   },
