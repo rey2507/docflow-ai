@@ -5,14 +5,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
+  inline?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className, id, ...props }, ref) => {
+  ({ label, error, helperText, inline, className, id, ...props }, ref) => {
     const inputId = id || props.name;
 
+    const wrapperClasses = inline ? 'flex-1 min-w-0' : 'space-y-1.5';
+
     return (
-      <div className="space-y-1.5">
+      <div className={wrapperClasses}>
         {label && (
           <label
             htmlFor={inputId}
@@ -29,14 +32,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             'focus:border-slate-900 focus:ring-4 focus:ring-slate-100',
             'disabled:bg-slate-50 disabled:text-slate-500 placeholder:text-slate-400',
             error && 'border-rose-600 focus:border-rose-600',
+            inline && 'h-9',
             className
           )}
           {...props}
         />
-        {helperText && !error && (
+        {!inline && helperText && !error && (
           <p className="text-xs text-slate-500">{helperText}</p>
         )}
-        {error && (
+        {!inline && error && (
           <p className="text-xs text-rose-600" role="alert">
             {error}
           </p>
