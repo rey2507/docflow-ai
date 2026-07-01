@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ArrowUpDown, Search, FileText, MoreVertical, Trash2, Share2, Download } from 'lucide-react';
+import { ArrowUpDown, Search, FileText, MoreVertical, Trash2, Share2, Download, RefreshCw, CheckCircle, AlertCircle, Eye } from 'lucide-react';
+import { relativeTimeFrom } from '../lib/time';
 import type { Document } from '../types/document';
 import PipelineStatusDisplay from './PipelineStatusDisplay';
 import { DocumentService } from '../services/documents/document.service';
@@ -90,7 +91,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const formatCreatedDate = (date: Date | string) =>
-    (date instanceof Date ? date : new Date(date)).toLocaleDateString();
+    (() => {
+      try {
+        const d = date instanceof Date ? date : new Date(date as string);
+        if (Number.isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString();
+      } catch {
+        return '—';
+      }
+    })();
 
   const getDeleteLockReason = (status: Document['status']) => {
     if (status === 'processing') return 'Delete is unavailable while processing is running.';
@@ -120,6 +129,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
     } finally {
       setRetryingId(null);
     }
+  };
+
+  const showErrorTooltip = (doc: Document) => {
+    const err = (doc.metadata as any)?.extractionError || (doc.metadata as any)?.pipelineError;
+    const attempts = (doc.metadata as any)?.failoverAttempts;
+    const details: string[] = [];
+    if (err) details.push(String(err));
+    if (Array.isArray(attempts) && attempts.length) details.push(`Attempts: ${attempts.map((a: any) => `${a.provider}:${a.error}`).join('; ')}`);
+    return details.join(' — ') || 'No detailed error available';
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -396,33 +414,32 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 </thead>
 <tbody className="divide-y divide-slate-100">
                    {pageData.map((doc) => (
-                     <tr key={doc.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
+                      <tr key={doc.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
                        <td className="px-4 py-3 align-top">
                          <div className="flex items-center gap-3">
                            <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
                              <FileText className="h-4 w-4 text-slate-500" />
                            </div>
                            <div className="min-w-0">
-                             <p className="font-medium text-slate-900 truncate" title={doc.name}>{doc.name}</p>
+                             <p className="font-medium text-slate-900 truncate max-w-[36ch]" title={doc.name}>{doc.name}</p>
                              <p className="text-xs text-slate-400 mt-0.5">ID: {doc.id.slice(0, 8)}</p>
                            </div>
                          </div>
                        </td>
                        <td className="px-4 py-3 align-top">
-                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${
-                           doc.status === 'completed' 
-                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                             : doc.status === 'failed'
-                             ? 'bg-rose-50 text-rose-700 border-rose-200'
-                             : doc.status === 'processing' || doc.status === 'validating'
-                             ? 'bg-blue-50 text-blue-700 border-blue-200'
-                             : 'bg-slate-100 text-slate-700 border-slate-200'
-                         }`}>
-                           {doc.type}
-                         </span>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${
+                            doc.status === 'completed'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : doc.status === 'failed'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            {doc.status === 'completed' ? <CheckCircle className="h-3.5 w-3.5 mr-1 text-emerald-700" /> : doc.status === 'failed' ? <AlertCircle className="h-3.5 w-3.5 mr-1 text-rose-700" /> : <RefreshCw className="h-3.5 w-3.5 mr-1 text-blue-700" />}
+                            {doc.type}
+                          </span>
                        </td>
 <td className="px-4 py-3 align-top">
-                          <div className="min-w-[200px]">
+                          <div className="min-w-[160px] md:min-w-[200px]">
                             {doc.metadata?.extractionAttempted && !doc.metadata?.lastExtractionError ? (
                               <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 border-emerald-200">
                                 completed
@@ -435,8 +452,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
                                 <p className="text-xs text-slate-500">Ready for AI processing</p>
                               </div>
                             ) : doc.status === 'failed' ? (
-                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-rose-50 text-rose-700 border-rose-200">
-                                failed
+                              <span title={showErrorTooltip(doc)} className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-rose-50 text-rose-700 border-rose-200">
+                                <AlertCircle className="h-3.5 w-3.5 mr-1" /> failed
                               </span>
                             ) : (
                               <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
@@ -450,6 +467,14 @@ const DocumentList: React.FC<DocumentListProps> = ({
                         </td>
                         <td className="px-4 py-3 text-right align-top">
                           <div className="flex items-center justify-end gap-2">
+                            {doc.status === 'failed' && (
+                              <Button size="sm" variant="ghost" onClick={() => handleRetry(doc)} disabled={retryingId === doc.id}>
+                                {retryingId === doc.id ? 'Retrying…' : 'Retry'}
+                              </Button>
+                            )}
+                            <Button size="sm" variant="ghost" onClick={() => onViewDetails(doc.id)} title="Preview document">
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="secondary" onClick={() => onViewDetails(doc.id)}>
                               View
                             </Button>
@@ -471,16 +496,17 @@ const DocumentList: React.FC<DocumentListProps> = ({
               </table>
             </div>
           ) : (
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {pageData.map((doc) => (
                 <Card key={doc.id} className="flex flex-col h-full">
                   <CardHeader className="pb-3">
                     <div className="space-y-2">
-                      <h4 className="max-w-[220px] truncate text-sm font-semibold text-slate-900" title={doc.name}>
+                      <h4 className="truncate text-sm font-semibold text-slate-900" title={doc.name}>
                         {doc.name}
                       </h4>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${
+                      <div className="flex items-center gap-3 justify-between">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${
                           doc.status === 'completed' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
                             : doc.status === 'failed'
@@ -489,7 +515,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
                         }`}>
                           {doc.status}
                         </span>
-                        <span className="text-slate-500">{doc.createdAt ? formatCreatedDate(doc.createdAt) : '—'}</span>
+                        </div>
+                        <span className="text-slate-500 text-xs" title={doc.createdAt ? new Date(doc.createdAt).toISOString() : ''}>{doc.createdAt ? relativeTimeFrom(doc.createdAt).label : '—'}</span>
                       </div>
                     </div>
                   </CardHeader>

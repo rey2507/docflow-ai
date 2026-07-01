@@ -10,6 +10,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.21.0",
     "openai": "^4.47.1",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.22.0",
     "postgres": "^3.4.9",
     "react": "^19.2.7",

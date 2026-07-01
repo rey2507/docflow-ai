@@ -46,7 +46,10 @@ export const ExtractService = {
       const prompt = PromptService.getExtractionPrompt(document.type);
       let fileContent: string | undefined;
 
-      if (document.type === 'image' || document.name.toLowerCase().endsWith('.png') || document.name.toLowerCase().endsWith('.jpg')) {
+      const lowerName = document.name?.toLowerCase() || '';
+
+      // Images: provide base64 image payload to AI when needed
+      if (document.type === 'image' || lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) {
         const { data: blob, error: downloadError } = await supabase.storage
           .from('documents')
           .download(document.storage_path);
@@ -59,6 +62,48 @@ export const ExtractService = {
             binary += String.fromCharCode(uint8[i]);
           }
           fileContent = btoa(binary);
+        }
+      }
+
+      // PDFs: extract text server-side and persist as `textPreview` to be used for preview and prompt context
+      if (lowerName.endsWith('.pdf') || (document?.metadata?.mimeType === 'application/pdf')) {
+        try {
+          const { data: blob, error: downloadError } = await supabase.storage
+            .from('documents')
+            .download(document.storage_path);
+
+          if (!downloadError && blob) {
+            const arrayBuffer = await blob.arrayBuffer();
+            // Load pdf-parse only in a Node/server environment to avoid bundling it into the browser build
+            let pdfParse: any = null;
+            try {
+              if (typeof window === 'undefined') {
+                pdfParse = eval('require')('pdf-parse');
+              }
+            } catch (e) {
+              LogService.warn('pdf-parse not available in this runtime', { error: (e as any)?.message || String(e), documentId });
+            }
+
+            const parsed = pdfParse ? await pdfParse(Buffer.from(arrayBuffer)) : null;
+            const text = (parsed && parsed.text) ? String(parsed.text).trim().slice(0, 20000) : '';
+            fileContent = text;
+
+            // Persist textPreview for viewer and prompt augmentation
+            const existingMetadata = (document.metadata as Record<string, any>) || {};
+            await supabase
+              .from('documents')
+              .update({
+                metadata: {
+                  ...existingMetadata,
+                  textPreview: text,
+                },
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', documentId)
+              .eq('user_id', userId);
+          }
+        } catch (pdfErr) {
+          LogService.warn('PDF text extraction failed', { error: (pdfErr as any)?.message || String(pdfErr), documentId });
         }
       }
 
@@ -139,7 +184,7 @@ export const ExtractService = {
           })
           .eq('id', documentId);
       } catch (metaErr) {
-        LogService.warn('Failed to persist extraction error metadata', metaErr, { documentId });
+        LogService.warn('Failed to persist extraction error metadata', { error: (metaErr as any)?.message || String(metaErr), documentId });
       }
 
       return { data: null, error };
