@@ -4,6 +4,8 @@ import { Card, CardHeader, CardBody } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { FileText, Upload } from 'lucide-react';
 import type { DocumentStatus } from '../types/document';
+import { useAuth } from '../contexts/AuthContext';
+import { useDocuments, useUploadDocument } from '../hooks/useDocuments';
 
 type Doc = {
   id: string;
@@ -33,16 +35,22 @@ function uuid() {
 }
 
 const DocumentsPage: React.FC = () => {
-  const [docs, setDocs] = useState<Doc[]>(() => readDocs());
+  const { user } = useAuth();
+  const userId = user?.id || '';
+  const { data: remoteDocs = [], isLoading } = useDocuments(userId);
+  const uploadDocument = useUploadDocument();
+
+  // local fallback state for when no user / backend
+  const [localDocs, setLocalDocs] = useState<Doc[]>(() => readDocs());
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    writeDocs(docs);
-  }, [docs]);
+    writeDocs(localDocs);
+  }, [localDocs]);
 
   useEffect(() => {
     // resume processing for any pending/processing docs on mount
-    docs.forEach((d) => {
+    localDocs.forEach((d) => {
       if (d.status === 'pending' || d.status === 'processing') {
         simulateProcessing(d.id);
       }
@@ -52,32 +60,45 @@ const DocumentsPage: React.FC = () => {
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const addFiles = (files: FileList | null) => {
+  const addFiles = async (files: FileList | null) => {
     if (!files) return;
-    const newDocs: Doc[] = Array.from(files).map((f) => ({
-      id: uuid(),
-      name: f.name,
-      size: f.size,
-      createdAt: new Date().toISOString(),
-      status: 'pending',
-    }));
-    setDocs((cur) => {
-      const merged = [...newDocs, ...cur];
-      return merged;
-    });
-    // start processing
-    newDocs.forEach((d) => simulateProcessing(d.id));
+    const list = Array.from(files);
+    if (userId) {
+      setUploading(true);
+      for (const f of list) {
+        try {
+          await uploadDocument.mutateAsync({ file: f, userId });
+        } catch (err) {
+          console.error('Upload failed', err);
+        }
+      }
+      setUploading(false);
+    } else {
+      const newDocs: Doc[] = list.map((f) => ({
+        id: uuid(),
+        name: f.name,
+        size: f.size,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+      }));
+      setLocalDocs((cur) => {
+        const merged = [...newDocs, ...cur];
+        return merged;
+      });
+      // start processing
+      newDocs.forEach((d) => simulateProcessing(d.id));
+    }
   };
 
   const openFilePicker = () => fileInputRef.current?.click();
 
   const simulateProcessing = (id: string) => {
     // set to processing quickly
-    setDocs((cur) => cur.map((d) => (d.id === id ? { ...d, status: 'processing' } : d)));
+    setLocalDocs((cur) => cur.map((d) => (d.id === id ? { ...d, status: 'processing' } : d)));
     // after a delay, mark completed or failed
     const delay = 1500 + Math.random() * 2500;
     setTimeout(() => {
-      setDocs((cur) =>
+      setLocalDocs((cur) =>
         cur.map((d) => {
           if (d.id !== id) return d;
           const success = Math.random() > 0.08; // 92% succeed
@@ -88,8 +109,15 @@ const DocumentsPage: React.FC = () => {
   };
 
   const removeDoc = (id: string) => {
-    setDocs((cur) => cur.filter((d) => d.id !== id));
+    if (userId) {
+      // removal should go through backend; optimistic local removal can be handled elsewhere
+      // For now, local deletion not implemented for remote docs; refresh will reflect changes.
+      return;
+    }
+    setLocalDocs((cur) => cur.filter((d) => d.id !== id));
   };
+
+  const docs = userId ? (remoteDocs as any[]).map((r) => ({ id: r.id, name: r.name, size: r.metadata?.fileSize || 0, createdAt: r.createdAt, status: r.status })) : localDocs;
 
   const counts = docs.reduce(
     (acc, d) => {

@@ -53,6 +53,19 @@ export const PipelineOrchestrator = {
       // Stuck workflow prevention: if processing for > 30 min, mark as failed
       const MAX_PIPELINE_DURATION_MS = 30 * 60 * 1000;
       const pipelineStartedAt = (resolvedDoc.metadata as Record<string, unknown>)?.pipelineStartedAt as string | undefined;
+      // If doc is marked processing but no pipelineStartedAt recorded, set it now to avoid indefinite stuck state
+      if (resolvedDoc.status === 'processing' && !pipelineStartedAt) {
+        await supabase
+          .from('documents')
+          .update({
+            metadata: {
+              ...(typeof resolvedDoc.metadata === 'object' && resolvedDoc.metadata ? (resolvedDoc.metadata as Record<string, unknown>) : {}),
+              pipelineStartedAt: new Date().toISOString(),
+            },
+          })
+          .eq('id', documentId);
+      }
+
       if (resolvedDoc.status === 'processing' && pipelineStartedAt) {
         const elapsed = Date.now() - new Date(pipelineStartedAt).getTime();
         if (elapsed > MAX_PIPELINE_DURATION_MS) {

@@ -323,7 +323,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
         aria-label="Upload document"
         title="Upload document"
         className="hidden"
-        accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
+        accept=".pdf,.png,.jpg,.jpeg,.csv,.txt,.doc,.docx,.xlsx,.pptx"
         onChange={handleFileChange}
         disabled={uploading}
       />

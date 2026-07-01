@@ -7,13 +7,15 @@ export const FILE_SIGNATURES: Record<string, Uint8Array[]> = {
     new Uint8Array([0xFF, 0xD8, 0xFF, 0xE8]),
   ],
   docx: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
+  xlsx: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
+  pptx: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
   zip: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
 };
 
 export function detectFileType(file: File): { type: string; confidence: 'high' | 'medium' | 'low' } {
   const ext = file.name.split('.').pop()?.toLowerCase() || '';
-  const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'];
-  
+  const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'txt', 'csv', 'xlsx', 'pptx'];
+
   if (!allowedExtensions.includes(ext)) {
     return { type: 'unsupported', confidence: 'high' };
   }
@@ -22,7 +24,16 @@ export function detectFileType(file: File): { type: string; confidence: 'high' |
     return { type: 'doc', confidence: 'medium' };
   }
 
-  return { type: ext === 'jpeg' ? 'jpg' : ext, confidence: 'medium' };
+  // normalize jpeg
+  if (ext === 'jpeg') return { type: 'jpg', confidence: 'medium' };
+
+  // text-like files
+  if (ext === 'txt' || ext === 'csv') return { type: ext, confidence: 'high' };
+
+  // office formats that are zipped packages (docx, xlsx, pptx)
+  if (ext === 'docx' || ext === 'xlsx' || ext === 'pptx') return { type: ext, confidence: 'medium' };
+
+  return { type: ext, confidence: 'medium' };
 }
 
 export async function validateFileSignature(file: File): Promise<{ valid: boolean; detectedType?: string; error?: string }> {
@@ -73,6 +84,10 @@ export function getFileTypeLabel(type: string): string {
     jpg: 'JPEG Image',
     doc: 'Word Document (DOC)',
     docx: 'Word Document (DOCX)',
+    xlsx: 'Spreadsheet (XLSX)',
+    pptx: 'Presentation (PPTX)',
+    csv: 'CSV (Comma-separated values)',
+    txt: 'Plain text',
   };
   return labels[type] || 'Unknown';
 }

@@ -17,7 +17,7 @@ interface QuickActionsProps {
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploading = false }) => {
   const filePicker = useFilePicker({
-    accept: '.pdf,.png,.jpg,.jpeg,.csv,.doc,.docx',
+        accept: '.pdf,.png,.jpg,.jpeg,.csv,.txt,.doc,.docx,.xlsx,.pptx',
     multiple: false,
     onFiles: (files) => {
       const file = files?.[0];

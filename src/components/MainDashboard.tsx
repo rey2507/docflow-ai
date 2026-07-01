@@ -4,6 +4,7 @@ import DocumentDetails from './DocumentDetails';
 import DashboardOverview from './DashboardOverview';
 import DocumentList from './DocumentList';
 import WorkflowActivity from './WorkflowActivity';
+import DocumentDrawer from './documents/DocumentDrawer';
 import { UploadZone, QuickActions } from './QuickActions';
 import { SectionContainer } from './ui/layout';
 import { useDocuments, useDeleteDocument, useUploadDocument } from '../hooks/useDocuments';
@@ -91,6 +92,12 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+      {selectedDocumentId && (
+        <DocumentDrawer
+          document={documents.find((d: any) => d.id === selectedDocumentId) || { id: selectedDocumentId, name: 'Document', createdAt: new Date().toISOString() }}
+          onClose={() => setSelectedDocumentId(null)}
+        />
+      )}
     </div>
   );
 };
