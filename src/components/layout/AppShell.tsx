@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import BetaBanner from '../ui/beta-banner';
 import type { Page } from '../../types/page';
 import { PageContainer } from '../ui/layout';
 import { FileText, GitBranch, MessageSquare, BarChart3, Upload, Bell } from 'lucide-react';
@@ -44,6 +45,7 @@ const AppShell: React.FC<AppShellProps> = ({
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
+        
         <Header
           title={
             currentPage === 'dashboard'
@@ -69,7 +71,11 @@ const AppShell: React.FC<AppShellProps> = ({
           onMenuClick={() => setMobileMenuOpen(true)}
           onNavigate={onNavigate}
         />
+
         <main id="main-content" className="flex-1 overflow-auto pb-20 sm:pb-0">
+          <div className="px-3 pt-3 sm:px-6 sm:pt-4 lg:px-8">
+            <BetaBanner />
+          </div>
           <PageContainer variant="default" className="px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
             {children}
           </PageContainer>

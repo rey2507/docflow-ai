@@ -14,6 +14,7 @@ const AIInsightsPage = lazy(() => import('../pages/AIInsightsPage'));
 const UploadPage = lazy(() => import('../pages/UploadPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const DocumentsPage = lazy(() => import('../pages/DocumentsPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
 const NotificationsPage = lazy(() => import('../pages/NotificationsPage'));
 
@@ -115,21 +116,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <ProtectedRoute><MainDashboard onNavigate={() => {}} /></ProtectedRoute> },
       { path: 'ai-insights', element: <ProtectedRoute><AIInsightsPage /></ProtectedRoute> },
-      {
-        path: 'documents',
-        element: (
-          <ProtectedRoute>
-            <PageContainer variant="medium">
-              <EmptyState
-                icon={<FileText className="h-6 w-6" />}
-                title="Documents workspace is being built"
-                description="Document browsing, filters, and bulk actions will land here next."
-                className="bg-white"
-              />
-            </PageContainer>
-          </ProtectedRoute>
-        ),
-      },
+      { path: 'documents', element: <ProtectedRoute><DocumentsPage /></ProtectedRoute> },
       { path: 'upload', element: <ProtectedRoute><UploadPage onUploadComplete={() => {}} /></ProtectedRoute> },
       {
         path: 'workflows',

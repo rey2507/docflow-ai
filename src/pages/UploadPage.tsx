@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import useFilePicker from '../hooks/useFilePicker';
 import { supabase } from '../lib/supabase/client';
 import { DocumentUploadService } from '../services/documents/upload.service';
 import { useAuth } from '../contexts/AuthContext';
@@ -62,6 +63,16 @@ const UploadPage: React.FC<UploadPageProps> = ({ onUploadComplete }) => {
 
   const handleDragLeave = () => setDragOver(false);
 
+  // file picker hook
+  const filePicker = useFilePicker({
+    accept: '.pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls,.doc,.docx',
+    multiple: false,
+    onFiles: (files) => {
+      const file = files?.[0];
+      if (file) processFile(file);
+    },
+  });
+
   return (
     <PageContainer variant="narrow">
       <SectionContainer spacing="md">
@@ -94,21 +105,13 @@ const UploadPage: React.FC<UploadPageProps> = ({ onUploadComplete }) => {
               </p>
               <p className="mt-1 text-xs text-slate-500">or</p>
               <div className="mt-4">
-                <input
-                  id="file-upload"
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.xls,.doc,.docx"
-                  onChange={handleFileChange}
-                  disabled={uploading}
-                />
-                <Button
-                  variant="primary"
-                  disabled={uploading}
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  {uploading ? 'Uploading…' : 'Browse files'}
-                </Button>
+                  {/* file picker (ref-based) */}
+                    {/* file picker (ref-based) */}
+                    {/* initialize hook once */}
+                    {filePicker.input}
+                    <Button variant="primary" disabled={uploading} onClick={filePicker.open}>
+                      {uploading ? 'Uploading…' : 'Browse files'}
+                    </Button>
               </div>
               <p className="mt-3 text-xs text-slate-500">
                 Supported: PDF, PNG, JPG, JPEG, CSV, XLS, XLSX

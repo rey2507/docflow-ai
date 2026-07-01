@@ -1,4 +1,5 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
+import useFilePicker from '../hooks/useFilePicker';
 import { Upload, FileText, GitBranch, MessageSquare, BarChart3 } from 'lucide-react';
 
 interface QuickAction {
@@ -15,17 +16,16 @@ interface QuickActionsProps {
 }
 
 const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploading = false }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const filePicker = useFilePicker({
+    accept: '.pdf,.png,.jpg,.jpeg,.csv,.doc,.docx',
+    multiple: false,
+    onFiles: (files) => {
+      const file = files?.[0];
+      if (file) onUpload(file);
+    },
+  });
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) onUpload(file);
-    e.target.value = '';
-  };
+  const handleUploadClick = () => filePicker.open();
 
   const actions: QuickAction[] = [
     { id: 'upload', label: 'Upload Document', icon: <FileText className="h-4 w-4" />, onClick: handleUploadClick },
@@ -54,16 +54,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onUpload, onNavigate, uploa
           </button>
         ))}
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        aria-label="Upload document"
-        title="Upload document"
-        className="hidden"
-        accept=".pdf,.png,.jpg,.jpeg,.csv,.doc,.docx"
-        onChange={handleFileChange}
-        disabled={uploading}
-      />
+      {filePicker.input}
     </div>
   );
 };
