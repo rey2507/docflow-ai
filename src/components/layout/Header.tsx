@@ -19,6 +19,7 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick, onMenu
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => removeExpiredNotifications());
   const headerRef = useRef<HTMLDivElement>(null);
+  const [menuTop, setMenuTop] = useState<number>(0);
 
   const initials = userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
   const unreadCount = getUnreadCount(notifications);
@@ -45,9 +46,20 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick, onMenu
 
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('keydown', handleEscape);
+    const updateTop = () => {
+      if (headerRef.current) {
+        const rect = headerRef.current.getBoundingClientRect();
+        setMenuTop(rect.bottom + window.scrollY + 4); // small gap
+      }
+    };
+    updateTop();
+    window.addEventListener('resize', updateTop);
+    window.addEventListener('scroll', updateTop, { passive: true });
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', updateTop);
+      window.removeEventListener('scroll', updateTop);
     };
   }, []);
 
@@ -128,7 +140,10 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick, onMenu
           </Button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+            <div
+              className="fixed right-4 z-50 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-lg"
+              style={{ top: `${menuTop}px` }}
+            >
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <p className="text-sm font-semibold text-slate-900">Notifications</p>
                 <button
@@ -196,7 +211,10 @@ const Header: React.FC<HeaderProps> = ({ title, userEmail, onUploadClick, onMenu
           </Button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+            <div
+              className="fixed right-4 z-50 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+              style={{ top: `${menuTop}px` }}
+            >
               <button
                 type="button"
                 className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"

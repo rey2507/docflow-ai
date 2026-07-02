@@ -3,7 +3,7 @@ import { DocumentStorageService } from '../services/documents/storage.service';
 
 interface FilePreviewProps {
   storagePath: string;
-  fileType: string;
+  mimeType: string;
   fileName: string;
 }
 
@@ -37,7 +37,7 @@ const DocumentIcon = () => (
   </svg>
 );
 
-const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, fileType, fileName }) => {
+const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, mimeType, fileName }) => {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -89,9 +89,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({ storagePath, fileType, fileNa
     </div>
   );
 
-  const isImage = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(fileType) || 
+  const isImage = ['image/png', 'image/jpeg', 'image/webp'].includes(mimeType) || 
                   ['png', 'jpg', 'jpeg'].some(ext => fileName.toLowerCase().endsWith(ext));
-  const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
+  const isPdf = mimeType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
 
   return (
     <div className="w-full min-h-[300px] md:min-h-[500px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

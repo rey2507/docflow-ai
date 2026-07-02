@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DocumentViewer from './DocumentViewer';
 import DocumentChat from './DocumentChat';
 import { Button } from '../ui/button';
+import { DocumentStorageService } from '../../services/documents/storage.service';
 
 export default function DocumentDrawer({ document, onClose }: { document: any; onClose: () => void }) {
   if (!document) return null;
 
-  const signedUrl = document?.storagePath ? `/storage/${document.storagePath}` : undefined;
+  const [signedUrl, setSignedUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function resolveUrl() {
+      if (!document?.storagePath) return;
+      const { url } = await DocumentStorageService.getDownloadUrl(document.storagePath);
+      if (!cancelled && url) setSignedUrl(url);
+    }
+    resolveUrl();
+    return () => { cancelled = true; };
+  }, [document?.storagePath]);
+
   const textPreview = document?.metadata?.textPreview;
   const [tab, setTab] = useState<'preview' | 'chat' | 'meta'>('preview');
 

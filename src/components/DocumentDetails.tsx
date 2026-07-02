@@ -181,7 +181,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ documentId, onBack })
           </div>
           <FilePreview 
             storagePath={document.storagePath} 
-            fileType={document.type} 
+            mimeType={document.metadata?.mimeType || ''} 
             fileName={document.name} 
           />
         </div>

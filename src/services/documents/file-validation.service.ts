@@ -10,7 +10,15 @@ export const FILE_SIGNATURES: Record<string, Uint8Array[]> = {
   xlsx: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
   pptx: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
   zip: [new Uint8Array([0x50, 0x4B, 0x03, 0x04])],
+  ole: [new Uint8Array([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])],
 };
+
+const EXECUTABLE_SIGNATURES: Uint8Array[] = [
+  new Uint8Array([0x4D, 0x5A]),
+  new Uint8Array([0x7F, 0x45, 0x4C, 0x46]),
+  new Uint8Array([0xFE, 0xED, 0xFA, 0xCE]),
+  new Uint8Array([0xFE, 0xED, 0xFA, 0xCF]),
+];
 
 export function detectFileType(file: File): { type: string; confidence: 'high' | 'medium' | 'low' } {
   const ext = file.name.split('.').pop()?.toLowerCase() || '';
@@ -58,9 +66,23 @@ export async function validateFileSignature(file: File): Promise<{ valid: boolea
     }
   }
 
-  // If file is empty or too small to check, allow it (could be a valid text file)
+  // If file is empty or too small to check, allow it
   if (bytes.length === 0) {
     return { valid: false, error: 'File is empty or unreadable.' };
+  }
+
+  // Allow text-based files (.txt, .csv) if content does not look like an executable
+  if (ext === 'txt' || ext === 'csv') {
+    const isExecutable = EXECUTABLE_SIGNATURES.some(sig => {
+      if (bytes.length >= sig.length) {
+        return sig.every((b, i) => bytes[i] === b);
+      }
+      return false;
+    });
+    if (!isExecutable) {
+      return { valid: true, detectedType: ext };
+    }
+    return { valid: false, error: 'File type does not match its extension. Upload rejected for security.' };
   }
 
   // No signature match found

@@ -43,7 +43,7 @@ const BetaBanner: React.FC<BetaBannerProps> = ({
       aria-live="polite"
       aria-atomic="true"
       className="inset-x-0 pointer-events-none"
-      style={topPx ? { position: 'fixed', top: topPx, left: 0, right: 0, zIndex: 9999 } : { position: 'fixed', top: '12px', left: 0, right: 0, zIndex: 9999 }}
+      style={topPx ? { position: 'fixed', top: topPx, left: 0, right: 0, zIndex: 40 } : { position: 'fixed', top: '12px', left: 0, right: 0, zIndex: 40 }}
     >
       <div className="mx-auto w-full max-w-[min(96vw,48rem)] pointer-events-auto">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-sm text-white shadow-lg sm:px-5"

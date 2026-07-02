@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { ArrowUpDown, Search, FileText, MoreVertical, Trash2, Share2, Download, RefreshCw, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { relativeTimeFrom } from '../lib/time';
 import type { Document } from '../types/document';
@@ -121,7 +122,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
     setActionFeedback(null);
     try {
       const { PipelineOrchestrator } = await import('../services/documents/orchestrator.service');
-      await PipelineOrchestrator.runPipeline({} as any, doc.id, doc.userId);
+      const { user } = useAuth();
+      const userId = user?.id || doc.userId;
+      await PipelineOrchestrator.runPipeline({} as any, doc.id, userId);
       setActionFeedback({ type: 'success', message: 'Retrying processing…' });
       onRefresh();
     } catch (err: any) {

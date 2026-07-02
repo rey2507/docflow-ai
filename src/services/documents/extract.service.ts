@@ -15,6 +15,26 @@ export const ExtractService = {
     providerOverride?: AIProvider
   ): Promise<{ data: Record<string, any> | null; error: Error | null }> {
     try {
+      // If running in browser, delegate to server/worker endpoint to avoid bundling server-only libs
+      if (typeof window !== 'undefined') {
+        const endpoint = (import.meta.env.VITE_EXTRACT_ENDPOINT as string) || (process.env.REACT_APP_EXTRACT_ENDPOINT as string) || '/.netlify/functions/pdf-extract';
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-extract-secret': (import.meta.env.VITE_EXTRACT_SECRET as string) || (process.env.REACT_APP_EXTRACT_SECRET as string) || 'dev-secret',
+            },
+            body: JSON.stringify({ documentId, userId, provider: providerOverride }),
+          });
+          const json: any = await res.json();
+          if (!res.ok) throw new Error(json?.error || 'Extraction endpoint failed');
+          return { data: json?.result?.data || json?.result?.structuredData || null, error: null };
+        } catch (e) {
+          // fallthrough to local extraction attempt if endpoint fails
+          LogService.warn('Remote extraction endpoint failed, attempting local extraction', { error: (e as any)?.message });
+        }
+      }
       // 1. Fetch the document
       const { data: document, error: docError } = await supabase
         .from('documents')
